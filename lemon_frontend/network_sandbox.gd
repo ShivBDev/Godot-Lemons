@@ -1,5 +1,7 @@
 extends Control
 
+const __save_path: String = "user://session_auth.cfg"
+var __session_token: String = ""
 var __email : String = ""
 var __uName : String = ""
 var __money : int = 0
@@ -32,6 +34,29 @@ func _onSyncUserPressed() -> void:
 		sync_user_button.text = "Saving..."
 		sync_user_button.disabled = true
 		_syncUserData()
+func _save_session_locally(token: String, email: String) -> void:
+	var config = ConfigFile.new()
+	config.set_value("auth", "session_token", token)
+	config.set_value("auth", "email", email)
+	var error = config.save(__save_path)
+	if error != OK:
+		print("Failed to cache session data locally.")
+
+func _tryLoadSaveData() -> void:
+	var config = ConfigFile.new()
+	var error = config.load(__save_path)
+	if error != OK:
+		print("No local session token found. User must log in.")
+		return
+
+	var saved_token = config.get_value("auth", "session_token", "")
+	var saved_email = config.get_value("auth", "email", "")
+
+	if saved_token != "" and saved_email != "":
+		print("Found saved session token. Verifying with server...")
+		__session_token = saved_token
+		__email = saved_email
+		_syncUserData()
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
@@ -46,6 +71,7 @@ func _ready() -> void:
 	autosave_timer.one_shot = false
 	autosave_timer.autostart = false
 	autosave_timer.timeout.connect(_autoSaveTrigger)
+	_tryLoadSaveData()
 
 func _startLoginOrRegistration(email: String, username: String) -> void:
 	sync_user_button.disabled = true
@@ -53,29 +79,41 @@ func _startLoginOrRegistration(email: String, username: String) -> void:
 	var headers: PackedStringArray = ["Content-Type: application/json"]
 	var payload: Dictionary = { "email": email, "name": username }
 	var jsonPayload = JSON.stringify(payload)
+	print("Sending Login Request...")
 	http_login_register.request(targetUrl, headers, HTTPClient.METHOD_POST, jsonPayload)
 func _submitOtpVerification(email: String, code: String) -> void:
 	var targetUrl: String = BASE_URL + "/player/verify-otp"
 	var headers: PackedStringArray = ["Content-Type: application/json"]
 	var payload: Dictionary = { "email": email, "code": code }
 	var jsonPayload = JSON.stringify(payload)
+	print("Sending OTP...")
 	http_verify.request(targetUrl, headers, HTTPClient.METHOD_POST, jsonPayload)
 
 func _syncUserData() -> void:
 	sync_user_button.disabled = true
 	__uName = username_field.text
 	var targetUrl: String = BASE_URL + "/player/sync"
-	var headers: PackedStringArray = ["Content-Type: application/json"]
-	var payload: Dictionary = {
-		"email": __email,
-		"name": __uName,
-		"money": __money
-	}
-	var jsonPayload = JSON.stringify(payload)
-	var error = http_sync.request(targetUrl, headers, HTTPClient.METHOD_PUT, jsonPayload)
-	if error != OK:
-		print("Sync update failed to dispatch.")
-		sync_user_button.disabled = false
+	var headers: PackedStringArray = [
+		"Content-Type: application/json",
+		"Authorization: " + __session_token
+	]
+	var payload: Dictionary = { "name": username_field.text, "money": __money }
+	http_sync.request(targetUrl, headers, HTTPClient.METHOD_PUT, JSON.stringify(payload))
+
+func _onLogoutPressed() -> void:
+	var targetUrl: String = BASE_URL + "/player/logout"
+	var headers: PackedStringArray = ["Authorization: " + __session_token]
+	# Reset states locally immediately
+	__session_token = ""
+	__email = ""
+	_updateUI()
+	var dir = DirAccess.open("user://")
+	if dir.file_exists("session_auth.cfg"):
+		dir.remove("session_auth.cfg")
+	# Tell server to delete context row tracking
+	var http_logout = HTTPRequest.new()
+	add_child(http_logout)
+	http_logout.request(targetUrl, headers, HTTPClient.METHOD_POST)
 
 func _httpLoginRegisterComplete(\
 _result: int,\
@@ -83,7 +121,6 @@ _response_code: int,\
 _headers: PackedStringArray,\
 _body: PackedByteArray) -> void:
 	if _response_code == 200:
-		print("OTP Sent! Awaiting submission.")
 		# For prototyping, auto-submit code 123456
 		_submitOtpVerification("player@test.com", "123456")
 
@@ -94,9 +131,11 @@ _headers: PackedStringArray,\
 _body: PackedByteArray) -> void:
 	if _response_code == 200:
 		var json = JSON.parse_string(_body.get_string_from_utf8())
-		__email = json["email"]
-		__uName = json["name"]
-		__money = json["money"]
+		print("Grabbing Session Token")
+		__session_token = json["token"]
+		__email = json["profile"]["email"]
+		__uName = json["profile"]["name"]
+		__money = json["profile"]["money"]
 		_updateUI()
 		sync_user_button.disabled = false
 		autosave_timer.start()
@@ -110,3 +149,13 @@ _body: PackedByteArray) -> void:
 	sync_user_button.text = "Sync Progress"
 	if _response_code == 200:
 		print("Save data synchronized successfully.")
+	elif _response_code == 401:
+		print("Your session has expired. Wiping local data.")
+		autosave_timer.stop()
+		__session_token = ""
+		__email = ""
+		_updateUI()
+		var dir = DirAccess.open("user://")
+		if dir.file_exists("session_auth.cfg"):
+			dir.remove("session_auth.cfg")
+		# TODO:open the registration panel here

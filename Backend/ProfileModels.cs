@@ -9,11 +9,18 @@ public class PlayerProfileObj {
   [MaxLength(50)]
   public string name { get; set; } = string.Empty;
   public int money { get; set; }
-  public bool isVerified { get; set; } = false;
 }
 
 public class OtpVerification {
   [Key] public string email { get; set; } = string.Empty;
   [Required] public string codeHash { get; set; } = string.Empty;
+  public DateTime expiresAt { get; set; }
+}
+
+public class PlayerSession {
+  [Key]
+  public string token { get; set; } = string.Empty; // Random Secure Guid string
+  [Required]
+  public string email { get; set; } = string.Empty;
   public DateTime expiresAt { get; set; }
 }
