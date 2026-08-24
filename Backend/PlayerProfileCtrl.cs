@@ -27,7 +27,7 @@ public class PlayerController : ControllerBase
     if (player == null) { // Register unverified user
       player = new PlayerProfileObj {
         email = request.email,
-        name = string.IsNullOrWhiteSpace(request.name) ? "New Player" : request.name,
+        name = "New Player",
         money = 100,
       };
       _context.Players.Add(player);
@@ -59,7 +59,6 @@ public class PlayerController : ControllerBase
     if (otpRecord == null || otpRecord.codeHash != request.code || otpRecord.expiresAt < DateTime.UtcNow) {
         return BadRequest(new { message = "Invalid or expired one-time passcode." });
     }
-
     var player = await _context.Players.FirstOrDefaultAsync(p => p.email == request.email);
     if (player == null) return NotFound(new { message = "Player profile missing." });
 
@@ -72,10 +71,26 @@ public class PlayerController : ControllerBase
         email = request.email,
         expiresAt = DateTime.UtcNow.AddDays(30)
     });
+    await _context.SaveChangesAsync();
+    return Ok(new { token = sessionToken, profile = player }); // Return verified user profile data to Godot
+  }
+
+  [HttpGet("profile")]
+  public async Task<IActionResult> GetProfileFromToken([FromHeader(Name = "Authorization")] string token)
+  {
+    if (string.IsNullOrEmpty(token)) return Unauthorized(new { message = "Missing token." });
+
+    var session = await _context.PlayerSessions.FirstOrDefaultAsync(s => s.token == token);
+    if (session == null || session.expiresAt < DateTime.UtcNow) {
+      return Unauthorized(new { message = "Session expired or invalid." });
+    }
+    // Slide the expiration window forward since they are active
+    session.expiresAt = DateTime.UtcNow.AddDays(30);
+    var player = await _context.Players.FirstOrDefaultAsync(p => p.email == session.email);
+    if (player == null) return NotFound();
 
     await _context.SaveChangesAsync();
-
-    return Ok(new { token = sessionToken, profile = player }); // Return verified user profile data to Godot
+    return Ok(player); // Safely returns the database values to Godot
   }
 
   [HttpPut("sync")]
@@ -96,10 +111,20 @@ public class PlayerController : ControllerBase
 
     var player = await _context.Players.FirstOrDefaultAsync(p => p.email == session.email);
     if (player == null) return NotFound();
-
     player.name = request.name;
     player.money = request.money;
     await _context.SaveChangesAsync();
     return Ok(player);
+  }
+
+  [HttpPost("logout")]
+  public async Task<IActionResult> Logout([FromHeader(Name = "Authorization")] string token)
+  {
+      var session = await _context.PlayerSessions.FirstOrDefaultAsync(s => s.token == token);
+      if (session != null) {
+          _context.PlayerSessions.Remove(session);
+          await _context.SaveChangesAsync();
+      }
+      return Ok(new { message = "Logged out successfully." });
   }
 }
