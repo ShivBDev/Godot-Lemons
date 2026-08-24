@@ -1,8 +1,10 @@
 docker run
---name godot-lemon-postgres     // docker convenient name
+--name godot-lemons-postgres     // docker convenient name
 -e POSTGRES_USER=admin          // master username for db
 -e POSTGRES_PASSWORD=[HIDDEN]   // 
--e POSTGRES_DB=godot_lemon_db   // postgres db name
+-e POSTGRES_DB=godot_lemons_db   // postgres db name
 -p 5432:5432                    // port mapping, localPort:dockerPort
 -d                              // run detached (frees up terminal)
 postgres:18                     // postgres version
+
+docker run --name godot-lemons-postgres -e POSTGRES_USER=admin -e POSTGRES_PASSWORD=[HIDDEN] -e POSTGRES_DB=godot_lemons_db -p 5432:5432 -d postgres:18

@@ -24,7 +24,7 @@ namespace Backend.Migrations
 
             modelBuilder.Entity("Backend.Models.OtpVerification", b =>
                 {
-                    b.Property<string>("email")
+                    b.Property<string>("emailHash")
                         .HasColumnType("text");
 
                     b.Property<string>("codeHash")
@@ -34,14 +34,14 @@ namespace Backend.Migrations
                     b.Property<DateTime>("expiresAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.HasKey("email");
+                    b.HasKey("emailHash");
 
                     b.ToTable("OtpCodes");
                 });
 
             modelBuilder.Entity("Backend.Models.PlayerProfileObj", b =>
                 {
-                    b.Property<string>("email")
+                    b.Property<string>("emailHash")
                         .HasColumnType("text");
 
                     b.Property<int>("money")
@@ -52,24 +52,24 @@ namespace Backend.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
-                    b.HasKey("email");
+                    b.HasKey("emailHash");
 
                     b.ToTable("Players");
                 });
 
             modelBuilder.Entity("Backend.Models.PlayerSession", b =>
                 {
-                    b.Property<string>("token")
+                    b.Property<string>("tokenHash")
                         .HasColumnType("text");
 
-                    b.Property<string>("email")
+                    b.Property<string>("emailHash")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<DateTime>("expiresAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.HasKey("token");
+                    b.HasKey("tokenHash");
 
                     b.ToTable("PlayerSessions");
                 });

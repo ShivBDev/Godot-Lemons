@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Backend.Data;
+using Backend.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -8,7 +9,9 @@ builder.Services.AddControllers();
 builder.Services.AddDbContext<AppDbContext>(options =>
   options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// ENABLE CORS: Allow local applications (like Godot) to read API data safely
+// Register the background service for cleaning up expired sessions
+builder.Services.AddHostedService<SessionCleanupService>();
+// enable Cors: Allow local applications (like Godot) to read API data safely
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowGodot", policy =>

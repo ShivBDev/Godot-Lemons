@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Backend.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialEmailAuthSchema : Migration
+    public partial class InitialSecureSchema : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -15,27 +15,39 @@ namespace Backend.Migrations
                 name: "OtpCodes",
                 columns: table => new
                 {
-                    email = table.Column<string>(type: "text", nullable: false),
+                    emailHash = table.Column<string>(type: "text", nullable: false),
                     codeHash = table.Column<string>(type: "text", nullable: false),
                     expiresAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_OtpCodes", x => x.email);
+                    table.PrimaryKey("PK_OtpCodes", x => x.emailHash);
                 });
 
             migrationBuilder.CreateTable(
                 name: "Players",
                 columns: table => new
                 {
-                    email = table.Column<string>(type: "text", nullable: false),
+                    emailHash = table.Column<string>(type: "text", nullable: false),
                     name = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    money = table.Column<int>(type: "integer", nullable: false),
-                    isVerified = table.Column<bool>(type: "boolean", nullable: false)
+                    money = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Players", x => x.email);
+                    table.PrimaryKey("PK_Players", x => x.emailHash);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "PlayerSessions",
+                columns: table => new
+                {
+                    tokenHash = table.Column<string>(type: "text", nullable: false),
+                    emailHash = table.Column<string>(type: "text", nullable: false),
+                    expiresAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_PlayerSessions", x => x.tokenHash);
                 });
         }
 
@@ -47,6 +59,9 @@ namespace Backend.Migrations
 
             migrationBuilder.DropTable(
                 name: "Players");
+
+            migrationBuilder.DropTable(
+                name: "PlayerSessions");
         }
     }
 }

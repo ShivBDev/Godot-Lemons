@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Backend.Models;
 using Backend.Data;
 using Backend.Dtos;
+using Backend.Utils;
 
 namespace Backend.Controllers;
 
@@ -22,25 +23,27 @@ public class PlayerController : ControllerBase
   {
     if (string.IsNullOrWhiteSpace(request.email)) { return BadRequest(new { message = "Email cannot be empty." }); }
 
-    var player = await _context.Players.FirstOrDefaultAsync(p => p.email == request.email);
-    
+    string emailHash = SecurityUtils.HashEmail(request.email);
+    var player = await _context.Players.FirstOrDefaultAsync(p => p.emailHash == emailHash);
+
     if (player == null) { // Register unverified user
       player = new PlayerProfileObj {
-        email = request.email,
+        emailHash = emailHash,
         name = "New Player",
         money = 100,
       };
       _context.Players.Add(player);
     }
     // Generate MOCK OTP code
-    string mockOtp = "123456"; 
+    string mockOtp = "123456";
+    string otpHash = SecurityUtils.ComputeSha256(mockOtp);
     // only let one otp code be valid per email
-    var existingOtp = await _context.OtpCodes.FirstOrDefaultAsync(o => o.email == request.email);
+    var existingOtp = await _context.OtpCodes.FirstOrDefaultAsync(o => o.emailHash == emailHash);
     if (existingOtp != null) _context.OtpCodes.Remove(existingOtp);
 
     _context.OtpCodes.Add(new OtpVerification {
-      email = request.email,
-      codeHash = mockOtp, // Ideally hash this value in production
+      emailHash = emailHash,
+      codeHash = otpHash, // Ideally hash this value in production
       expiresAt = DateTime.UtcNow.AddMinutes(15)
     });
 
@@ -49,30 +52,38 @@ public class PlayerController : ControllerBase
     // TODO: Call an email service provider here to send mockOtp to request.email
     Console.WriteLine($"[EMAIL SENT] OTP to {request.email} is {mockOtp}");
 
-    return Ok(new { message = "OTP generated successfully.", email = player.email });
+    return Ok(new { message = "OTP generated successfully.", email = request.email });
   }
 
   [HttpPost("verify-otp")]
   public async Task<IActionResult> VerifyOtp([FromBody] VerifyOtpRequest request)
   {
-    var otpRecord = await _context.OtpCodes.FirstOrDefaultAsync(o => o.email == request.email);
-    if (otpRecord == null || otpRecord.codeHash != request.code || otpRecord.expiresAt < DateTime.UtcNow) {
+    string emailHash = SecurityUtils.HashEmail(request.email);
+    string targetOtpHash = SecurityUtils.ComputeSha256(request.code);
+
+    var otpRecord = await _context.OtpCodes.FirstOrDefaultAsync(o => o.emailHash == emailHash);
+    if (otpRecord == null || otpRecord.codeHash != targetOtpHash || otpRecord.expiresAt < DateTime.UtcNow) {
         return BadRequest(new { message = "Invalid or expired one-time passcode." });
     }
-    var player = await _context.Players.FirstOrDefaultAsync(p => p.email == request.email);
+    var player = await _context.Players.FirstOrDefaultAsync(p => p.emailHash == emailHash);
     if (player == null) return NotFound(new { message = "Player profile missing." });
 
     _context.OtpCodes.Remove(otpRecord); // Consume code
-    string sessionToken = Guid.NewGuid().ToString();
+
+    string rawSessionToken = Guid.NewGuid().ToString();
+    string sessionToken = SecurityUtils.ComputeSha256(rawSessionToken); // Hash the token for storage
 
     // Save Session
     _context.PlayerSessions.Add(new PlayerSession {
-        token = sessionToken,
-        email = request.email,
+        tokenHash = sessionToken,
+        emailHash = emailHash,
         expiresAt = DateTime.UtcNow.AddDays(30)
     });
     await _context.SaveChangesAsync();
-    return Ok(new { token = sessionToken, profile = player }); // Return verified user profile data to Godot
+    return Ok(new { 
+          token = rawSessionToken, 
+          profile = new { email = request.email, name = player.name, money = player.money } 
+      });
   }
 
   [HttpGet("profile")]
@@ -80,17 +91,18 @@ public class PlayerController : ControllerBase
   {
     if (string.IsNullOrEmpty(token)) return Unauthorized(new { message = "Missing token." });
 
-    var session = await _context.PlayerSessions.FirstOrDefaultAsync(s => s.token == token);
+    string tokenHash = SecurityUtils.ComputeSha256(token);
+    var session = await _context.PlayerSessions.FirstOrDefaultAsync(s => s.tokenHash == tokenHash);
     if (session == null || session.expiresAt < DateTime.UtcNow) {
       return Unauthorized(new { message = "Session expired or invalid." });
     }
-    // Slide the expiration window forward since they are active
+    // Slide expiration window since they are active
     session.expiresAt = DateTime.UtcNow.AddDays(30);
-    var player = await _context.Players.FirstOrDefaultAsync(p => p.email == session.email);
+    var player = await _context.Players.FirstOrDefaultAsync(p => p.emailHash == session.emailHash);
     if (player == null) return NotFound();
 
     await _context.SaveChangesAsync();
-    return Ok(player); // Safely returns the database values to Godot
+    return Ok(new { email = "Protected", name = player.name, money = player.money });
   }
 
   [HttpPut("sync")]
@@ -99,17 +111,18 @@ public class PlayerController : ControllerBase
     if (string.IsNullOrEmpty(token)) return Unauthorized(new { message = "Missing authentication token header." });
 
     // Validate the session token exists and hasn't expired yet
-    var session = await _context.PlayerSessions.FirstOrDefaultAsync(s => s.token == token);
+    string tokenHash = SecurityUtils.ComputeSha256(token);
+    var session = await _context.PlayerSessions.FirstOrDefaultAsync(s => s.tokenHash == tokenHash);
     if (session == null || session.expiresAt < DateTime.UtcNow) {
       if (session != null) {
-            _context.PlayerSessions.Remove(session); // Clean up expired row from database
-            await _context.SaveChangesAsync();
+        _context.PlayerSessions.Remove(session); // Clean up expired row from database
+        await _context.SaveChangesAsync();
       }
       return Unauthorized(new { message = "Session expired or invalid. Please sign in again." });
     }
     session.expiresAt = DateTime.UtcNow.AddDays(30); // Refresh session expiry
 
-    var player = await _context.Players.FirstOrDefaultAsync(p => p.email == session.email);
+    var player = await _context.Players.FirstOrDefaultAsync(p => p.emailHash == session.emailHash);
     if (player == null) return NotFound();
     player.name = request.name;
     player.money = request.money;
@@ -120,11 +133,12 @@ public class PlayerController : ControllerBase
   [HttpPost("logout")]
   public async Task<IActionResult> Logout([FromHeader(Name = "Authorization")] string token)
   {
-      var session = await _context.PlayerSessions.FirstOrDefaultAsync(s => s.token == token);
-      if (session != null) {
-          _context.PlayerSessions.Remove(session);
-          await _context.SaveChangesAsync();
-      }
-      return Ok(new { message = "Logged out successfully." });
+    string tokenHash = SecurityUtils.ComputeSha256(token);
+    var session = await _context.PlayerSessions.FirstOrDefaultAsync(s => s.tokenHash == tokenHash);
+    if (session != null) {
+      _context.PlayerSessions.Remove(session);
+      await _context.SaveChangesAsync();
+    }
+    return Ok(new { message = "Logged out successfully." });
   }
 }

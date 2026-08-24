@@ -13,8 +13,8 @@ public class AppDbContext : DbContext
   protected override void OnModelCreating(ModelBuilder modelBuilder)
   {
       // Tell PostgreSQL to use unique player id (pid) as Primary Key table constraint
-      modelBuilder.Entity<PlayerProfileObj>().HasKey(p => p.email);
-      modelBuilder.Entity<OtpVerification>().HasKey(o => o.email);
-      modelBuilder.Entity<PlayerSession>().HasKey(p => p.token);
+      modelBuilder.Entity<PlayerProfileObj>().HasKey(p => p.emailHash);
+      modelBuilder.Entity<OtpVerification>().HasKey(o => o.emailHash);
+      modelBuilder.Entity<PlayerSession>().HasKey(p => p.tokenHash);
   }
 }

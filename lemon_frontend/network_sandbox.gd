@@ -99,7 +99,6 @@ func _onFetchComplete(_result, _response_code, _headers, _body) -> void:
 	if _response_code == 200 and game_panel.visible == false:
 		_setNetworkStatus("User Profile Fetched!", MSG_CLR)
 		var json = JSON.parse_string(_body.get_string_from_utf8())
-		__email = json["email"]
 		__uName = json["name"]
 		__money = json["money"]
 		_updateUI()
