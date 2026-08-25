@@ -164,6 +164,10 @@ func _onLoginRegisterComplete(_result, _response_code, _headers, _body) -> void:
 		var json = JSON.parse_string(_body.get_string_from_utf8())
 		__email = json["email"]
 		_switchToPanel(otp_panel)
+	elif _response_code == 429:
+		# Catch the rate limit
+		var error_msg = "Too many login attempts. Please wait 1 minute."
+		_setNetworkStatus(error_msg, ERR_CLR)
 	else:
 		_setNetworkStatus("Authentication request rejected by server.", WRN_CLR)
 	login_button.disabled = false

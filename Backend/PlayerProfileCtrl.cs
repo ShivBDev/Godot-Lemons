@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
+using Microsoft.AspNetCore.RateLimiting;
 using Backend.Models;
 using Backend.Data;
 using Backend.Dtos;
@@ -17,13 +18,16 @@ public class PlayerController : ControllerBase
   private readonly AppDbContext _context;
   private readonly SecurityUtils _securityUtils;
   private readonly EmailService _emailService;
+  private readonly EncryptionUtils _encryptionUtils;
 
-  public PlayerController(AppDbContext context, SecurityUtils securityUtils, EmailService emailService) {
+  public PlayerController(AppDbContext context, SecurityUtils securityUtils, EmailService emailService, EncryptionUtils encryptionUtils) {
      _context = context;
      _securityUtils = securityUtils;
      _emailService = emailService;
+     _encryptionUtils = encryptionUtils;
   }
 
+  [EnableRateLimiting("StrictOtpLimit")] // NEW: Guard this endpoint with our policy rules!
   [HttpPost("login-or-register")]
   public async Task<IActionResult> LoginOrRegister([FromBody] LoginOrRegisterRequest request)
   {
@@ -35,7 +39,7 @@ public class PlayerController : ControllerBase
     if (player == null) { 
       player = new PlayerProfileObj {
         emailHash = emailHash,
-        name = "New Player",
+        name = _encryptionUtils.Encrypt("New Player"),
         money = 100,
       };
       _context.Players.Add(player);
@@ -92,9 +96,11 @@ public class PlayerController : ControllerBase
         expiresAt = DateTime.UtcNow.AddDays(30)
     });
     await _context.SaveChangesAsync();
+
+    string decryptedName = _encryptionUtils.Decrypt(player.name);
     return Ok(new { 
           token = rawSessionToken, 
-          profile = new { email = request.email, name = player.name, money = player.money } 
+          profile = new { email = request.email, name = decryptedName, money = player.money } 
       });
   }
 
@@ -114,7 +120,8 @@ public class PlayerController : ControllerBase
     if (player == null) return NotFound();
 
     await _context.SaveChangesAsync();
-    return Ok(new { email = "Protected", name = player.name, money = player.money });
+    string decryptedName = _encryptionUtils.Decrypt(player.name);
+    return Ok(new { email = "Protected", name = decryptedName, money = player.money });
   }
 
   [HttpPut("sync")]
@@ -136,7 +143,7 @@ public class PlayerController : ControllerBase
 
     var player = await _context.Players.FirstOrDefaultAsync(p => p.emailHash == session.emailHash);
     if (player == null) return NotFound();
-    player.name = request.name;
+    player.name = _encryptionUtils.Encrypt(request.name);
     player.money = request.money;
     await _context.SaveChangesAsync();
     return Ok(player);
