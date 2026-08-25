@@ -1,10 +1,12 @@
 // Controllers/PlayerController.cs
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Cryptography;
 using Backend.Models;
 using Backend.Data;
 using Backend.Dtos;
 using Backend.Utils;
+using Backend.Services; 
 
 namespace Backend.Controllers;
 
@@ -14,10 +16,12 @@ public class PlayerController : ControllerBase
 {
   private readonly AppDbContext _context;
   private readonly SecurityUtils _securityUtils;
+  private readonly EmailService _emailService;
 
-  public PlayerController(AppDbContext context, SecurityUtils securityUtils) {
+  public PlayerController(AppDbContext context, SecurityUtils securityUtils, EmailService emailService) {
      _context = context;
      _securityUtils = securityUtils;
+     _emailService = emailService;
   }
 
   [HttpPost("login-or-register")]
@@ -27,8 +31,8 @@ public class PlayerController : ControllerBase
 
     string emailHash = _securityUtils.HashEmail(request.email);
     var player = await _context.Players.FirstOrDefaultAsync(p => p.emailHash == emailHash);
-
-    if (player == null) { // Register unverified user
+    // Register unverified user
+    if (player == null) { 
       player = new PlayerProfileObj {
         emailHash = emailHash,
         name = "New Player",
@@ -36,9 +40,9 @@ public class PlayerController : ControllerBase
       };
       _context.Players.Add(player);
     }
-    // Generate MOCK OTP code
-    string mockOtp = "123456";
-    string otpHash = _securityUtils.ComputeSha256(mockOtp);
+    //Generate Otp
+    string secureRawOtp = RandomNumberGenerator.GetInt32(100000, 1000000).ToString();
+    string otpHash = _securityUtils.ComputeSha256(secureRawOtp);
     // only let one otp code be valid per email
     var existingOtp = await _context.OtpCodes.FirstOrDefaultAsync(o => o.emailHash == emailHash);
     if (existingOtp != null) _context.OtpCodes.Remove(existingOtp);
@@ -51,8 +55,14 @@ public class PlayerController : ControllerBase
 
     await _context.SaveChangesAsync();
     
-    // TODO: Call an email service provider here to send mockOtp to request.email
-    Console.WriteLine($"[EMAIL SENT] OTP to {request.email} is {mockOtp}");
+    try {
+      await _emailService.SendOtpEmailAsync(request.email, secureRawOtp);
+      Console.WriteLine($"[EMAIL SENT] Secure OTP dispatched to inbox.");
+    }
+    catch (Exception ex) {
+      Console.WriteLine($"[EMAIL CRASH] SMTP failed to deliver: {ex.Message}");
+      return StatusCode(500, new { message = "Failed to dispatch system verification email." });
+    }
 
     return Ok(new { message = "OTP generated successfully.", email = request.email });
   }

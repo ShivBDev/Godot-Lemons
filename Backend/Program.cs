@@ -9,8 +9,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddDbContext<AppDbContext>(options =>
   options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
 builder.Services.AddSingleton<SecurityUtils>();
-// Register the background service for cleaning up expired sessions
+builder.Services.AddSingleton<EmailService>();
 builder.Services.AddHostedService<SessionCleanupService>();
 // enable Cors: Allow local applications (like Godot) to read API data safely
 builder.Services.AddCors(options =>
