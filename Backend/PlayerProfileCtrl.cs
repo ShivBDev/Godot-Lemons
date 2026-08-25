@@ -13,9 +13,11 @@ namespace Backend.Controllers;
 public class PlayerController : ControllerBase
 {
   private readonly AppDbContext _context;
-  public PlayerController(AppDbContext context)
-  {
-    _context = context;
+  private readonly SecurityUtils _securityUtils;
+
+  public PlayerController(AppDbContext context, SecurityUtils securityUtils) {
+     _context = context;
+     _securityUtils = securityUtils;
   }
 
   [HttpPost("login-or-register")]
@@ -23,7 +25,7 @@ public class PlayerController : ControllerBase
   {
     if (string.IsNullOrWhiteSpace(request.email)) { return BadRequest(new { message = "Email cannot be empty." }); }
 
-    string emailHash = SecurityUtils.HashEmail(request.email);
+    string emailHash = _securityUtils.HashEmail(request.email);
     var player = await _context.Players.FirstOrDefaultAsync(p => p.emailHash == emailHash);
 
     if (player == null) { // Register unverified user
@@ -36,7 +38,7 @@ public class PlayerController : ControllerBase
     }
     // Generate MOCK OTP code
     string mockOtp = "123456";
-    string otpHash = SecurityUtils.ComputeSha256(mockOtp);
+    string otpHash = _securityUtils.ComputeSha256(mockOtp);
     // only let one otp code be valid per email
     var existingOtp = await _context.OtpCodes.FirstOrDefaultAsync(o => o.emailHash == emailHash);
     if (existingOtp != null) _context.OtpCodes.Remove(existingOtp);
@@ -58,8 +60,8 @@ public class PlayerController : ControllerBase
   [HttpPost("verify-otp")]
   public async Task<IActionResult> VerifyOtp([FromBody] VerifyOtpRequest request)
   {
-    string emailHash = SecurityUtils.HashEmail(request.email);
-    string targetOtpHash = SecurityUtils.ComputeSha256(request.code);
+    string emailHash = _securityUtils.HashEmail(request.email);
+    string targetOtpHash = _securityUtils.ComputeSha256(request.code);
 
     var otpRecord = await _context.OtpCodes.FirstOrDefaultAsync(o => o.emailHash == emailHash);
     if (otpRecord == null || otpRecord.codeHash != targetOtpHash || otpRecord.expiresAt < DateTime.UtcNow) {
@@ -71,7 +73,7 @@ public class PlayerController : ControllerBase
     _context.OtpCodes.Remove(otpRecord); // Consume code
 
     string rawSessionToken = Guid.NewGuid().ToString();
-    string sessionToken = SecurityUtils.ComputeSha256(rawSessionToken); // Hash the token for storage
+    string sessionToken = _securityUtils.ComputeSha256(rawSessionToken); // Hash the token for storage
 
     // Save Session
     _context.PlayerSessions.Add(new PlayerSession {
@@ -91,7 +93,7 @@ public class PlayerController : ControllerBase
   {
     if (string.IsNullOrEmpty(token)) return Unauthorized(new { message = "Missing token." });
 
-    string tokenHash = SecurityUtils.ComputeSha256(token);
+    string tokenHash = _securityUtils.ComputeSha256(token);
     var session = await _context.PlayerSessions.FirstOrDefaultAsync(s => s.tokenHash == tokenHash);
     if (session == null || session.expiresAt < DateTime.UtcNow) {
       return Unauthorized(new { message = "Session expired or invalid." });
@@ -111,7 +113,7 @@ public class PlayerController : ControllerBase
     if (string.IsNullOrEmpty(token)) return Unauthorized(new { message = "Missing authentication token header." });
 
     // Validate the session token exists and hasn't expired yet
-    string tokenHash = SecurityUtils.ComputeSha256(token);
+    string tokenHash = _securityUtils.ComputeSha256(token);
     var session = await _context.PlayerSessions.FirstOrDefaultAsync(s => s.tokenHash == tokenHash);
     if (session == null || session.expiresAt < DateTime.UtcNow) {
       if (session != null) {
@@ -133,7 +135,7 @@ public class PlayerController : ControllerBase
   [HttpPost("logout")]
   public async Task<IActionResult> Logout([FromHeader(Name = "Authorization")] string token)
   {
-    string tokenHash = SecurityUtils.ComputeSha256(token);
+    string tokenHash = _securityUtils.ComputeSha256(token);
     var session = await _context.PlayerSessions.FirstOrDefaultAsync(s => s.tokenHash == tokenHash);
     if (session != null) {
       _context.PlayerSessions.Remove(session);
