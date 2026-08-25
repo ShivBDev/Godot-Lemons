@@ -1,0 +1,44 @@
+services:
+  # CONTAINER A: THE POSTGRES DATABASE
+  godot-lemons-postgres:
+    image: postgres:18
+    container_name: godot-lemons-postgres
+    environment:
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=[DB_PASSWORD]
+      - POSTGRES_DB=godot_lemons_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_game_data:/var/lib/postgresql/ # CRITICAL: Keeps data from deleting when the container stops
+    networks:
+      - game-network # Put this container onto our private network path
+
+  # CONTAINER B: CUSTOM C# WEB API
+  game-backend-api:
+    build:
+      context: ./Backend # Tells Docker to look inside Backend folder...
+      dockerfile: Dockerfile # ...and execute the instructions inside the Dockerfile
+    container_name: godot-lemons-backend-api
+    ports:
+      - "5212:5212" # Maps port 5212 on local computer to port 5212 inside the API container
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      # Inside a Docker network, containers look up other containers using their defined service name
+      - ConnectionStrings__DefaultConnection=Host=godot-lemons-postgres;Database=godot_lemons_db;Username=admin;Password=[DB_PASSWORD]
+      - SecuritySettings__ServerPepper=[SERVER_PEPPER]
+      - SecuritySettings__AesKey=[AES_KEY]
+      - EmailSettings__SmtpUser=[SMTP_USER]
+      - EmailSettings__SmtpPass=[SMTP_PASS]
+    depends_on:
+      - godot-lemons-postgres # Ensures database fully starts BEFORE C# API tries to build or connect
+    networks:
+      - game-network
+
+# Setup persistent storage volumes
+volumes:
+  postgres_game_data:
+
+# Create network channel so API and Database can communicate securely
+networks:
+  game-network:

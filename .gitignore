@@ -1,3 +1,4 @@
 Backend/bin/
 Backend/obj/
 Backend/Properties/launchSettings.json
+docker-compose.yml

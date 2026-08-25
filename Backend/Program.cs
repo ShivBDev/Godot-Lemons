@@ -52,7 +52,7 @@ builder.Services.AddRateLimiter(options => {
 var app = builder.Build();
 app.UseRateLimiter();
 // setup https redir 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 // setup cors
 app.UseCors("AllowGodot");
 
