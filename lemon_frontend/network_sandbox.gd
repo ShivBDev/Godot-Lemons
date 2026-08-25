@@ -6,6 +6,7 @@ var __session_token: String = ""
 var __email : String = ""
 var __uName : String = ""
 var __money : int = 0
+var __networkBusy: bool = false
 # Panel Refs
 @onready var login_panel: VBoxContainer = $Panels/LoginPanel
 @onready var otp_panel: VBoxContainer = $Panels/OtpPanel
@@ -65,6 +66,19 @@ func _onEarnMoneyPressed() -> void:
 func _setNetworkStatus(msg:String, color:Color = Color.WHITE):
 	network_status.text = msg
 	network_status.add_theme_color_override("font_color", color)
+func _setNetworkLock(locked: bool) -> void:
+	__networkBusy = locked
+	var activePanel: VBoxContainer = null
+	if login_panel.visible: activePanel = login_panel
+	elif otp_panel.visible: activePanel = otp_panel
+	elif game_panel.visible: activePanel = game_panel
+	if not activePanel: return
+	# Recursively toggle every interactive child in the panel
+	for child in activePanel.get_children():
+		if child is Button:
+			child.disabled = locked
+		elif child is LineEdit:
+			child.editable = not locked
 
 # Save Data Functions
 ## Local Save functionality
@@ -104,12 +118,13 @@ func _onFetchComplete(_result, _response_code, _headers, _body) -> void:
 		_updateUI()
 		_switchToPanel(game_panel)
 		autosave_timer.start() # Safe to start autosaving now
-	elif _response_code == 401:
-		_setNetworkStatus("Saved session was invalid or expired! Log in Again.", ERR_CLR)
+	elif _response_code == 401 or _response_code == 404:
 		_clearLocalSession()
 		__session_token = ""
 		__email = ""
 		_switchToPanel(login_panel)
+		var networkErr: String = _parseServerError(_body)
+		_setNetworkStatus(networkErr, ERR_CLR)
 func _autoSaveTrigger() -> void:
 	_setNetworkStatus("Autosaving...", MSG_CLR)
 	_syncUserData()
@@ -127,11 +142,14 @@ func _syncUserData() -> void:
 func _onSyncComplete(_result, _response_code, _headers, _body) -> void:
 	if _response_code == 200:
 		_setNetworkStatus("Save verified by server.", MSG_CLR)
-	elif _response_code == 401:
-		_setNetworkStatus("Session invalidated. Returning to Login screen.", ERR_CLR)
+		return
+	if _response_code == 401 or _response_code == 404:
 		_clearLocalSession()
 		__session_token = ""
+		__email = ""
 		_switchToPanel(login_panel)
+	var networkErr: String = _parseServerError(_body)
+	_setNetworkStatus(networkErr, ERR_CLR)
 ## Logout
 func _onLogoutPressed() -> void:
 	_setNetworkStatus("Logging Out...", WRN_CLR)
@@ -147,43 +165,42 @@ func _onLogoutPressed() -> void:
 	login_email.text = ""
 	otp_code.text = ""
 	_switchToPanel(login_panel)
-
 #Auth
 ## Login
 func _onLoginPressed() -> void:
+	if __networkBusy: return
 	_setNetworkStatus("Logging in with email...", MSG_CLR)
 	if login_email.text.strip_edges() == "": return
-	login_button.disabled = true
+	_setNetworkLock(true)
 	var target_url = BASE_URL + "/player/login-or-register"
 	var headers = ["Content-Type: application/json"]
 	var payload = { "email": login_email.text.strip_edges() }
 	http_login_register.request(target_url, headers, HTTPClient.METHOD_POST, JSON.stringify(payload))
 func _onLoginRegisterComplete(_result, _response_code, _headers, _body) -> void:
+	_setNetworkLock(false)
 	if _response_code == 200:
 		_setNetworkStatus("Auth Request Accepted, Enter Code...", MSG_CLR)
 		var json = JSON.parse_string(_body.get_string_from_utf8())
 		__email = json["email"]
 		_switchToPanel(otp_panel)
-	elif _response_code == 429:
-		# Catch the rate limit
-		var error_msg = "Too many login attempts. Please wait 1 minute."
-		_setNetworkStatus(error_msg, ERR_CLR)
 	else:
-		_setNetworkStatus("Authentication request rejected by server.", WRN_CLR)
-	login_button.disabled = false
+		var networkErr: String = _parseServerError(_body)
+		_setNetworkStatus(networkErr, ERR_CLR)
 ## Otp
 func _onOtpSubmitPressed() -> void:
+	if __networkBusy: return
 	_setNetworkStatus("Submitting OTP...", MSG_CLR)
 	if otp_code.text.strip_edges() == "": return
-	otp_submit_button.disabled = true
+	_setNetworkLock(true)
 	var target_url = BASE_URL + "/player/verify-otp"
 	var headers = ["Content-Type: application/json"]
 	var payload = { "email": __email, "code": otp_code.text.strip_edges() }
 	http_verify.request(target_url, headers, HTTPClient.METHOD_POST, JSON.stringify(payload))
 func _onOtpVerifyComplete(_result, _response_code, _headers, _body) -> void:
+	_setNetworkLock(false)
 	if _response_code != 200:
-		_setNetworkStatus("Invalid OTP sequence.", ERR_CLR)
-		otp_submit_button.disabled = false
+		var networkErr: String = _parseServerError(_body)
+		_setNetworkStatus(networkErr, ERR_CLR)
 		return
 	_setNetworkStatus("OTP Response Verified!", MSG_CLR)
 	var json = JSON.parse_string(_body.get_string_from_utf8())
@@ -195,4 +212,13 @@ func _onOtpVerifyComplete(_result, _response_code, _headers, _body) -> void:
 	_updateUI()
 	_switchToPanel(game_panel)
 	autosave_timer.start()
-	otp_submit_button.disabled = false
+# Network Error Handling
+# Utility function to parse any server-side RFC 7807 error
+func _parseServerError(body: PackedByteArray) -> String:
+	var raw_text = body.get_string_from_utf8()
+	var json = JSON.parse_string(raw_text)
+	# Verify that the parsed object conforms to the expected contract signature
+	if json and json is Dictionary and json.has("detail"):
+		return json["detail"]
+	# Fallback if payload unreadable or corrupted
+	return "An unexpected communication fault was encountered."

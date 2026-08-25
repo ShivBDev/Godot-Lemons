@@ -4,6 +4,8 @@ An architectural proof-of-concept demonstrating a secure, decoupled full-stack l
 
 ## 🚀 Architectural Notes
 * **Privacy-First Cryptography:** Includes a multi-layered cryptographic strategy to shield data records from database dumps and compliance leaks (Blind indexing, AES-256 with distinct IVs, and SHA-256 session signatures).
+* **Unified API Error Contract (RFC 7807):** API error payloads use standard `ProblemDetailsResponse` contract. Godot client uses a single, centralized parsing function to ingest and handle any server-side validation or security exception.
+* **Automated Client UI Lockout State Machine:** Implements centralized, async network tracker within the Godot client. While HTTP data streams are active, input controls are frozen to eliminate double-click bugs or client-side value spam.
 * **IP-Partitioned Rate Limiting:** Fixed-window gateway middleware protects third-party SMTP email services from credential brute-forcing and bot spam.
 * **Autonomous Database Sweeping:** An asynchronous `.NET Hosted Service` background thread automatically purges abandoned OTP tokens and inactive sessions every 24 hours.
 * **Modern Container DevOps:** Configured for high-portability deployment leveraging multi-stage Docker builds and software-defined isolated sub-networks compliant with Postgres 18 data directory layouts.

@@ -44,7 +44,7 @@ builder.Services.AddRateLimiter(options => {
     context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
     context.HttpContext.Response.ContentType = "application/json";
     await context.HttpContext.Response.WriteAsync(
-      "{\"message\": \"Too many login attempts. Please wait 1 minute before trying again.\"}", 
+      "{\"title\": \"Too Many Requests\", \"status\": 429, \"detail\": \"Too many login attempts. Please wait 1 minute before trying again.\"}", 
       cancellationToken);
   };
 });

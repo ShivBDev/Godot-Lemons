@@ -31,7 +31,9 @@ public class PlayerController : ControllerBase
   [HttpPost("login-or-register")]
   public async Task<IActionResult> LoginOrRegister([FromBody] LoginOrRegisterRequest request)
   {
-    if (string.IsNullOrWhiteSpace(request.email)) { return BadRequest(new { message = "Email cannot be empty." }); }
+    if (string.IsNullOrWhiteSpace(request.email)) { 
+      return BadRequest(new ProblemDetailsResponse("Bad Request", 400, "Email cannot be empty."));
+    }
 
     string emailHash = _securityUtils.HashEmail(request.email);
     var player = await _context.Players.FirstOrDefaultAsync(p => p.emailHash == emailHash);
@@ -62,13 +64,12 @@ public class PlayerController : ControllerBase
     try {
       await _emailService.SendOtpEmailAsync(request.email, secureRawOtp);
       Console.WriteLine($"[EMAIL SENT] Secure OTP dispatched to inbox.");
+      return Ok(new { message = "OTP generated successfully.", email = request.email });
     }
     catch (Exception ex) {
       Console.WriteLine($"[EMAIL CRASH] SMTP failed to deliver: {ex.Message}");
-      return StatusCode(500, new { message = "Failed to dispatch system verification email." });
+      return StatusCode(500, new ProblemDetailsResponse("Internal Server Error", 500, "Failed to dispatch system verification email."));
     }
-
-    return Ok(new { message = "OTP generated successfully.", email = request.email });
   }
 
   [HttpPost("verify-otp")]
@@ -79,10 +80,10 @@ public class PlayerController : ControllerBase
 
     var otpRecord = await _context.OtpCodes.FirstOrDefaultAsync(o => o.emailHash == emailHash);
     if (otpRecord == null || otpRecord.codeHash != targetOtpHash || otpRecord.expiresAt < DateTime.UtcNow) {
-        return BadRequest(new { message = "Invalid or expired one-time passcode." });
+        return BadRequest(new ProblemDetailsResponse("Unauthorized Access", 400, "Invalid or expired one-time passcode."));
     }
     var player = await _context.Players.FirstOrDefaultAsync(p => p.emailHash == emailHash);
-    if (player == null) return NotFound(new { message = "Player profile missing." });
+    if (player == null) return NotFound(new ProblemDetailsResponse("Not Found", 404, "Player profile missing."));
 
     _context.OtpCodes.Remove(otpRecord); // Consume code
 
@@ -107,17 +108,19 @@ public class PlayerController : ControllerBase
   [HttpGet("profile")]
   public async Task<IActionResult> GetProfileFromToken([FromHeader(Name = "Authorization")] string token)
   {
-    if (string.IsNullOrEmpty(token)) return Unauthorized(new { message = "Missing token." });
+    if (string.IsNullOrEmpty(token)) {
+      return Unauthorized(new ProblemDetailsResponse("Unauthorized", 401, "Missing token."));
+    }
 
     string tokenHash = _securityUtils.ComputeSha256(token);
     var session = await _context.PlayerSessions.FirstOrDefaultAsync(s => s.tokenHash == tokenHash);
     if (session == null || session.expiresAt < DateTime.UtcNow) {
-      return Unauthorized(new { message = "Session expired or invalid." });
+      return Unauthorized(new ProblemDetailsResponse("Unauthorized", 401, "Session expired or invalid."));
     }
     // Slide expiration window since they are active
     session.expiresAt = DateTime.UtcNow.AddDays(30);
     var player = await _context.Players.FirstOrDefaultAsync(p => p.emailHash == session.emailHash);
-    if (player == null) return NotFound();
+    if (player == null) return NotFound(new ProblemDetailsResponse("Not Found", 404, "Player profile missing."));
 
     await _context.SaveChangesAsync();
     string decryptedName = _encryptionUtils.Decrypt(player.name);
@@ -127,7 +130,9 @@ public class PlayerController : ControllerBase
   [HttpPut("sync")]
   public async Task<IActionResult> SyncProfile([FromHeader(Name = "Authorization")] string token, [FromBody] PlayerSyncRequest request)
   {
-    if (string.IsNullOrEmpty(token)) return Unauthorized(new { message = "Missing authentication token header." });
+    if (string.IsNullOrEmpty(token)) {
+      return Unauthorized(new ProblemDetailsResponse("Unauthorized", 401, "Missing authentication token header."));
+    }
 
     // Validate the session token exists and hasn't expired yet
     string tokenHash = _securityUtils.ComputeSha256(token);
@@ -137,12 +142,14 @@ public class PlayerController : ControllerBase
         _context.PlayerSessions.Remove(session); // Clean up expired row from database
         await _context.SaveChangesAsync();
       }
-      return Unauthorized(new { message = "Session expired or invalid. Please sign in again." });
+      return Unauthorized(new ProblemDetailsResponse("Unauthorized", 401, "Session expired or invalid. Please sign in again."));
     }
     session.expiresAt = DateTime.UtcNow.AddDays(30); // Refresh session expiry
 
     var player = await _context.Players.FirstOrDefaultAsync(p => p.emailHash == session.emailHash);
-    if (player == null) return NotFound();
+    if (player == null) {
+      return NotFound(new ProblemDetailsResponse("Not Found", 404, "Player profile missing."));
+    }
     player.name = _encryptionUtils.Encrypt(request.name);
     player.money = request.money;
     await _context.SaveChangesAsync();
