@@ -1,8 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using System.Threading.RateLimiting;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Backend.Data;
 using Backend.Services;
 using Backend.Utils;
+using Backend.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,6 +12,16 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddDbContext<AppDbContext>(options =>
   options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+// Health Checks
+builder.Services.AddHealthChecks()
+  .AddNpgSql(builder.Configuration.GetConnectionString("DefaultConnection")!, name: "PostgreSQL-Cluster");
+builder.Services.AddSingleton<IHealthCheckPublisher, DbAlertPublisher>();
+builder.Services.Configure<HealthCheckPublisherOptions>(options =>
+{
+    options.Delay = TimeSpan.FromSeconds(10);     // Run the first check 10 seconds after boot
+    options.Period = TimeSpan.FromSeconds(30);    // Scan database health continuously every 30 seconds
+    options.Timeout = TimeSpan.FromSeconds(5);    // Crash check if database takes longer than 5 seconds to reply
+});
 
 builder.Services.AddSingleton<SecurityUtils>();
 builder.Services.AddSingleton<EmailService>();
@@ -57,6 +69,7 @@ app.UseRateLimiter();
 app.UseCors("AllowGodot");
 
 app.UseAuthorization();
+app.MapHealthChecks("/health");
 app.MapControllers();
 
 // Apply pending migrations on startup

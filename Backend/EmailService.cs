@@ -48,4 +48,29 @@ public class EmailService
         // Fire the email network stream asynchronously in the background
         await smtp.SendMailAsync(message);
     }
+
+    public async Task SendCustomSystemEmailAsync(string targetEmail, string customSubject, string htmlBody)
+    {
+        var fromAddress = new MailAddress(_smtpUser, "System Monitoring Engine");
+        var toAddress = new MailAddress(targetEmail);
+        using var smtp = new SmtpClient
+        {
+            Host = "smtp.gmail.com",
+            Port = 587,
+            EnableSsl = true,
+            DeliveryMethod = SmtpDeliveryMethod.Network,
+            UseDefaultCredentials = false,
+            Credentials = new NetworkCredential(fromAddress.Address, _smtpPass)
+        };
+
+        using var message = new MailMessage(fromAddress, toAddress)
+        {
+            Subject = customSubject,
+            Body = htmlBody,
+            IsBodyHtml = true
+        };
+
+        await smtp.SendMailAsync(message);
+    }
+
 }

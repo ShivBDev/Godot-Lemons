@@ -30,6 +30,7 @@ services:
       - SecuritySettings__AesKey=[AES_KEY]
       - EmailSettings__SmtpUser=[SMTP_USER]
       - EmailSettings__SmtpPass=[SMTP_PASS]
+      - EmailSettings__AdminAlertEmail=[ADMIN_ALERT_EMAIL]
     depends_on:
       - godot-lemons-postgres # Ensures database fully starts BEFORE C# API tries to build or connect
     networks:

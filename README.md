@@ -4,6 +4,8 @@ An architectural proof-of-concept demonstrating a secure, decoupled full-stack l
 
 ## 🚀 Architectural Notes
 * **Privacy-First Cryptography:** Includes a multi-layered cryptographic strategy to shield data records from database dumps and compliance leaks (Blind indexing, AES-256 with distinct IVs, and SHA-256 session signatures).
+* **Live Infrastructure Monitoring:** Integrates native ASP.NET Core Health Checks mapping diagnostic daemon route to `/health`. If underlying data channel or database socket is severed, node instantly signals structural health degradation.
+* **Autonomous Outage Incident Alerting:** Features a background `IHealthCheckPublisher` engine that tracks system stability  every few seconds. If a critical service drops offline, the system immediately dispatches detailed crash information to the administration team's email.
 * **Unified API Error Contract (RFC 7807):** API error payloads use standard `ProblemDetailsResponse` contract. Godot client uses a single, centralized parsing function to ingest and handle any server-side validation or security exception.
 * **Automated Client UI Lockout State Machine:** Implements centralized, async network tracker within the Godot client. While HTTP data streams are active, input controls are frozen to eliminate double-click bugs or client-side value spam.
 * **IP-Partitioned Rate Limiting:** Fixed-window gateway middleware protects third-party SMTP email services from credential brute-forcing and bot spam.
