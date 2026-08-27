@@ -13,8 +13,7 @@ namespace Backend.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class PlayerController : ControllerBase
-{
+public class PlayerController : ControllerBase {
   private readonly AppDbContext _context;
   private readonly SecurityUtils _securityUtils;
   private readonly EmailService _emailService;
@@ -27,10 +26,9 @@ public class PlayerController : ControllerBase
      _encryptionUtils = encryptionUtils;
   }
 
-  [EnableRateLimiting("StrictOtpLimit")] // NEW: Guard this endpoint with our policy rules!
+  [EnableRateLimiting("StrictOtpLimit")]
   [HttpPost("login-or-register")]
-  public async Task<IActionResult> LoginOrRegister([FromBody] LoginOrRegisterRequest request)
-  {
+  public async Task<IActionResult> LoginOrRegister([FromBody] LoginOrRegisterRequest request) {
     if (string.IsNullOrWhiteSpace(request.email)) { 
       return BadRequest(new ProblemDetailsResponse("Bad Request", 400, "Email cannot be empty."));
     }
@@ -73,8 +71,7 @@ public class PlayerController : ControllerBase
   }
 
   [HttpPost("verify-otp")]
-  public async Task<IActionResult> VerifyOtp([FromBody] VerifyOtpRequest request)
-  {
+  public async Task<IActionResult> VerifyOtp([FromBody] VerifyOtpRequest request) {
     string emailHash = _securityUtils.HashEmail(request.email);
     string targetOtpHash = _securityUtils.ComputeSha256(request.code);
 
@@ -106,8 +103,7 @@ public class PlayerController : ControllerBase
   }
 
   [HttpGet("profile")]
-  public async Task<IActionResult> GetProfileFromToken([FromHeader(Name = "Authorization")] string token)
-  {
+  public async Task<IActionResult> GetProfileFromToken([FromHeader(Name = "Authorization")] string token) {
     if (string.IsNullOrEmpty(token)) {
       return Unauthorized(new ProblemDetailsResponse("Unauthorized", 401, "Missing token."));
     }
@@ -128,8 +124,7 @@ public class PlayerController : ControllerBase
   }
 
   [HttpPut("sync")]
-  public async Task<IActionResult> SyncProfile([FromHeader(Name = "Authorization")] string token, [FromBody] PlayerSyncRequest request)
-  {
+  public async Task<IActionResult> SyncProfile([FromHeader(Name = "Authorization")] string token, [FromBody] PlayerSyncRequest request) {
     if (string.IsNullOrEmpty(token)) {
       return Unauthorized(new ProblemDetailsResponse("Unauthorized", 401, "Missing authentication token header."));
     }
@@ -157,8 +152,7 @@ public class PlayerController : ControllerBase
   }
 
   [HttpPost("logout")]
-  public async Task<IActionResult> Logout([FromHeader(Name = "Authorization")] string token)
-  {
+  public async Task<IActionResult> Logout([FromHeader(Name = "Authorization")] string token) {
     string tokenHash = _securityUtils.ComputeSha256(token);
     var session = await _context.PlayerSessions.FirstOrDefaultAsync(s => s.tokenHash == tokenHash);
     if (session != null) {
