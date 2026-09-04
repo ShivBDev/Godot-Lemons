@@ -1,0 +1,167 @@
+[gd_scene format=3 uid="uid://d3pb86mio8bc4"]
+
+[ext_resource type="Script" uid="uid://rl2qbemx22c0" path="res://GameController.gd" id="1_j86yo"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_t2uw5"]
+font_size = 80
+font_color = Color(0, 0, 0, 1)
+
+[sub_resource type="LabelSettings" id="LabelSettings_njuqu"]
+font_size = 40
+font_color = Color(0, 0, 0, 1)
+
+[sub_resource type="LabelSettings" id="LabelSettings_lv54m"]
+font_size = 32
+font_color = Color(0, 0, 0, 1)
+
+[sub_resource type="LabelSettings" id="LabelSettings_fw8nd"]
+font_size = 32
+font_color = Color(0, 0, 0, 1)
+
+[sub_resource type="LabelSettings" id="LabelSettings_j86yo"]
+font_size = 24
+font_color = Color(0, 0, 0, 1)
+
+[node name="GameCtrl" type="Node" unique_id=1490560837]
+script = ExtResource("1_j86yo")
+
+[node name="BG" type="ColorRect" parent="." unique_id=494950054]
+custom_minimum_size = Vector2(720, 1280)
+offset_right = 720.0
+offset_bottom = 1280.0
+color = Color(0.99614185, 0.9999997, 0.53877085, 1)
+
+[node name="LoginPanel" type="Control" parent="." unique_id=37850031]
+visible = false
+custom_minimum_size = Vector2(720, 1280)
+layout_mode = 3
+anchors_preset = 0
+offset_right = 720.0
+offset_bottom = 1280.0
+
+[node name="LoginLabel" type="Label" parent="LoginPanel" unique_id=192719785]
+custom_minimum_size = Vector2(720, 150)
+layout_mode = 0
+offset_right = 720.0
+offset_bottom = 150.0
+text = "Login"
+label_settings = SubResource("LabelSettings_t2uw5")
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="EmailLabel" type="Label" parent="LoginPanel" unique_id=625513637]
+custom_minimum_size = Vector2(720, 100)
+layout_mode = 0
+offset_top = 400.0
+offset_right = 720.0
+offset_bottom = 550.0
+text = "Login With Email"
+label_settings = SubResource("LabelSettings_njuqu")
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="EmailField" type="LineEdit" parent="LoginPanel" unique_id=209378073]
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 0
+offset_top = 550.0
+offset_right = 720.0
+offset_bottom = 600.0
+placeholder_text = "Enter Your Email..."
+alignment = 1
+
+[node name="LoginButton" type="Button" parent="LoginPanel" unique_id=1578172928]
+custom_minimum_size = Vector2(400, 60)
+layout_mode = 0
+offset_left = 160.0
+offset_top = 1000.0
+offset_right = 560.0
+offset_bottom = 1060.0
+text = "Log In"
+
+[node name="OtpPanel" type="Control" parent="." unique_id=696622700]
+visible = false
+custom_minimum_size = Vector2(720, 1280)
+layout_mode = 3
+anchors_preset = 0
+offset_right = 720.0
+offset_bottom = 1280.0
+
+[node name="LoginLabel" type="Label" parent="OtpPanel" unique_id=2139787411]
+custom_minimum_size = Vector2(720, 150)
+layout_mode = 0
+offset_right = 720.0
+offset_bottom = 150.0
+text = "Login"
+label_settings = SubResource("LabelSettings_t2uw5")
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="OtpLabel" type="Label" parent="OtpPanel" unique_id=295534475]
+custom_minimum_size = Vector2(720, 100)
+layout_mode = 0
+offset_top = 400.0
+offset_right = 720.0
+offset_bottom = 550.0
+text = "Enter your 6-digit One-Time Passcode"
+label_settings = SubResource("LabelSettings_lv54m")
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="OtpField" type="LineEdit" parent="OtpPanel" unique_id=729310290]
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 0
+offset_top = 550.0
+offset_right = 720.0
+offset_bottom = 600.0
+placeholder_text = "Enter OTP Code"
+alignment = 1
+
+[node name="OtpSubmitButton" type="Button" parent="OtpPanel" unique_id=379911999]
+custom_minimum_size = Vector2(450, 60)
+layout_mode = 0
+offset_left = 135.0
+offset_top = 900.0
+offset_right = 585.0
+offset_bottom = 960.0
+text = "Submit One-Time Passcode"
+
+[node name="BackToLoginButton" type="Button" parent="OtpPanel" unique_id=1940175161]
+custom_minimum_size = Vector2(320, 60)
+layout_mode = 0
+offset_left = 200.0
+offset_top = 1100.0
+offset_right = 520.0
+offset_bottom = 1160.0
+text = "Back to Log In."
+
+[node name="GamePanel" type="Control" parent="." unique_id=647420713]
+custom_minimum_size = Vector2(720, 1280)
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="Label" type="Label" parent="GamePanel" unique_id=1514493296]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 23.0
+text = "Player Stats:"
+label_settings = SubResource("LabelSettings_fw8nd")
+
+[node name="PlayerDataLabel" type="Label" parent="GamePanel" unique_id=1550844478]
+custom_minimum_size = Vector2(720, 500)
+layout_mode = 0
+offset_top = 50.0
+offset_right = 720.0
+offset_bottom = 550.0
+text = "Place Holder Text"
+label_settings = SubResource("LabelSettings_j86yo")
+
+[node name="LogoutButton" type="Button" parent="GamePanel" unique_id=820284982]
+custom_minimum_size = Vector2(320, 50)
+layout_mode = 0
+offset_left = 200.0
+offset_top = 1200.0
+offset_right = 520.0
+offset_bottom = 1250.0
+text = "Log Out"

@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://dnw4r7p02oybn"]
 
-[ext_resource type="Script" uid="uid://br27lc7v67lau" path="res://network_sandbox.gd" id="1_reudo"]
+[ext_resource type="Script" uid="uid://br27lc7v67lau" path="res://Sandbox/network_sandbox.gd" id="1_reudo"]
 
 [sub_resource type="LabelSettings" id="LabelSettings_t2uw5"]
 font_size = 24

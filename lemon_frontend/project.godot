@@ -11,9 +11,14 @@ config_version=5
 [application]
 
 config/name="Lemon_Frontend"
-run/main_scene="uid://dnw4r7p02oybn"
+run/main_scene="uid://d3pb86mio8bc4"
 config/features=PackedStringArray("4.7", "Mobile")
-config/icon="res://icon.svg"
+config/icon="res://Sandbox/icon.svg"
+
+[autoload]
+
+GameNet="*uid://bpfm4b6y6y1ej"
+PlayerData="*uid://3cpctkrvy6me"
 
 [display]
 

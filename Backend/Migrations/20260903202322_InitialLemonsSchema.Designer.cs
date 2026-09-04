@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Backend.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260824211859_InitialSecureSchema")]
-    partial class InitialSecureSchema
+    [Migration("20260903202322_InitialLemonsSchema")]
+    partial class InitialLemonsSchema
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -47,13 +47,37 @@ namespace Backend.Migrations
                     b.Property<string>("emailHash")
                         .HasColumnType("text");
 
-                    b.Property<int>("money")
+                    b.Property<int>("dayCount")
                         .HasColumnType("integer");
+
+                    b.Property<int>("iceStock")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("lemonStock")
+                        .HasColumnType("integer");
+
+                    b.Property<float>("money")
+                        .HasColumnType("real");
 
                     b.Property<string>("name")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
+
+                    b.Property<int>("recipeIce")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("recipeLemons")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("recipeSugar")
+                        .HasColumnType("integer");
+
+                    b.Property<float>("salePrice")
+                        .HasColumnType("real");
+
+                    b.Property<int>("sugarStock")
+                        .HasColumnType("integer");
 
                     b.HasKey("emailHash");
 

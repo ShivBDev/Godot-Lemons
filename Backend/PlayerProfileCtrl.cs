@@ -39,8 +39,7 @@ public class PlayerController : ControllerBase {
     if (player == null) { 
       player = new PlayerProfileObj {
         emailHash = emailHash,
-        name = _encryptionUtils.Encrypt("New Player"),
-        money = 100,
+        name = _encryptionUtils.Encrypt("New Player")
       };
       _context.Players.Add(player);
     }
@@ -95,10 +94,9 @@ public class PlayerController : ControllerBase {
     });
     await _context.SaveChangesAsync();
 
-    string decryptedName = _encryptionUtils.Decrypt(player.name);
     return Ok(new { 
           token = rawSessionToken, 
-          profile = new { email = request.email, name = decryptedName, money = player.money } 
+          profile = player.ToResponsePayload(_encryptionUtils) 
       });
   }
 
@@ -119,8 +117,10 @@ public class PlayerController : ControllerBase {
     if (player == null) return NotFound(new ProblemDetailsResponse("Not Found", 404, "Player profile missing."));
 
     await _context.SaveChangesAsync();
-    string decryptedName = _encryptionUtils.Decrypt(player.name);
-    return Ok(new { email = "Protected", name = decryptedName, money = player.money });
+    return Ok(new {
+      email = "Protected",
+      profile = player.ToResponsePayload(_encryptionUtils)
+    });
   }
 
   [HttpPut("sync")]
@@ -145,8 +145,7 @@ public class PlayerController : ControllerBase {
     if (player == null) {
       return NotFound(new ProblemDetailsResponse("Not Found", 404, "Player profile missing."));
     }
-    player.name = _encryptionUtils.Encrypt(request.name);
-    player.money = request.money;
+    player.ApplySyncUpdate(request, _encryptionUtils);
     await _context.SaveChangesAsync();
     return Ok(player);
   }

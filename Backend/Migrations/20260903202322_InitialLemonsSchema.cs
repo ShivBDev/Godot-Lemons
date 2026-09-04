@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Backend.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialSecureSchema : Migration
+    public partial class InitialLemonsSchema : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -30,7 +30,15 @@ namespace Backend.Migrations
                 {
                     emailHash = table.Column<string>(type: "text", nullable: false),
                     name = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    money = table.Column<int>(type: "integer", nullable: false)
+                    money = table.Column<float>(type: "real", nullable: false),
+                    dayCount = table.Column<int>(type: "integer", nullable: false),
+                    lemonStock = table.Column<int>(type: "integer", nullable: false),
+                    sugarStock = table.Column<int>(type: "integer", nullable: false),
+                    iceStock = table.Column<int>(type: "integer", nullable: false),
+                    recipeLemons = table.Column<int>(type: "integer", nullable: false),
+                    recipeSugar = table.Column<int>(type: "integer", nullable: false),
+                    recipeIce = table.Column<int>(type: "integer", nullable: false),
+                    salePrice = table.Column<float>(type: "real", nullable: false)
                 },
                 constraints: table =>
                 {
