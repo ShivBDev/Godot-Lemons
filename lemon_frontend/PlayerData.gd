@@ -32,7 +32,6 @@ func update_from_server_payload(profile_dict: Dictionary) -> void:
 	profile_updated.emit()
 
 func serialize_for_sync() -> Dictionary:
-	# Packs active tycoon to match C# DTO contracts
 	return {
 		"name": username,
 		"state": {
