@@ -28,5 +28,5 @@ func _on_new_username_submitted():
 		requestedUsername.length() > 20:
 			return
 	PlayerData.username = requestedUsername
-	GameNet.sync_user_data()
+	GameNet.sync_user_data(true)
 	PlayerData.profile_updated.emit()

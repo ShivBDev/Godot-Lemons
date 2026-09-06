@@ -18,6 +18,7 @@ var http_login: HTTPRequest
 var http_verify: HTTPRequest
 var http_fetch: HTTPRequest
 var http_sync: HTTPRequest
+var force_immediate_sync_refire: bool = false
 
 #Utils
 func _gameNetPrint(msg : String):
@@ -97,11 +98,14 @@ func _on_fetch_complete(_result, _response_code, _headers, _body) -> void:
 		_clear_local_session()
 		login_status = LOGIN_STATUS.logged_out
 # Networking Save Sync
-func sync_user_data() -> void:
+func sync_user_data(forceRefire: bool = false) -> void:
 	_gameNetPrint("Syncing User Data...")
 	if session_token == "": return
 	var headers = ["Content-Type: application/json", "Authorization: " + session_token]
 	var payload = PlayerData.serialize_for_sync()
+	if http_sync.get_http_client_status() == HTTPClient.STATUS_REQUESTING:
+		force_immediate_sync_refire = forceRefire
+		return
 	http_sync.request(BASE_URL + "/player/sync", headers, HTTPClient.METHOD_PUT, JSON.stringify(payload))
 func _on_sync_complete(_result, _response_code, _headers, _body) -> void:
 	if _response_code == 200:
@@ -114,6 +118,8 @@ func _on_sync_complete(_result, _response_code, _headers, _body) -> void:
 	else:
 		_gameNetPrint("Save Failed, Unknown Error: %d" % _response_code)
 		sync_completed.emit(false, _parse_server_error(_body))
+	if force_immediate_sync_refire:
+		sync_user_data()
 # Networking Save Login/Auth
 ## Login
 func request_email_otp(email: String) -> void:

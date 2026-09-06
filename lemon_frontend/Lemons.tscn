@@ -5,6 +5,7 @@
 [ext_resource type="Script" uid="uid://cq60olaox1l8j" path="res://SettingsMenu.gd" id="3_522g8"]
 [ext_resource type="Script" uid="uid://cuji38rmb5i7i" path="res://MenuBar.gd" id="3_egube"]
 [ext_resource type="Script" uid="uid://dakfv1llfdo4u" path="res://RecipeMenu.gd" id="5_1c78g"]
+[ext_resource type="Script" uid="uid://do4pb4e4vex7y" path="res://ShopMenu.gd" id="5_12p6v"]
 
 [sub_resource type="LabelSettings" id="LabelSettings_t2uw5"]
 font_size = 80
@@ -29,8 +30,24 @@ font_color = Color(0, 0, 0, 1)
 [sub_resource type="LabelSettings" id="LabelSettings_qk17a"]
 font_size = 20
 
+[sub_resource type="LabelSettings" id="LabelSettings_8dd8l"]
+font_size = 28
+font_color = Color(0, 0, 0, 1)
+
+[sub_resource type="LabelSettings" id="LabelSettings_1c78g"]
+font_size = 24
+font_color = Color(0, 0, 0, 1)
+
+[sub_resource type="LabelSettings" id="LabelSettings_1gxwb"]
+font_size = 24
+font_color = Color(0, 0, 0, 1)
+
 [sub_resource type="LabelSettings" id="LabelSettings_swyiq"]
 font_size = 32
+font_color = Color(0, 0, 0, 1)
+
+[sub_resource type="LabelSettings" id="LabelSettings_64573"]
+font_size = 20
 font_color = Color(0, 0, 0, 1)
 
 [sub_resource type="LabelSettings" id="LabelSettings_d56af"]
@@ -39,10 +56,6 @@ font_color = Color(0, 0, 0, 1)
 
 [sub_resource type="LabelSettings" id="LabelSettings_qm2tb"]
 font_size = 24
-font_color = Color(0, 0, 0, 1)
-
-[sub_resource type="LabelSettings" id="LabelSettings_64573"]
-font_size = 20
 font_color = Color(0, 0, 0, 1)
 
 [node name="LoginControl" type="Node" unique_id=1490560837]
@@ -164,6 +177,14 @@ anchors_preset = 0
 offset_right = 40.0
 offset_bottom = 40.0
 script = ExtResource("2_522g8")
+
+[node name="DaySimulator" type="Node" parent="GamePanel" unique_id=982510860]
+
+[node name="StartDayButton" type="Button" parent="GamePanel/DaySimulator" unique_id=2038416365]
+offset_right = 8.0
+offset_bottom = 8.0
+
+[node name="AutoSave" type="Timer" parent="GamePanel" unique_id=655385413]
 
 [node name="Label" type="Label" parent="GamePanel" unique_id=1514493296]
 layout_mode = 0
@@ -289,11 +310,203 @@ max_length = 20
 
 [node name="ShopMenu" type="Control" parent="GamePanel/Menus" unique_id=893313510]
 visible = false
-custom_minimum_size = Vector2(720, 500)
+custom_minimum_size = Vector2(700, 500)
 anchors_preset = 0
+offset_left = 10.0
 offset_top = 730.0
+offset_right = 710.0
+offset_bottom = 1230.0
+script = ExtResource("5_12p6v")
+
+[node name="ShopLabel" type="Label" parent="GamePanel/Menus/ShopMenu" unique_id=1509147964]
+layout_mode = 0
 offset_right = 40.0
-offset_bottom = 770.0
+offset_bottom = 23.0
+text = "Buy Ingredients and Supplies"
+label_settings = SubResource("LabelSettings_8dd8l")
+
+[node name="Lemons" type="Label" parent="GamePanel/Menus/ShopMenu" unique_id=1664118738]
+layout_mode = 0
+offset_top = 86.0
+offset_right = 91.0
+offset_bottom = 120.0
+text = "Lemons"
+label_settings = SubResource("LabelSettings_1c78g")
+
+[node name="Stock" type="Label" parent="GamePanel/Menus/ShopMenu/Lemons" unique_id=1142415474]
+layout_mode = 0
+offset_left = 174.0
+offset_top = -1.0
+offset_right = 214.0
+offset_bottom = 33.0
+text = "0"
+label_settings = SubResource("LabelSettings_1gxwb")
+
+[node name="BuyS" type="Button" parent="GamePanel/Menus/ShopMenu/Lemons" unique_id=1139702050]
+layout_mode = 0
+offset_left = 280.0
+offset_top = -10.0
+offset_right = 405.0
+offset_bottom = 44.0
+text = "Buy 12 Lemons
+$4.50"
+
+[node name="BuyM" type="Button" parent="GamePanel/Menus/ShopMenu/Lemons" unique_id=930554753]
+layout_mode = 0
+offset_left = 423.0
+offset_top = -13.0
+offset_right = 483.0
+offset_bottom = 41.0
+text = "Buy 24 Lemons
+$7.50"
+
+[node name="BuyL" type="Button" parent="GamePanel/Menus/ShopMenu/Lemons" unique_id=1667408337]
+layout_mode = 0
+offset_left = 563.0
+offset_top = -12.0
+offset_right = 688.0
+offset_bottom = 42.0
+text = "Buy 48 Lemons
+$12.50
+"
+
+[node name="Sugar" type="Label" parent="GamePanel/Menus/ShopMenu" unique_id=380408457]
+layout_mode = 0
+offset_top = 187.0
+offset_right = 66.0
+offset_bottom = 221.0
+text = "Sugar"
+label_settings = SubResource("LabelSettings_1c78g")
+
+[node name="Stock" type="Label" parent="GamePanel/Menus/ShopMenu/Sugar" unique_id=262959855]
+layout_mode = 0
+offset_left = 171.0
+offset_top = 1.0
+offset_right = 211.0
+offset_bottom = 35.0
+text = "0"
+label_settings = SubResource("LabelSettings_1gxwb")
+
+[node name="BuyS" type="Button" parent="GamePanel/Menus/ShopMenu/Sugar" unique_id=1957190545]
+layout_mode = 0
+offset_left = 294.0
+offset_top = -9.0
+offset_right = 396.0
+offset_bottom = 45.0
+text = "Buy 12 Cups
+$4.80"
+
+[node name="BuyM" type="Button" parent="GamePanel/Menus/ShopMenu/Sugar" unique_id=29374337]
+layout_mode = 0
+offset_left = 434.0
+offset_top = -12.0
+offset_right = 536.0
+offset_bottom = 42.0
+text = "Buy 20 Cups
+$7.00"
+
+[node name="BuyL" type="Button" parent="GamePanel/Menus/ShopMenu/Sugar" unique_id=2035947603]
+layout_mode = 0
+offset_left = 573.0
+offset_top = -11.0
+offset_right = 675.0
+offset_bottom = 43.0
+text = "Buy 50 Cups
+$15.00
+"
+
+[node name="Ice" type="Label" parent="GamePanel/Menus/ShopMenu" unique_id=449342876]
+layout_mode = 0
+offset_left = -1.0
+offset_top = 277.0
+offset_right = 39.0
+offset_bottom = 311.0
+text = "Ice"
+label_settings = SubResource("LabelSettings_1c78g")
+
+[node name="Stock" type="Label" parent="GamePanel/Menus/ShopMenu/Ice" unique_id=716826418]
+layout_mode = 0
+offset_left = 171.0
+offset_top = -1.0
+offset_right = 211.0
+offset_bottom = 33.0
+text = "0"
+label_settings = SubResource("LabelSettings_1gxwb")
+
+[node name="BuyS" type="Button" parent="GamePanel/Menus/ShopMenu/Ice" unique_id=507642874]
+layout_mode = 0
+offset_left = 302.0
+offset_top = -5.0
+offset_right = 388.0
+offset_bottom = 49.0
+text = "Buy 50 Ice
+$1.00"
+
+[node name="BuyM" type="Button" parent="GamePanel/Menus/ShopMenu/Ice" unique_id=1164172916]
+layout_mode = 0
+offset_left = 439.0
+offset_top = -8.0
+offset_right = 535.0
+offset_bottom = 46.0
+text = "Buy 200 Ice
+$3.00"
+
+[node name="BuyL" type="Button" parent="GamePanel/Menus/ShopMenu/Ice" unique_id=51608654]
+layout_mode = 0
+offset_left = 577.0
+offset_top = -7.0
+offset_right = 673.0
+offset_bottom = 47.0
+text = "Buy 500 Ice
+$5.50
+"
+
+[node name="Cups" type="Label" parent="GamePanel/Menus/ShopMenu" unique_id=686444261]
+layout_mode = 0
+offset_left = -1.0
+offset_top = 369.0
+offset_right = 56.0
+offset_bottom = 440.0
+text = "Cups
+"
+label_settings = SubResource("LabelSettings_1c78g")
+
+[node name="Stock" type="Label" parent="GamePanel/Menus/ShopMenu/Cups" unique_id=964479666]
+layout_mode = 0
+offset_left = 171.0
+offset_top = -1.0
+offset_right = 211.0
+offset_bottom = 33.0
+text = "0"
+label_settings = SubResource("LabelSettings_1gxwb")
+
+[node name="BuyS" type="Button" parent="GamePanel/Menus/ShopMenu/Cups" unique_id=1812679691]
+layout_mode = 0
+offset_left = 295.0
+offset_top = -9.0
+offset_right = 397.0
+offset_bottom = 45.0
+text = "Buy 75 Cups
+$1.00"
+
+[node name="BuyM" type="Button" parent="GamePanel/Menus/ShopMenu/Cups" unique_id=1366773856]
+layout_mode = 0
+offset_left = 436.0
+offset_top = -10.0
+offset_right = 548.0
+offset_bottom = 44.0
+text = "Buy 250 Cups
+$2.50"
+
+[node name="BuyL" type="Button" parent="GamePanel/Menus/ShopMenu/Cups" unique_id=27259523]
+layout_mode = 0
+offset_left = 571.0
+offset_top = -9.0
+offset_right = 680.0
+offset_bottom = 45.0
+text = "Buy 500 cups
+$4.50
+"
 
 [node name="RecipeMenu" type="Control" parent="GamePanel/Menus" unique_id=2034686580]
 custom_minimum_size = Vector2(700, 500)
@@ -311,11 +524,20 @@ offset_bottom = 23.0
 text = "Per Pitcher:"
 label_settings = SubResource("LabelSettings_swyiq")
 
+[node name="PitcherVolumeLabel" type="Label" parent="GamePanel/Menus/RecipeMenu/PerPitcherLabel" unique_id=1718508359]
+layout_mode = 0
+offset_left = 205.0
+offset_top = 10.0
+offset_right = 423.0
+offset_bottom = 38.0
+text = "Pitcher Makes 10 Cups"
+label_settings = SubResource("LabelSettings_64573")
+
 [node name="Lemons" type="Control" parent="GamePanel/Menus/RecipeMenu" unique_id=325593742]
 anchors_preset = 0
-offset_top = 60.0
+offset_top = 52.0
 offset_right = 40.0
-offset_bottom = 100.0
+offset_bottom = 92.0
 
 [node name="Label" type="Label" parent="GamePanel/Menus/RecipeMenu/Lemons" unique_id=302389938]
 layout_mode = 0
@@ -327,9 +549,10 @@ vertical_alignment = 1
 
 [node name="Count" type="Label" parent="GamePanel/Menus/RecipeMenu/Lemons" unique_id=969950980]
 layout_mode = 0
-offset_left = 220.0
-offset_right = 260.0
-offset_bottom = 34.0
+offset_left = 297.0
+offset_top = -4.0
+offset_right = 337.0
+offset_bottom = 30.0
 text = "0"
 label_settings = SubResource("LabelSettings_qm2tb")
 horizontal_alignment = 1
@@ -338,38 +561,41 @@ vertical_alignment = 1
 [node name="Increase" type="Button" parent="GamePanel/Menus/RecipeMenu/Lemons" unique_id=25983566]
 custom_minimum_size = Vector2(80, 50)
 layout_mode = 0
-offset_left = 280.0
-offset_right = 360.0
-offset_bottom = 50.0
+offset_left = 357.0
+offset_top = -4.0
+offset_right = 437.0
+offset_bottom = 46.0
 text = "+"
 
 [node name="Decrease" type="Button" parent="GamePanel/Menus/RecipeMenu/Lemons" unique_id=1371243157]
 custom_minimum_size = Vector2(80, 50)
 layout_mode = 0
-offset_left = 120.0
-offset_right = 200.0
-offset_bottom = 50.0
+offset_left = 197.0
+offset_top = -4.0
+offset_right = 277.0
+offset_bottom = 46.0
 text = "-"
 
 [node name="Sugar" type="Control" parent="GamePanel/Menus/RecipeMenu" unique_id=494891785]
 anchors_preset = 0
-offset_top = 150.0
+offset_top = 132.0
 offset_right = 40.0
-offset_bottom = 190.0
+offset_bottom = 172.0
 
 [node name="Label" type="Label" parent="GamePanel/Menus/RecipeMenu/Sugar" unique_id=812283694]
 layout_mode = 0
 offset_right = 109.0
 offset_bottom = 34.0
-text = "Sugar:"
+text = "Sugar (Cups):"
 label_settings = SubResource("LabelSettings_d56af")
 vertical_alignment = 1
 
 [node name="Count" type="Label" parent="GamePanel/Menus/RecipeMenu/Sugar" unique_id=1417358592]
 layout_mode = 0
-offset_left = 220.0
-offset_right = 260.0
-offset_bottom = 34.0
+offset_left = 297.0
+offset_top = -4.0
+offset_right = 337.0
+offset_bottom = 30.0
 text = "0"
 label_settings = SubResource("LabelSettings_qm2tb")
 horizontal_alignment = 1
@@ -378,46 +604,49 @@ vertical_alignment = 1
 [node name="Increase" type="Button" parent="GamePanel/Menus/RecipeMenu/Sugar" unique_id=263028879]
 custom_minimum_size = Vector2(80, 50)
 layout_mode = 0
-offset_left = 280.0
-offset_right = 360.0
-offset_bottom = 50.0
+offset_left = 357.0
+offset_top = -4.0
+offset_right = 437.0
+offset_bottom = 46.0
 text = "+"
 
 [node name="Decrease" type="Button" parent="GamePanel/Menus/RecipeMenu/Sugar" unique_id=1250710238]
 custom_minimum_size = Vector2(80, 50)
 layout_mode = 0
-offset_left = 120.0
-offset_right = 160.0
-offset_bottom = 40.0
+offset_left = 197.0
+offset_top = -4.0
+offset_right = 277.0
+offset_bottom = 46.0
 text = "-"
 
 [node name="PerCupLabel" type="Label" parent="GamePanel/Menus/RecipeMenu" unique_id=492425434]
 layout_mode = 0
-offset_top = 250.0
+offset_top = 189.0
 offset_right = 179.0
-offset_bottom = 295.0
+offset_bottom = 234.0
 text = "Per Cup:"
 label_settings = SubResource("LabelSettings_swyiq")
 
 [node name="Ice" type="Control" parent="GamePanel/Menus/RecipeMenu" unique_id=2061542531]
 anchors_preset = 0
-offset_top = 300.0
+offset_top = 249.0
 offset_right = 40.0
-offset_bottom = 340.0
+offset_bottom = 289.0
 
 [node name="Label" type="Label" parent="GamePanel/Menus/RecipeMenu/Ice" unique_id=40950684]
 layout_mode = 0
 offset_right = 109.0
 offset_bottom = 34.0
-text = "Ice"
+text = "Ice Cubes"
 label_settings = SubResource("LabelSettings_d56af")
 vertical_alignment = 1
 
 [node name="Count" type="Label" parent="GamePanel/Menus/RecipeMenu/Ice" unique_id=1034667348]
 layout_mode = 0
-offset_left = 220.0
-offset_right = 260.0
-offset_bottom = 34.0
+offset_left = 295.0
+offset_top = -8.0
+offset_right = 335.0
+offset_bottom = 26.0
 text = "0"
 label_settings = SubResource("LabelSettings_qm2tb")
 horizontal_alignment = 1
@@ -426,23 +655,68 @@ vertical_alignment = 1
 [node name="Increase" type="Button" parent="GamePanel/Menus/RecipeMenu/Ice" unique_id=1719269798]
 custom_minimum_size = Vector2(80, 50)
 layout_mode = 0
-offset_left = 280.0
-offset_right = 360.0
-offset_bottom = 50.0
+offset_left = 355.0
+offset_top = -8.0
+offset_right = 435.0
+offset_bottom = 42.0
 text = "+"
 
 [node name="Decrease" type="Button" parent="GamePanel/Menus/RecipeMenu/Ice" unique_id=575246476]
 custom_minimum_size = Vector2(80, 50)
 layout_mode = 0
-offset_left = 120.0
-offset_right = 160.0
-offset_bottom = 40.0
+offset_left = 195.0
+offset_top = -8.0
+offset_right = 275.0
+offset_bottom = 42.0
 text = "-"
 
-[node name="PitcherVolumeLabel" type="Label" parent="GamePanel/Menus/RecipeMenu" unique_id=1718508359]
+[node name="CupPrice" type="Label" parent="GamePanel/Menus/RecipeMenu" unique_id=578705482]
 layout_mode = 0
-offset_top = 450.0
-offset_right = 218.0
-offset_bottom = 478.0
-text = "Pitcher Makes 10 Cups"
-label_settings = SubResource("LabelSettings_64573")
+offset_top = 301.0
+offset_right = 179.0
+offset_bottom = 346.0
+text = "Cup Price:"
+label_settings = SubResource("LabelSettings_swyiq")
+
+[node name="Price" type="Control" parent="GamePanel/Menus/RecipeMenu" unique_id=1222272739]
+anchors_preset = 0
+offset_left = 4.0
+offset_top = 355.0
+offset_right = 44.0
+offset_bottom = 395.0
+
+[node name="Label" type="Label" parent="GamePanel/Menus/RecipeMenu/Price" unique_id=2015786975]
+layout_mode = 0
+offset_right = 109.0
+offset_bottom = 34.0
+text = "Sale Price"
+label_settings = SubResource("LabelSettings_d56af")
+vertical_alignment = 1
+
+[node name="Value" type="Label" parent="GamePanel/Menus/RecipeMenu/Price" unique_id=1007369688]
+layout_mode = 0
+offset_left = 297.0
+offset_right = 345.0
+offset_bottom = 34.0
+text = "0.00"
+label_settings = SubResource("LabelSettings_qm2tb")
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Increase" type="Button" parent="GamePanel/Menus/RecipeMenu/Price" unique_id=216420332]
+custom_minimum_size = Vector2(80, 50)
+layout_mode = 0
+offset_left = 365.0
+offset_top = -8.0
+offset_right = 445.0
+offset_bottom = 42.0
+text = "+"
+
+[node name="Decrease" type="Button" parent="GamePanel/Menus/RecipeMenu/Price" unique_id=929977563]
+custom_minimum_size = Vector2(80, 50)
+layout_mode = 0
+offset_left = 195.0
+offset_top = -8.0
+offset_right = 275.0
+offset_bottom = 42.0
+text = "-"

@@ -33,9 +33,10 @@ public class PlayerProfileObj {
   public int lemonStock { get; set; } = 0;
   public int sugarStock { get; set; } = 0;
   public int iceStock { get; set; } = 0;
+  public int cupStock { get; set; } = 0;
   //// Recipe Data
-  public int recipeLemons { get; set; } = 0;
-  public int recipeSugar { get; set; } = 0;
+  public int recipeLemons { get; set; } = 1;
+  public int recipeSugar { get; set; } = 1;
   public int recipeIce { get; set; } = 0;
   public float salePrice { get; set; } = 0.50f;
 
@@ -45,7 +46,7 @@ public class PlayerProfileObj {
     return new {
       name = decryptedName,
       money, dayCount,
-      lemonStock, sugarStock, iceStock,
+      lemonStock, sugarStock, iceStock, cupStock,
       recipeLemons, recipeSugar, recipeIce,
       salePrice
     };
@@ -58,6 +59,7 @@ public class PlayerProfileObj {
     lemonStock = request.state.lemonStock;
     sugarStock = request.state.sugarStock;
     iceStock = request.state.iceStock;
+    cupStock = request.state.cupStock;
     recipeLemons = request.state.recipeLemons;
     recipeSugar = request.state.recipeSugar;
     recipeIce = request.state.recipeIce;

@@ -14,6 +14,7 @@ public record GameStateData(
     int lemonStock,
     int sugarStock,
     int iceStock,
+    int cupStock,
     int recipeLemons,
     int recipeSugar,
     int recipeIce,

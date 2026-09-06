@@ -11,6 +11,7 @@ var day_count: int = 1
 var lemon_stock: int = 0
 var sugar_stock: int = 0
 var ice_stock: int = 0
+var cup_stock: int = 0
 
 # Recipe
 var recipe_lemons: int = 4
@@ -25,6 +26,7 @@ func update_from_server_payload(profile_dict: Dictionary) -> void:
 	if profile_dict.has("lemonStock"): lemon_stock = profile_dict["lemonStock"]
 	if profile_dict.has("sugarStock"): sugar_stock = profile_dict["sugarStock"]
 	if profile_dict.has("iceStock"): ice_stock = profile_dict["iceStock"]
+	if profile_dict.has("cupStock"): cup_stock = profile_dict["cupStock"]
 	if profile_dict.has("recipeLemons"): recipe_lemons = profile_dict["recipeLemons"]
 	if profile_dict.has("recipeSugar"): recipe_sugar = profile_dict["recipeSugar"]
 	if profile_dict.has("recipeIce"): recipe_ice = profile_dict["recipeIce"]
@@ -40,6 +42,7 @@ func serialize_for_sync() -> Dictionary:
 			"lemonStock": lemon_stock,
 			"sugarStock": sugar_stock,
 			"iceStock": ice_stock,
+			"cupStock": cup_stock,
 			"recipeLemons": recipe_lemons,
 			"recipeSugar": recipe_sugar,
 			"recipeIce": recipe_ice,
