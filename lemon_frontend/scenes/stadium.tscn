@@ -1,0 +1,369 @@
+[gd_scene load_steps=23 format=3]
+
+; Stadium level: an open-air ballpark, and the stand is set up on the field
+; edge, right at the foot of the bleachers. Nothing here is roofed over - the
+; only things above the crowd are sky, pennants and the top of the light mast.
+;
+; Framing. The camera is fixed in DaySimulation.tscn at (-9.89, 7.73, -9.65),
+; pitched about 40 degrees down with a 62 degree vertical FOV on a 720x1280
+; portrait viewport. Worked out, the ground it can see runs from about 2.6 m to
+; 46 m away, and the top of the frame sits about 9 degrees below the horizon:
+; nothing taller than about 13 m survives the top of the frame at distance.
+; The visible floor is a narrow wedge running out from the stand, and inside
+; that wedge the height a thing may reach is about (distance - 8.1) * 0.17.
+; Everything that carries this place lives inside it: the mown field, the
+; padded field wall at x = 7, and the bleacher bank stepping up and away behind
+; the wall from x = 8.2 out to x = 14.8.
+;
+; The stand itself never moves. The Stand node lives in DaySimulation.tscn at
+; (2.51, 0, -3.50) and every level scene is built around that transform. The
+; front of the queue is 2.2 m down the stand's local -Z and every arrival route
+; converges there, so the strip in front of the counter stays clear: the
+; nearest geometry to the stand is open field.
+;
+; Every node is a direct child of the root, or of an unscaled group, with its
+; own absolute transform. No mesh is ever parented under a scaled node - a
+; child inherits that scale, which is what made an early version render slabs.
+
+; --- Materials -------------------------------------------------------------
+
+[sub_resource type="StandardMaterial3D" id="MatTurf"]
+albedo_color = Color(0.30, 0.56, 0.25, 1)
+
+[sub_resource type="StandardMaterial3D" id="MatTurfStripe"]
+albedo_color = Color(0.38, 0.66, 0.30, 1)
+
+[sub_resource type="StandardMaterial3D" id="MatPad"]
+albedo_color = Color(0.83, 0.79, 0.69, 1)
+
+[sub_resource type="StandardMaterial3D" id="MatWall"]
+albedo_color = Color(0.72, 0.20, 0.19, 1)
+
+[sub_resource type="StandardMaterial3D" id="MatPadding"]
+albedo_color = Color(0.95, 0.73, 0.14, 1)
+
+[sub_resource type="StandardMaterial3D" id="MatConcrete"]
+albedo_color = Color(0.83, 0.82, 0.79, 1)
+
+[sub_resource type="StandardMaterial3D" id="MatSeatA"]
+albedo_color = Color(0.14, 0.31, 0.70, 1)
+
+[sub_resource type="StandardMaterial3D" id="MatSeatB"]
+albedo_color = Color(0.23, 0.45, 0.83, 1)
+
+[sub_resource type="StandardMaterial3D" id="MatSeatAccent"]
+albedo_color = Color(0.95, 0.80, 0.22, 1)
+
+[sub_resource type="StandardMaterial3D" id="MatSteel"]
+albedo_color = Color(0.55, 0.58, 0.62, 1)
+
+[sub_resource type="StandardMaterial3D" id="MatScore"]
+albedo_color = Color(0.10, 0.12, 0.16, 1)
+
+[sub_resource type="StandardMaterial3D" id="MatScoreText"]
+albedo_color = Color(0.94, 0.86, 0.36, 1)
+
+[sub_resource type="StandardMaterial3D" id="MatPennantA"]
+albedo_color = Color(0.86, 0.22, 0.19, 1)
+
+[sub_resource type="StandardMaterial3D" id="MatPennantB"]
+albedo_color = Color(0.96, 0.78, 0.18, 1)
+
+[sub_resource type="StandardMaterial3D" id="MatPennantC"]
+albedo_color = Color(0.93, 0.94, 0.92, 1)
+
+[sub_resource type="StandardMaterial3D" id="MatBanner"]
+albedo_color = Color(0.16, 0.36, 0.68, 1)
+
+[sub_resource type="StandardMaterial3D" id="MatCooler"]
+albedo_color = Color(0.90, 0.91, 0.92, 1)
+
+[sub_resource type="StandardMaterial3D" id="MatCrate"]
+albedo_color = Color(0.62, 0.45, 0.26, 1)
+
+[sub_resource type="StandardMaterial3D" id="MatLampFace"]
+emission_enabled = true
+emission = Color(1, 0.97, 0.86, 1)
+albedo_color = Color(0.96, 0.95, 0.90, 1)
+
+[sub_resource type="BoxMesh" id="MeshUnit"]
+
+[sub_resource type="CylinderMesh" id="MeshPole"]
+top_radius = 0.06
+bottom_radius = 0.08
+height = 1.0
+
+[sub_resource type="PlaneMesh" id="MeshPlanePad"]
+size = Vector2(4.2, 7.8)
+
+[node name="Stadium" type="Node3D"]
+
+; --- The field -------------------------------------------------------------
+; One big turf panel running past both ends of the camera wedge, so no turf
+; edge is ever in shot. Painted on top of it: the mown stripes and the pale
+; walkway the stand is set up on.
+
+[node name="Field" type="Node3D" parent="."]
+
+[node name="FieldTurf" type="MeshInstance3D" parent="Field"]
+transform = Transform3D(54, 0, 0, 0, 0.04, 0, 0, 0, 96, 0, 0.02, -6)
+material_override = SubResource("MatTurf")
+mesh = SubResource("MeshUnit")
+
+[node name="FieldStripeA" type="MeshInstance3D" parent="Field"]
+transform = Transform3D(44, 0, 0, 0, 0.004, 0, 0, 0, 6, 2, 0.05, -32)
+material_override = SubResource("MatTurfStripe")
+mesh = SubResource("MeshUnit")
+
+[node name="FieldStripeB" type="MeshInstance3D" parent="Field"]
+transform = Transform3D(44, 0, 0, 0, 0.004, 0, 0, 0, 6, 2, 0.05, -20)
+material_override = SubResource("MatTurfStripe")
+mesh = SubResource("MeshUnit")
+
+[node name="FieldStripeC" type="MeshInstance3D" parent="Field"]
+transform = Transform3D(44, 0, 0, 0, 0.004, 0, 0, 0, 6, 2, 0.05, -8)
+material_override = SubResource("MatTurfStripe")
+mesh = SubResource("MeshUnit")
+
+[node name="FieldStripeD" type="MeshInstance3D" parent="Field"]
+transform = Transform3D(44, 0, 0, 0, 0.004, 0, 0, 0, 6, 2, 0.05, 4)
+material_override = SubResource("MatTurfStripe")
+mesh = SubResource("MeshUnit")
+
+[node name="FieldStripeE" type="MeshInstance3D" parent="Field"]
+transform = Transform3D(44, 0, 0, 0, 0.004, 0, 0, 0, 6, 2, 0.05, 16)
+material_override = SubResource("MatTurfStripe")
+mesh = SubResource("MeshUnit")
+
+[node name="FieldStripeF" type="MeshInstance3D" parent="Field"]
+transform = Transform3D(44, 0, 0, 0, 0.004, 0, 0, 0, 6, 2, 0.05, 28)
+material_override = SubResource("MatTurfStripe")
+mesh = SubResource("MeshUnit")
+
+[node name="FieldStripeG" type="MeshInstance3D" parent="Field"]
+transform = Transform3D(44, 0, 0, 0, 0.004, 0, 0, 0, 6, 2, 0.05, 40)
+material_override = SubResource("MatTurfStripe")
+mesh = SubResource("MeshUnit")
+
+; Pale walkway under the stand, on the same transform in every area, reaching
+; out toward the field so the queue never waits on the grass.
+[node name="StandPad" type="MeshInstance3D" parent="Field"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.7, 0.055, -2.1)
+material_override = SubResource("MatPad")
+mesh = SubResource("MeshPlanePad")
+
+; --- The bleacher bank -----------------------------------------------------
+; A terrace six rows deep stepping up and away from the field, front row one
+; step above the field wall so the people in it can see over the wall. Seat
+; colours blend between the two blues with one gold accent row, so the bank
+; reads as seating and not as a slab of grey concrete.
+
+[node name="Bleachers" type="Node3D" parent="."]
+
+[node name="Step1" type="MeshInstance3D" parent="Bleachers"]
+transform = Transform3D(1.2, 0, 0, 0, 0.9, 0, 0, 0, 31, 8.2, 0.45, 6.5)
+material_override = SubResource("MatConcrete")
+mesh = SubResource("MeshUnit")
+
+[node name="Seat1" type="MeshInstance3D" parent="Bleachers"]
+transform = Transform3D(1.16, 0, 0, 0, 0.16, 0, 0, 0, 30.6, 8.2, 0.98, 6.5)
+material_override = SubResource("MatSeatA")
+mesh = SubResource("MeshUnit")
+
+[node name="Step2" type="MeshInstance3D" parent="Bleachers"]
+transform = Transform3D(1.2, 0, 0, 0, 1.4, 0, 0, 0, 31, 9.4, 0.7, 6.5)
+material_override = SubResource("MatConcrete")
+mesh = SubResource("MeshUnit")
+
+[node name="Seat2" type="MeshInstance3D" parent="Bleachers"]
+transform = Transform3D(1.16, 0, 0, 0, 0.16, 0, 0, 0, 30.6, 9.4, 1.48, 6.5)
+material_override = SubResource("MatSeatB")
+mesh = SubResource("MeshUnit")
+
+[node name="Step3" type="MeshInstance3D" parent="Bleachers"]
+transform = Transform3D(1.2, 0, 0, 0, 1.9, 0, 0, 0, 31, 10.6, 0.95, 6.5)
+material_override = SubResource("MatConcrete")
+mesh = SubResource("MeshUnit")
+
+[node name="Seat3" type="MeshInstance3D" parent="Bleachers"]
+transform = Transform3D(1.16, 0, 0, 0, 0.16, 0, 0, 0, 30.6, 10.6, 1.98, 6.5)
+material_override = SubResource("MatSeatAccent")
+mesh = SubResource("MeshUnit")
+
+[node name="Step4" type="MeshInstance3D" parent="Bleachers"]
+transform = Transform3D(1.2, 0, 0, 0, 2.4, 0, 0, 0, 31, 11.8, 1.2, 6.5)
+material_override = SubResource("MatConcrete")
+mesh = SubResource("MeshUnit")
+
+[node name="Seat4" type="MeshInstance3D" parent="Bleachers"]
+transform = Transform3D(1.16, 0, 0, 0, 0.16, 0, 0, 0, 30.6, 11.8, 2.48, 6.5)
+material_override = SubResource("MatSeatA")
+mesh = SubResource("MeshUnit")
+
+[node name="Step5" type="MeshInstance3D" parent="Bleachers"]
+transform = Transform3D(1.2, 0, 0, 0, 2.9, 0, 0, 0, 31, 13, 1.45, 6.5)
+material_override = SubResource("MatConcrete")
+mesh = SubResource("MeshUnit")
+
+[node name="Seat5" type="MeshInstance3D" parent="Bleachers"]
+transform = Transform3D(1.16, 0, 0, 0, 0.16, 0, 0, 0, 30.6, 13, 2.98, 6.5)
+material_override = SubResource("MatSeatB")
+mesh = SubResource("MeshUnit")
+
+[node name="Step6" type="MeshInstance3D" parent="Bleachers"]
+transform = Transform3D(1.2, 0, 0, 0, 3.4, 0, 0, 0, 31, 14.2, 1.7, 6.5)
+material_override = SubResource("MatConcrete")
+mesh = SubResource("MeshUnit")
+
+[node name="Seat6" type="MeshInstance3D" parent="Bleachers"]
+transform = Transform3D(1.16, 0, 0, 0, 0.16, 0, 0, 0, 30.6, 14.2, 3.48, 6.5)
+material_override = SubResource("MatSeatA")
+mesh = SubResource("MeshUnit")
+
+; End rails. The bank is 31 m long, which puts both end faces outside the
+; camera wedge, so the bank has no visible ends to cap.
+[node name="BankRailSouth" type="MeshInstance3D" parent="Bleachers"]
+transform = Transform3D(8.6, 0, 0, 0, 0.14, 0, 0, 0, 0.16, 11.5, 1.9, -9)
+material_override = SubResource("MatSteel")
+mesh = SubResource("MeshUnit")
+
+[node name="BankRailNorth" type="MeshInstance3D" parent="Bleachers"]
+transform = Transform3D(8.6, 0, 0, 0, 0.14, 0, 0, 0, 0.16, 11.5, 1.9, 22)
+material_override = SubResource("MatSteel")
+mesh = SubResource("MeshUnit")
+
+; --- The wall between field and seats -------------------------------------
+; 1.1 m of padded wall with a pale cap rail, running past both ends of the
+; frame. This is the line that puts the stand on the field side of the seats.
+
+[node name="FieldWall" type="Node3D" parent="."]
+
+[node name="WallBody" type="MeshInstance3D" parent="FieldWall"]
+transform = Transform3D(0.5, 0, 0, 0, 1.1, 0, 0, 0, 31, 7, 0.55, 6.5)
+material_override = SubResource("MatWall")
+mesh = SubResource("MeshUnit")
+
+[node name="WallPadding" type="MeshInstance3D" parent="FieldWall"]
+transform = Transform3D(0.06, 0, 0, 0, 0.55, 0, 0, 0, 31, 6.72, 0.7, 6.5)
+material_override = SubResource("MatPadding")
+mesh = SubResource("MeshUnit")
+
+[node name="WallCap" type="MeshInstance3D" parent="FieldWall"]
+transform = Transform3D(0.62, 0, 0, 0, 0.08, 0, 0, 0, 31, 7, 1.13, 6.5)
+material_override = SubResource("MatSteel")
+mesh = SubResource("MeshUnit")
+
+; Club banners hung along the field side of the wall, then pennants standing
+; on the wall top in front of the seats.
+[node name="Banner1" type="MeshInstance3D" parent="FieldWall"]
+transform = Transform3D(0.05, 0, 0, 0, 0.72, 0, 0, 0, 2.2, 6.68, 0.62, -2)
+material_override = SubResource("MatBanner")
+mesh = SubResource("MeshUnit")
+
+[node name="Banner2" type="MeshInstance3D" parent="FieldWall"]
+transform = Transform3D(0.05, 0, 0, 0, 0.72, 0, 0, 0, 2.2, 6.68, 0.62, 5)
+material_override = SubResource("MatPennantC")
+mesh = SubResource("MeshUnit")
+
+[node name="Banner3" type="MeshInstance3D" parent="FieldWall"]
+transform = Transform3D(0.05, 0, 0, 0, 0.72, 0, 0, 0, 2.2, 6.68, 0.62, 12)
+material_override = SubResource("MatBanner")
+mesh = SubResource("MeshUnit")
+
+[node name="WallPennant1" type="MeshInstance3D" parent="FieldWall"]
+transform = Transform3D(0.04, 0, 0, 0, 0.85, 0, 0, 0, 0.3, 6.95, 1.62, -3)
+material_override = SubResource("MatPennantA")
+mesh = SubResource("MeshUnit")
+
+[node name="WallPennant2" type="MeshInstance3D" parent="FieldWall"]
+transform = Transform3D(0.04, 0, 0, 0, 0.85, 0, 0, 0, 0.3, 6.95, 1.62, 1)
+material_override = SubResource("MatPennantB")
+mesh = SubResource("MeshUnit")
+
+[node name="WallPennant3" type="MeshInstance3D" parent="FieldWall"]
+transform = Transform3D(0.04, 0, 0, 0, 0.85, 0, 0, 0, 0.3, 6.95, 1.62, 5)
+material_override = SubResource("MatPennantC")
+mesh = SubResource("MeshUnit")
+
+; --- Field furniture -------------------------------------------------------
+; A dugout backed against the wall, on the field a few metres up from the
+; stand, so the staff and the players are the nearest thing to the seats.
+
+[node name="Dugout" type="Node3D" parent="."]
+
+[node name="DugoutWall" type="MeshInstance3D" parent="Dugout"]
+transform = Transform3D(0.3, 0, 0, 0, 1.7, 0, 0, 0, 3.6, 5.2, 0.85, 7)
+material_override = SubResource("MatConcrete")
+mesh = SubResource("MeshUnit")
+
+[node name="DugoutBench" type="MeshInstance3D" parent="Dugout"]
+transform = Transform3D(0.5, 0, 0, 0, 0.12, 0, 0, 0, 3.2, 4.55, 0.45, 7)
+material_override = SubResource("MatSteel")
+mesh = SubResource("MeshUnit")
+
+[node name="DugoutRoof" type="MeshInstance3D" parent="Dugout"]
+transform = Transform3D(1.7, 0, 0, 0, 0.1, 0, 0, 0, 3.8, 4.9, 1.8, 7)
+material_override = SubResource("MatBanner")
+mesh = SubResource("MeshUnit")
+
+; --- Scoreboard ------------------------------------------------------------
+; Mounted on the terrace among the seats so its whole face stays inside the
+; frame: on the field it would be pushed out of shot by the top of the wedge.
+
+[node name="Scoreboard" type="Node3D" parent="."]
+
+[node name="ScorePanel" type="MeshInstance3D" parent="Scoreboard"]
+transform = Transform3D(0.3, 0, 0, 0, 1.6, 0, 0, 0, 2.6, 11, 2.55, 12)
+material_override = SubResource("MatScore")
+mesh = SubResource("MeshUnit")
+
+[node name="ScoreLine1" type="MeshInstance3D" parent="Scoreboard"]
+transform = Transform3D(0.04, 0, 0, 0, 0.18, 0, 0, 0, 2.0, 10.83, 2.85, 12)
+material_override = SubResource("MatScoreText")
+mesh = SubResource("MeshUnit")
+
+[node name="ScoreLine2" type="MeshInstance3D" parent="Scoreboard"]
+transform = Transform3D(0.04, 0, 0, 0, 0.18, 0, 0, 0, 1.5, 10.83, 2.5, 12)
+material_override = SubResource("MatScoreText")
+mesh = SubResource("MeshUnit")
+
+[node name="ScoreLine3" type="MeshInstance3D" parent="Scoreboard"]
+transform = Transform3D(0.04, 0, 0, 0, 0.18, 0, 0, 0, 2.3, 10.83, 2.15, 12)
+material_override = SubResource("MatScoreText")
+mesh = SubResource("MeshUnit")
+
+; --- Floodlight ------------------------------------------------------------
+; Kept to 9 m so the lamp head is still inside the frame at its range, and the
+; mast itself reads as an outdoor floodlight past the end of the seats.
+
+[node name="FieldLight" type="Node3D" parent="."]
+
+[node name="LightPost" type="MeshInstance3D" parent="FieldLight"]
+transform = Transform3D(1, 0, 0, 0, 9, 0, 0, 0, 1, 11, 4.5, 23)
+material_override = SubResource("MatSteel")
+mesh = SubResource("MeshPole")
+
+[node name="LightHead" type="MeshInstance3D" parent="FieldLight"]
+transform = Transform3D(2.2, 0, 0, 0, 0.5, 0, 0, 0, 0.2, 11, 9.2, 22.6)
+material_override = SubResource("MatLampFace")
+mesh = SubResource("MeshUnit")
+
+[node name="LightBulbs" type="MeshInstance3D" parent="FieldLight"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 9.2, 23)
+material_override = SubResource("MatScore")
+mesh = SubResource("MeshUnit")
+
+; --- Stand-side dressing ---------------------------------------------------
+; A crate and a cooler hold the stand's stock, on the field just behind it.
+
+[node name="StandDressing" type="Node3D" parent="."]
+
+[node name="StockCrate" type="MeshInstance3D" parent="StandDressing"]
+transform = Transform3D(0.6, 0, 0, 0, 0.44, 0, 0, 0, 0.5, 3.3, 0.22, -1.1)
+material_override = SubResource("MatCrate")
+mesh = SubResource("MeshUnit")
+
+[node name="StockCooler" type="MeshInstance3D" parent="StandDressing"]
+transform = Transform3D(0.55, 0, 0, 0, 0.48, 0, 0, 0, 0.55, 3.4, 0.24, 0)
+material_override = SubResource("MatCooler")
+mesh = SubResource("MeshUnit")

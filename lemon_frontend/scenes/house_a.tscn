@@ -1,0 +1,52 @@
+[gd_scene load_steps=9 format=3]
+
+[sub_resource type="StandardMaterial3D" id="MatBody"]
+albedo_color = Color(0.45, 0.3, 0.16, 1)
+
+[sub_resource type="StandardMaterial3D" id="MatRoof"]
+albedo_color = Color(0.42, 0.29, 0.27, 1)
+
+[sub_resource type="StandardMaterial3D" id="MatDoor"]
+albedo_color = Color(0.31, 0.2, 0.11, 1)
+
+[sub_resource type="StandardMaterial3D" id="MatGlass"]
+albedo_color = Color(0.36, 0.51, 0.62, 1)
+
+[sub_resource type="BoxMesh" id="MeshBody"]
+size = Vector3(5.2, 4.6, 4.2)
+
+[sub_resource type="PrismMesh" id="MeshRoof"]
+size = Vector3(5.5, 1.7, 4.35)
+
+[sub_resource type="BoxMesh" id="MeshDoor"]
+size = Vector3(0.14, 1.9, 0.95)
+
+[sub_resource type="BoxMesh" id="MeshWindow"]
+size = Vector3(0.14, 0.95, 0.95)
+
+[node name="HouseA" type="Node3D"]
+
+[node name="Body" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.3, 0)
+mesh = SubResource("MeshBody")
+material_override = SubResource("MatBody")
+
+[node name="Roof" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.45, 0)
+mesh = SubResource("MeshRoof")
+material_override = SubResource("MatRoof")
+
+[node name="Door" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.67, 0.95, 0)
+mesh = SubResource("MeshDoor")
+material_override = SubResource("MatDoor")
+
+[node name="WindowA" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.67, 2.6, -1.25)
+mesh = SubResource("MeshWindow")
+material_override = SubResource("MatGlass")
+
+[node name="WindowB" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.67, 2.6, 1.25)
+mesh = SubResource("MeshWindow")
+material_override = SubResource("MatGlass")

@@ -1,0 +1,556 @@
+[gd_scene format=3 uid="uid://b874jqp5hyprr"]
+
+[ext_resource type="Script" uid="uid://b04d6ph40w84t" path="res://scripts/day/DaySimulation.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://scenes/neighborhood.tscn" id="5_ef33t"]
+[ext_resource type="StyleBox" path="res://ui/style_bar.tres" id="8_bar"]
+[ext_resource type="StyleBox" path="res://ui/style_card.tres" id="8_card"]
+[ext_resource type="Script" uid="uid://ehbnrcro4u1e" path="res://ui/icon.gd" id="9_icon"]
+
+[sub_resource type="ProceduralSkyMaterial" id="SkyMat"]
+sky_top_color = Color(0.44, 0.71, 0.96, 1)
+sky_horizon_color = Color(0.976, 0.949, 0.784, 1)
+ground_bottom_color = Color(0.4, 0.6, 0.33, 1)
+ground_horizon_color = Color(0.847, 0.886, 0.714, 1)
+
+[sub_resource type="Sky" id="SkyRes"]
+sky_material = SubResource("SkyMat")
+
+[sub_resource type="Environment" id="Env"]
+background_mode = 2
+sky = SubResource("SkyRes")
+ambient_light_source = 2
+ambient_light_color = Color(0.933, 0.945, 0.867, 1)
+ambient_light_energy = 0.55
+
+[sub_resource type="StandardMaterial3D" id="MatGround"]
+albedo_color = Color(0.42, 0.663, 0.341, 1)
+
+[sub_resource type="PlaneMesh" id="MeshGround"]
+size = Vector2(420, 420)
+
+[sub_resource type="StandardMaterial3D" id="MatWood"]
+albedo_color = Color(0.45, 0.3, 0.16, 1)
+
+[sub_resource type="BoxMesh" id="MeshCounter"]
+size = Vector3(2.6, 0.8, 0.5)
+
+[sub_resource type="StandardMaterial3D" id="MatWoodLight"]
+albedo_color = Color(0.62, 0.45, 0.26, 1)
+
+[sub_resource type="BoxMesh" id="MeshCounterTop"]
+size = Vector3(2.7, 0.12, 0.62)
+
+[sub_resource type="BoxMesh" id="MeshBackboard"]
+size = Vector3(2.6, 1.1, 0.12)
+
+[sub_resource type="StandardMaterial3D" id="MatGreen"]
+albedo_color = Color(0.663, 0.808, 0.478, 1)
+
+[sub_resource type="BoxMesh" id="MeshAwning"]
+size = Vector3(2.9, 0.12, 1.2)
+
+[sub_resource type="StandardMaterial3D" id="MatCream"]
+albedo_color = Color(0.99, 0.965, 0.89, 1)
+
+[sub_resource type="BoxMesh" id="MeshUnit"]
+
+[sub_resource type="BoxMesh" id="MeshValance"]
+size = Vector3(2.9, 0.3, 0.08)
+
+[sub_resource type="CylinderMesh" id="MeshPole"]
+height = 1.0
+
+[sub_resource type="StandardMaterial3D" id="MatSignWhite"]
+albedo_color = Color(0.98, 0.97, 0.92, 1)
+
+[sub_resource type="BoxMesh" id="MeshSign"]
+size = Vector3(1, 0.55, 0.1)
+
+[sub_resource type="CylinderMesh" id="MeshSignPole"]
+top_radius = 0.05
+bottom_radius = 0.05
+height = 0.4
+
+[sub_resource type="StandardMaterial3D" id="MatPitcher"]
+albedo_color = Color(0.7, 0.85, 0.95, 1)
+
+[sub_resource type="CylinderMesh" id="MeshPitcher"]
+top_radius = 0.18
+bottom_radius = 0.18
+height = 0.3
+
+[sub_resource type="StandardMaterial3D" id="MatAwningYellow"]
+albedo_color = Color(1, 0.85, 0.25, 1)
+
+[sub_resource type="SphereMesh" id="MeshBall"]
+
+[node name="DaySimulation" type="Node3D" unique_id=895767277]
+script = ExtResource("1_script")
+day_length = null
+serve_time = null
+brew_time = null
+pitcher_capacity = null
+spawn_min_interval = null
+spawn_max_interval = null
+spawn_stop_buffer = null
+fast_forward_scale = null
+min_spawn_interval = null
+max_spawn_interval = null
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=254049285]
+environment = SubResource("Env")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=357957444]
+transform = Transform3D(-0.6642486, -0.00063958764, 0.74751145, 0.59696394, 0.6014061, 0.5309847, -0.44989753, 0.79894316, -0.39910132, 0, 0, 0)
+light_color = Color(1, 0.965, 0.878, 1)
+light_energy = 1.15
+light_angular_distance = 1.5
+shadow_enabled = true
+directional_shadow_max_distance = 110.0
+
+[node name="Ground" type="MeshInstance3D" parent="." unique_id=136170054]
+material_override = SubResource("MatGround")
+mesh = SubResource("MeshGround")
+
+[node name="Stand" type="Node3D" parent="." unique_id=1737119791]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 2.5136561, 0, -3.5048113)
+
+[node name="Counter" type="MeshInstance3D" parent="Stand" unique_id=490753783]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.4, -1.2)
+material_override = SubResource("MatWood")
+mesh = SubResource("MeshCounter")
+
+[node name="CounterTop" type="MeshInstance3D" parent="Stand" unique_id=1151075835]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.86, -1.2)
+material_override = SubResource("MatWoodLight")
+mesh = SubResource("MeshCounterTop")
+
+[node name="Backboard" type="MeshInstance3D" parent="Stand" unique_id=83210653]
+transform = Transform3D(1, 0, 0, 0, 2.056224, 0, 0, 0, 1, 0, 1.1632813, 0.08220321)
+material_override = SubResource("MatWood")
+mesh = SubResource("MeshBackboard")
+
+[node name="Awning" type="MeshInstance3D" parent="Stand" unique_id=823798866]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1.9069035, 0, 2.35, -0.8664456)
+material_override = SubResource("MatGreen")
+mesh = SubResource("MeshAwning")
+
+[node name="Stripe1" type="MeshInstance3D" parent="Stand" unique_id=1458026031]
+transform = Transform3D(0.24, 0, 0, 0, 0.16, 0, 0, 0, 2.29, -1.16, 2.42, -0.8664456)
+material_override = SubResource("MatCream")
+mesh = SubResource("MeshUnit")
+
+[node name="Stripe2" type="MeshInstance3D" parent="Stand" unique_id=1537679507]
+transform = Transform3D(0.24, 0, 0, 0, 0.16, 0, 0, 0, 2.29, -0.58, 2.42, -0.8664456)
+material_override = SubResource("MatCream")
+mesh = SubResource("MeshUnit")
+
+[node name="Stripe3" type="MeshInstance3D" parent="Stand" unique_id=301842371]
+transform = Transform3D(0.24, 0, 0, 0, 0.16, 0, 0, 0, 2.29, 0, 2.42, -0.8664456)
+material_override = SubResource("MatCream")
+mesh = SubResource("MeshUnit")
+
+[node name="Stripe4" type="MeshInstance3D" parent="Stand" unique_id=1849039829]
+transform = Transform3D(0.24, 0, 0, 0, 0.16, 0, 0, 0, 2.29, 0.58, 2.42, -0.8664456)
+material_override = SubResource("MatCream")
+mesh = SubResource("MeshUnit")
+
+[node name="Stripe5" type="MeshInstance3D" parent="Stand" unique_id=638075550]
+transform = Transform3D(0.24, 0, 0, 0, 0.16, 0, 0, 0, 2.29, 1.16, 2.42, -0.8664456)
+material_override = SubResource("MatCream")
+mesh = SubResource("MeshUnit")
+
+[node name="Valance" type="MeshInstance3D" parent="Stand" unique_id=2068566643]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.18, -1.78)
+material_override = SubResource("MatCream")
+mesh = SubResource("MeshValance")
+
+[node name="PostLeft" type="MeshInstance3D" parent="Stand" unique_id=380035891]
+transform = Transform3D(0.14, 0, 0, 0, 1.45, 0, 0, 0, 0.14, -1.3, 1.63, -1.9)
+material_override = SubResource("MatWood")
+mesh = SubResource("MeshPole")
+
+[node name="PostRight" type="MeshInstance3D" parent="Stand" unique_id=1753819320]
+transform = Transform3D(0.14, 0, 0, 0, 1.45, 0, 0, 0, 0.14, 1.3, 1.63, -1.9)
+material_override = SubResource("MatWood")
+mesh = SubResource("MeshPole")
+
+[node name="Sign" type="MeshInstance3D" parent="Stand" unique_id=1854800492]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.9, -1.15)
+material_override = SubResource("MatSignWhite")
+mesh = SubResource("MeshSign")
+
+[node name="SignPole" type="MeshInstance3D" parent="Stand" unique_id=1856011253]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.6, -1.15)
+material_override = SubResource("MatWood")
+mesh = SubResource("MeshSignPole")
+
+[node name="Pitcher" type="MeshInstance3D" parent="Stand" unique_id=1345276498]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.75, 1.05, -1.2)
+material_override = SubResource("MatPitcher")
+mesh = SubResource("MeshPitcher")
+
+[node name="CupA" type="MeshInstance3D" parent="Stand" unique_id=591767569]
+transform = Transform3D(0.13, 0, 0, 0, 0.17, 0, 0, 0, 0.13, 0.18, 1, -1.15)
+material_override = SubResource("MatCream")
+mesh = SubResource("MeshPole")
+
+[node name="CupB" type="MeshInstance3D" parent="Stand" unique_id=908677033]
+transform = Transform3D(0.13, 0, 0, 0, 0.17, 0, 0, 0, 0.13, 0.18, 1.16, -1.15)
+material_override = SubResource("MatCream")
+mesh = SubResource("MeshPole")
+
+[node name="CupC" type="MeshInstance3D" parent="Stand" unique_id=642280777]
+transform = Transform3D(0.13, 0, 0, 0, 0.17, 0, 0, 0, 0.13, 0.18, 1.32, -1.15)
+material_override = SubResource("MatCream")
+mesh = SubResource("MeshPole")
+
+[node name="Bowl" type="MeshInstance3D" parent="Stand" unique_id=471223872]
+transform = Transform3D(0.4, 0, 0, 0, 0.16, 0, 0, 0, 0.4, -0.55, 1, -1.2)
+material_override = SubResource("MatWoodLight")
+mesh = SubResource("MeshPole")
+
+[node name="LemonA" type="MeshInstance3D" parent="Stand" unique_id=858999867]
+transform = Transform3D(0.17, 0, 0, 0, 0.17, 0, 0, 0, 0.17, -0.65, 1.13, -1.25)
+material_override = SubResource("MatAwningYellow")
+mesh = SubResource("MeshBall")
+
+[node name="LemonB" type="MeshInstance3D" parent="Stand" unique_id=1867574594]
+transform = Transform3D(0.17, 0, 0, 0, 0.17, 0, 0, 0, 0.17, -0.46, 1.13, -1.14)
+material_override = SubResource("MatAwningYellow")
+mesh = SubResource("MeshBall")
+
+[node name="LemonC" type="MeshInstance3D" parent="Stand" unique_id=1007083350]
+transform = Transform3D(0.17, 0, 0, 0, 0.17, 0, 0, 0, 0.17, -0.56, 1.14, -1.32)
+material_override = SubResource("MatAwningYellow")
+mesh = SubResource("MeshBall")
+
+[node name="Crate" type="MeshInstance3D" parent="Stand" unique_id=451739665]
+transform = Transform3D(0.62, 0, 0, 0, 0.44, 0, 0, 0, 0.44, -1.9, 0.22, -1.35)
+material_override = SubResource("MatWoodLight")
+mesh = SubResource("MeshUnit")
+
+[node name="SignLabel" type="Label3D" parent="Stand" unique_id=812138056]
+transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 0, 2.9, -1.3)
+pixel_size = 0.004
+modulate = Color(0.36, 0.24, 0.15, 1)
+outline_modulate = Color(1, 1, 1, 1)
+text = "LEMONADE"
+font_size = 64
+
+[node name="Camera3D" type="Camera3D" parent="." unique_id=685657432]
+transform = Transform3D(-0.52249914, 0.55322933, -0.6487927, 0, 0.7609224, 0.64884293, 0.8526398, 0.33901986, -0.39758128, -9.891931, 7.7284184, -9.651525)
+fov = 62.0
+
+[node name="HUD" type="CanvasLayer" parent="." unique_id=81637282]
+
+[node name="StatusBar" type="Panel" parent="HUD" unique_id=1763487526]
+offset_left = 10.0
+offset_top = 10.0
+offset_right = 710.0
+offset_bottom = 94.0
+theme_override_styles/panel = ExtResource("8_bar")
+
+[node name="MoneyLabel" type="Label" parent="HUD/StatusBar" unique_id=763302439]
+layout_mode = 0
+offset_left = 18.0
+offset_top = 6.0
+offset_right = 196.0
+offset_bottom = 36.0
+theme_override_colors/font_color = Color(0.992, 0.965, 0.89, 1)
+theme_override_font_sizes/font_size = 20
+text = "Money: $0.00"
+
+[node name="IconLemon" type="Control" parent="HUD/StatusBar" unique_id=763302440]
+anchors_preset = 0
+offset_left = 200.0
+offset_top = 7.0
+offset_right = 226.0
+offset_bottom = 33.0
+script = ExtResource("9_icon")
+
+[node name="CountLemon" type="Label" parent="HUD/StatusBar" unique_id=763302441]
+layout_mode = 0
+offset_left = 230.0
+offset_top = 6.0
+offset_right = 314.0
+offset_bottom = 34.0
+theme_override_colors/font_color = Color(0.992, 0.965, 0.89, 1)
+theme_override_font_sizes/font_size = 20
+text = "0"
+vertical_alignment = 1
+
+[node name="IconSugar" type="Control" parent="HUD/StatusBar" unique_id=763302442]
+anchors_preset = 0
+offset_left = 326.0
+offset_top = 7.0
+offset_right = 352.0
+offset_bottom = 33.0
+script = ExtResource("9_icon")
+kind = "sugar"
+
+[node name="CountSugar" type="Label" parent="HUD/StatusBar" unique_id=763302443]
+layout_mode = 0
+offset_left = 356.0
+offset_top = 6.0
+offset_right = 440.0
+offset_bottom = 34.0
+theme_override_colors/font_color = Color(0.992, 0.965, 0.89, 1)
+theme_override_font_sizes/font_size = 20
+text = "0"
+vertical_alignment = 1
+
+[node name="IconIce" type="Control" parent="HUD/StatusBar" unique_id=763302444]
+anchors_preset = 0
+offset_left = 452.0
+offset_top = 7.0
+offset_right = 478.0
+offset_bottom = 33.0
+script = ExtResource("9_icon")
+kind = "ice"
+
+[node name="CountIce" type="Label" parent="HUD/StatusBar" unique_id=763302445]
+layout_mode = 0
+offset_left = 482.0
+offset_top = 6.0
+offset_right = 566.0
+offset_bottom = 34.0
+theme_override_colors/font_color = Color(0.992, 0.965, 0.89, 1)
+theme_override_font_sizes/font_size = 20
+text = "0"
+vertical_alignment = 1
+
+[node name="IconCup" type="Control" parent="HUD/StatusBar" unique_id=763302446]
+anchors_preset = 0
+offset_left = 578.0
+offset_top = 7.0
+offset_right = 604.0
+offset_bottom = 33.0
+script = ExtResource("9_icon")
+kind = "cup"
+
+[node name="CountCup" type="Label" parent="HUD/StatusBar" unique_id=763302447]
+layout_mode = 0
+offset_left = 608.0
+offset_top = 6.0
+offset_right = 692.0
+offset_bottom = 34.0
+theme_override_colors/font_color = Color(0.992, 0.965, 0.89, 1)
+theme_override_font_sizes/font_size = 20
+text = "0"
+vertical_alignment = 1
+
+[node name="WeatherIcon" type="Control" parent="HUD/StatusBar" unique_id=763302448]
+anchors_preset = 0
+offset_left = 18.0
+offset_top = 46.0
+offset_right = 48.0
+offset_bottom = 76.0
+script = ExtResource("9_icon")
+kind = "sun"
+
+[node name="WeatherLabel" type="Label" parent="HUD/StatusBar" unique_id=1122169128]
+layout_mode = 0
+offset_left = 54.0
+offset_top = 46.0
+offset_right = 344.0
+offset_bottom = 78.0
+theme_override_colors/font_color = Color(0.992, 0.965, 0.89, 1)
+theme_override_font_sizes/font_size = 20
+text = "Today 75F Warm Sunny"
+
+[node name="ForecastIcon" type="Control" parent="HUD/StatusBar" unique_id=763302449]
+anchors_preset = 0
+offset_left = 358.0
+offset_top = 48.0
+offset_right = 384.0
+offset_bottom = 74.0
+script = ExtResource("9_icon")
+kind = "sun"
+
+[node name="ForecastLabel" type="Label" parent="HUD/StatusBar" unique_id=324718727]
+layout_mode = 0
+offset_left = 388.0
+offset_top = 47.0
+offset_right = 682.0
+offset_bottom = 77.0
+theme_override_colors/font_color = Color(0.729, 0.769, 0.639, 1)
+theme_override_font_sizes/font_size = 18
+text = "Tomorrow 75F Warm Sunny"
+horizontal_alignment = 2
+
+[node name="TopBar" type="Panel" parent="HUD" unique_id=1817992142]
+offset_left = 10.0
+offset_top = 106.0
+offset_right = 710.0
+offset_bottom = 218.0
+theme_override_styles/panel = ExtResource("8_bar")
+
+[node name="StatusLabel" type="Label" parent="HUD/TopBar" unique_id=926836198]
+layout_mode = 0
+offset_left = 18.0
+offset_top = 14.0
+offset_right = 420.0
+offset_bottom = 50.0
+theme_override_colors/font_color = Color(0.992, 0.965, 0.89, 1)
+theme_override_font_sizes/font_size = 26
+text = "0 cups ready"
+vertical_alignment = 1
+
+[node name="DayTimeLabel" type="Label" parent="HUD/TopBar" unique_id=423284996]
+layout_mode = 0
+offset_left = 430.0
+offset_top = 14.0
+offset_right = 682.0
+offset_bottom = 50.0
+theme_override_colors/font_color = Color(0.992, 0.965, 0.89, 1)
+theme_override_font_sizes/font_size = 22
+text = "Day Time: 0.0s"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="StockLabel" type="Label" parent="HUD/TopBar" unique_id=156761265]
+layout_mode = 0
+offset_left = 18.0
+offset_top = 68.0
+offset_right = 420.0
+offset_bottom = 100.0
+theme_override_colors/font_color = Color(0.729, 0.769, 0.639, 1)
+theme_override_font_sizes/font_size = 18
+text = "Stock L:0 S:0 I:0 C:0"
+vertical_alignment = 1
+
+[node name="RevenueLabel" type="Label" parent="HUD/TopBar" unique_id=911066422]
+layout_mode = 0
+offset_left = 430.0
+offset_top = 66.0
+offset_right = 682.0
+offset_bottom = 102.0
+theme_override_colors/font_color = Color(0.973, 0.859, 0.322, 1)
+theme_override_font_sizes/font_size = 26
+text = "Revenue: $0.00"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="SpeedButton" type="Button" parent="HUD" unique_id=616243409]
+visible = false
+offset_left = 460.0
+offset_top = 230.0
+offset_right = 700.0
+offset_bottom = 290.0
+theme_override_font_sizes/font_size = 22
+text = "Fast Forward x5"
+
+[node name="ResultsPanel" type="Control" parent="HUD" unique_id=439339270]
+visible = false
+layout_mode = 3
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -270.0
+offset_top = -270.0
+offset_right = 270.0
+offset_bottom = 270.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Backdrop" type="ColorRect" parent="HUD/ResultsPanel" unique_id=2046628905]
+layout_mode = 0
+offset_right = 540.0
+offset_bottom = 540.0
+color = Color(0, 0, 0, 0.7)
+
+[node name="Panel" type="Panel" parent="HUD/ResultsPanel" unique_id=1967840164]
+layout_mode = 0
+offset_left = 60.0
+offset_top = 40.0
+offset_right = 480.0
+offset_bottom = 500.0
+theme_override_styles/panel = ExtResource("8_card")
+
+[node name="TitleLabel" type="Label" parent="HUD/ResultsPanel" unique_id=810255806]
+layout_mode = 0
+offset_left = 60.0
+offset_top = 70.0
+offset_right = 480.0
+offset_bottom = 120.0
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_font_sizes/font_size = 40
+text = "Day Complete!"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ResultsRevenue" type="Label" parent="HUD/ResultsPanel" unique_id=1230414419]
+layout_mode = 0
+offset_left = 90.0
+offset_top = 150.0
+offset_right = 450.0
+offset_bottom = 190.0
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_font_sizes/font_size = 26
+text = "Revenue: $0.00"
+
+[node name="ResultsCups" type="Label" parent="HUD/ResultsPanel" unique_id=1200889561]
+layout_mode = 0
+offset_left = 90.0
+offset_top = 200.0
+offset_right = 450.0
+offset_bottom = 240.0
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_font_sizes/font_size = 26
+text = "Cups Sold: 0"
+
+[node name="ResultsServed" type="Label" parent="HUD/ResultsPanel" unique_id=168098686]
+layout_mode = 0
+offset_left = 90.0
+offset_top = 250.0
+offset_right = 450.0
+offset_bottom = 290.0
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_font_sizes/font_size = 26
+text = "Customers Served: 0"
+
+[node name="ResultsRejected" type="Label" parent="HUD/ResultsPanel" unique_id=1813934326]
+layout_mode = 0
+offset_left = 90.0
+offset_top = 300.0
+offset_right = 450.0
+offset_bottom = 340.0
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_font_sizes/font_size = 26
+text = "Customers Rejected: 0"
+
+[node name="FinishDayButton" type="Button" parent="HUD/ResultsPanel" unique_id=242765334]
+layout_mode = 0
+offset_left = 140.0
+offset_top = 390.0
+offset_right = 400.0
+offset_bottom = 460.0
+theme_override_font_sizes/font_size = 28
+text = "Finish Day"
+
+[node name="ResultsSpoilage" type="Label" parent="HUD/ResultsPanel" unique_id=869675500]
+layout_mode = 0
+offset_left = 90.0
+offset_top = 332.0
+offset_right = 450.0
+offset_bottom = 372.0
+theme_override_colors/font_color = Color(0.72, 0.28, 0.16, 1)
+theme_override_font_sizes/font_size = 22
+text = "Losses: 0 ice melted, 0 lemons spoiled"
+
+[node name="ResultsArea" type="Label" parent="HUD/ResultsPanel" unique_id=1099607055]
+layout_mode = 0
+offset_left = 90.0
+offset_top = 120.0
+offset_right = 450.0
+offset_bottom = 148.0
+theme_override_colors/font_color = Color(0.36, 0.24, 0.15, 1)
+theme_override_font_sizes/font_size = 22
+text = "Fee: $0.00"
+
+[node name="LevelHolder" type="Node3D" parent="." unique_id=285066890]
+
+[node name="Neighborhood" parent="LevelHolder" unique_id=365782543 instance=ExtResource("5_ef33t")]

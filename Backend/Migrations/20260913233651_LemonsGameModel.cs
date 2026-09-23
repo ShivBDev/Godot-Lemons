@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -6,7 +7,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Backend.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialLemonsSchema : Migration
+    public partial class LemonsGameModel : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -35,10 +36,14 @@ namespace Backend.Migrations
                     lemonStock = table.Column<int>(type: "integer", nullable: false),
                     sugarStock = table.Column<int>(type: "integer", nullable: false),
                     iceStock = table.Column<int>(type: "integer", nullable: false),
+                    cupStock = table.Column<int>(type: "integer", nullable: false),
                     recipeLemons = table.Column<int>(type: "integer", nullable: false),
                     recipeSugar = table.Column<int>(type: "integer", nullable: false),
                     recipeIce = table.Column<int>(type: "integer", nullable: false),
-                    salePrice = table.Column<float>(type: "real", nullable: false)
+                    salePrice = table.Column<float>(type: "real", nullable: false),
+                    weather = table.Column<Dictionary<string, object>>(type: "jsonb", nullable: false),
+                    forecast = table.Column<Dictionary<string, object>>(type: "jsonb", nullable: false),
+                    upgradeLevels = table.Column<Dictionary<string, object>>(type: "jsonb", nullable: false)
                 },
                 constraints: table =>
                 {
