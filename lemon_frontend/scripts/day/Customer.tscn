@@ -1,0 +1,270 @@
+[gd_scene load_steps=30 format=3]
+
+[ext_resource type="Script" path="res://scripts/day/Customer.gd" id="1_script"]
+
+[sub_resource type="CapsuleMesh" id="Capsule_body"]
+radius = 0.27
+height = 0.62
+
+[sub_resource type="SphereMesh" id="Sphere_head"]
+radius = 0.21
+height = 0.42
+
+[sub_resource type="StandardMaterial3D" id="Mat_body"]
+albedo_color = Color(1, 1, 1, 1)
+
+[sub_resource type="StandardMaterial3D" id="Mat_head"]
+albedo_color = Color(0.98, 0.85, 0.72, 1)
+
+[sub_resource type="StandardMaterial3D" id="Mat_hair"]
+albedo_color = Color(0.35, 0.22, 0.14, 1)
+
+[sub_resource type="StandardMaterial3D" id="Mat_eye"]
+albedo_color = Color(0.14, 0.1, 0.08, 1)
+
+[sub_resource type="SphereMesh" id="Mesh_hairCap"]
+radius = 0.215
+height = 0.43
+
+[sub_resource type="BoxMesh" id="Mesh_eye"]
+size = Vector3(0.055, 0.07, 0.05)
+
+[sub_resource type="CapsuleMesh" id="Mesh_pants"]
+radius = 0.285
+height = 0.22
+
+[sub_resource type="StandardMaterial3D" id="Mat_pants"]
+albedo_color = Color(0.22, 0.27, 0.4, 1)
+
+[sub_resource type="BoxMesh" id="Mesh_shoe"]
+size = Vector3(0.15, 0.075, 0.26)
+
+[sub_resource type="StandardMaterial3D" id="Mat_shoe"]
+albedo_color = Color(0.18, 0.16, 0.16, 1)
+
+[sub_resource type="CylinderMesh" id="Mesh_hatCrown"]
+top_radius = 0.2
+bottom_radius = 0.29
+height = 0.16
+
+[sub_resource type="CylinderMesh" id="Mesh_hatBrim"]
+top_radius = 0.34
+bottom_radius = 0.34
+height = 0.03
+
+[sub_resource type="StandardMaterial3D" id="Mat_hat"]
+albedo_color = Color(0.86, 0.3, 0.24, 1)
+
+[sub_resource type="CylinderMesh" id="Mesh_sunBrim"]
+top_radius = 0.5
+bottom_radius = 0.5
+height = 0.025
+
+[sub_resource type="SphereMesh" id="Mesh_beanie"]
+radius = 0.238
+height = 0.476
+
+[sub_resource type="CylinderMesh" id="Mesh_headband"]
+top_radius = 0.238
+bottom_radius = 0.238
+height = 0.07
+
+[sub_resource type="CylinderMesh" id="Mesh_bucketCrown"]
+top_radius = 0.17
+bottom_radius = 0.245
+height = 0.24
+
+[sub_resource type="CylinderMesh" id="Mesh_bucketBrim"]
+top_radius = 0.37
+bottom_radius = 0.37
+height = 0.025
+
+[sub_resource type="CylinderMesh" id="Mesh_skirt"]
+top_radius = 0.27
+bottom_radius = 0.43
+height = 0.32
+
+[sub_resource type="BoxMesh" id="Mesh_backpack"]
+size = Vector3(0.32, 0.4, 0.18)
+
+[sub_resource type="BoxMesh" id="Mesh_apron"]
+size = Vector3(0.42, 0.46, 0.05)
+
+[sub_resource type="BoxMesh" id="Mesh_bow"]
+size = Vector3(0.16, 0.11, 0.08)
+
+[sub_resource type="BoxMesh" id="Mesh_lens"]
+size = Vector3(0.1, 0.07, 0.035)
+
+[sub_resource type="BoxMesh" id="Mesh_tie"]
+size = Vector3(0.09, 0.32, 0.06)
+
+[sub_resource type="BoxMesh" id="Mesh_briefcase"]
+size = Vector3(0.28, 0.22, 0.1)
+
+[sub_resource type="BoxMesh" id="Mesh_jerseyPanel"]
+size = Vector3(0.32, 0.36, 0.06)
+
+[node name="Customer" type="Node3D"]
+script = ExtResource("1_script")
+
+[node name="Visuals" type="Node3D" parent="."]
+
+[node name="Body" type="MeshInstance3D" parent="Visuals"]
+position = Vector3(0, 0.58, 0)
+mesh = SubResource("Capsule_body")
+material_override = SubResource("Mat_body")
+
+[node name="Pants" type="MeshInstance3D" parent="Visuals"]
+position = Vector3(0, 0.3, 0)
+mesh = SubResource("Mesh_pants")
+material_override = SubResource("Mat_pants")
+
+[node name="Skirt" type="MeshInstance3D" parent="Visuals"]
+visible = false
+position = Vector3(0, 0.4, 0)
+mesh = SubResource("Mesh_skirt")
+material_override = SubResource("Mat_pants")
+
+[node name="ShoeLeft" type="MeshInstance3D" parent="Visuals"]
+position = Vector3(-0.13, 0.04, -0.05)
+mesh = SubResource("Mesh_shoe")
+material_override = SubResource("Mat_shoe")
+
+[node name="ShoeRight" type="MeshInstance3D" parent="Visuals"]
+position = Vector3(0.13, 0.04, -0.05)
+mesh = SubResource("Mesh_shoe")
+material_override = SubResource("Mat_shoe")
+
+[node name="ArmLeft" type="MeshInstance3D" parent="Visuals"]
+transform = Transform3D(0.34, 0, 0, 0, 0.72, 0, 0, 0, 0.34, -0.31, 0.78, 0)
+mesh = SubResource("Capsule_body")
+material_override = SubResource("Mat_head")
+
+[node name="ArmRight" type="MeshInstance3D" parent="Visuals"]
+transform = Transform3D(0.34, 0, 0, 0, 0.72, 0, 0, 0, 0.34, 0.31, 0.78, 0)
+mesh = SubResource("Capsule_body")
+material_override = SubResource("Mat_head")
+
+[node name="Apron" type="MeshInstance3D" parent="Visuals"]
+visible = false
+position = Vector3(0, 0.55, -0.25)
+mesh = SubResource("Mesh_apron")
+material_override = SubResource("Mat_body")
+
+[node name="Backpack" type="MeshInstance3D" parent="Visuals"]
+visible = false
+position = Vector3(0, 0.72, 0.28)
+mesh = SubResource("Mesh_backpack")
+material_override = SubResource("Mat_pants")
+
+[node name="Head" type="MeshInstance3D" parent="Visuals"]
+position = Vector3(0, 1.3, 0)
+mesh = SubResource("Sphere_head")
+material_override = SubResource("Mat_head")
+
+[node name="HairCap" type="MeshInstance3D" parent="Visuals"]
+transform = Transform3D(1.04, 0, 0, 0, 0.92, 0, 0, 0, 1.04, 0, 1.37, 0.02)
+mesh = SubResource("Mesh_hairCap")
+material_override = SubResource("Mat_hair")
+
+[node name="EyeLeft" type="MeshInstance3D" parent="Visuals"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.075, 1.31, -0.185)
+mesh = SubResource("Mesh_eye")
+material_override = SubResource("Mat_eye")
+
+[node name="EyeRight" type="MeshInstance3D" parent="Visuals"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.075, 1.31, -0.185)
+mesh = SubResource("Mesh_eye")
+material_override = SubResource("Mat_eye")
+
+[node name="Glasses" type="Node3D" parent="Visuals"]
+visible = false
+
+[node name="LensLeft" type="MeshInstance3D" parent="Visuals/Glasses"]
+position = Vector3(-0.075, 1.31, -0.2)
+mesh = SubResource("Mesh_lens")
+material_override = SubResource("Mat_eye")
+
+[node name="LensRight" type="MeshInstance3D" parent="Visuals/Glasses"]
+position = Vector3(0.075, 1.31, -0.2)
+mesh = SubResource("Mesh_lens")
+material_override = SubResource("Mat_eye")
+
+[node name="Bow" type="MeshInstance3D" parent="Visuals"]
+visible = false
+position = Vector3(0.2, 1.43, 0.04)
+mesh = SubResource("Mesh_bow")
+material_override = SubResource("Mat_hat")
+
+[node name="Hat" type="Node3D" parent="Visuals"]
+
+[node name="Brim" type="MeshInstance3D" parent="Visuals/Hat"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.44, 0)
+mesh = SubResource("Mesh_hatBrim")
+material_override = SubResource("Mat_hat")
+
+[node name="Crown" type="MeshInstance3D" parent="Visuals/Hat"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.52, 0)
+mesh = SubResource("Mesh_hatCrown")
+material_override = SubResource("Mat_hat")
+
+[node name="SunBrim" type="MeshInstance3D" parent="Visuals/Hat"]
+visible = false
+position = Vector3(0, 1.44, 0)
+mesh = SubResource("Mesh_sunBrim")
+material_override = SubResource("Mat_hat")
+
+[node name="BucketCrown" type="MeshInstance3D" parent="Visuals/Hat"]
+visible = false
+position = Vector3(0, 1.53, 0)
+mesh = SubResource("Mesh_bucketCrown")
+material_override = SubResource("Mat_hat")
+
+[node name="BucketBrim" type="MeshInstance3D" parent="Visuals/Hat"]
+visible = false
+position = Vector3(0, 1.42, 0)
+mesh = SubResource("Mesh_bucketBrim")
+material_override = SubResource("Mat_hat")
+
+[node name="Beanie" type="MeshInstance3D" parent="Visuals/Hat"]
+visible = false
+transform = Transform3D(1, 0, 0, 0, 0.75, 0, 0, 0, 1, 0, 1.44, 0.01)
+mesh = SubResource("Mesh_beanie")
+material_override = SubResource("Mat_hat")
+
+[node name="Headband" type="MeshInstance3D" parent="Visuals/Hat"]
+visible = false
+position = Vector3(0, 1.4, 0)
+mesh = SubResource("Mesh_headband")
+material_override = SubResource("Mat_hat")
+
+; --- Area wardrobe -------------------------------------------------------
+; Three extra pieces the neighbourhood crowd never shows: office wear for
+; downtown and a two-tone front panel for stadium jerseys.
+[node name="Tie" type="MeshInstance3D" parent="Visuals"]
+visible = false
+position = Vector3(0, 0.72, -0.28)
+mesh = SubResource("Mesh_tie")
+material_override = SubResource("Mat_body")
+
+[node name="Briefcase" type="MeshInstance3D" parent="Visuals"]
+visible = false
+position = Vector3(0.44, 0.4, 0)
+mesh = SubResource("Mesh_briefcase")
+material_override = SubResource("Mat_pants")
+
+[node name="JerseyPanel" type="MeshInstance3D" parent="Visuals"]
+visible = false
+position = Vector3(0, 0.68, -0.25)
+mesh = SubResource("Mesh_jerseyPanel")
+material_override = SubResource("Mat_body")
+
+[node name="Bubble" type="Label3D" parent="."]
+visible = false
+position = Vector3(0, 1.85, 0)
+billboard = 1
+font_size = 48
+pixel_size = 0.006
+outline_size = 14
+outline_modulate = Color(0, 0, 0, 1)

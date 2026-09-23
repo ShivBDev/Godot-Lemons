@@ -1,4 +1,6 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json;
 using Backend.Utils;
 using Backend.Dtos;
 namespace Backend.Models;
@@ -40,6 +42,13 @@ public class PlayerProfileObj {
   public int recipeIce { get; set; } = 0;
   public float salePrice { get; set; } = 0.50f;
 
+  [Column(TypeName = "jsonb")]
+  public JsonDocument weather { get; set; } = JsonDocument.Parse("{}");
+  [Column(TypeName = "jsonb")]
+  public JsonDocument forecast { get; set; } = JsonDocument.Parse("{}");
+  [Column(TypeName = "jsonb")]
+  public JsonDocument upgradeLevels { get; set; } = JsonDocument.Parse("{}");
+
   public object ToResponsePayload(EncryptionUtils encryptionUtils) {
     // Decrypt the player username securely on demand
     string decryptedName = encryptionUtils.Decrypt(name);
@@ -48,7 +57,10 @@ public class PlayerProfileObj {
       money, dayCount,
       lemonStock, sugarStock, iceStock, cupStock,
       recipeLemons, recipeSugar, recipeIce,
-      salePrice
+      salePrice,
+      weather = weather.RootElement, 
+      forecast = forecast.RootElement, 
+      upgradeLevels = upgradeLevels.RootElement
     };
   }
 
@@ -64,5 +76,12 @@ public class PlayerProfileObj {
     recipeSugar = request.state.recipeSugar;
     recipeIce = request.state.recipeIce;
     salePrice = request.state.salePrice;
+
+    string rawWeather = JsonSerializer.Serialize(request.state.weather);
+    string rawForecast = JsonSerializer.Serialize(request.state.forecast);
+    string rawUpgradeLevels = JsonSerializer.Serialize(request.state.upgradeLevels);
+    weather = JsonDocument.Parse(rawWeather);
+    forecast = JsonDocument.Parse(rawForecast);
+    upgradeLevels = JsonDocument.Parse(rawUpgradeLevels);
   }
 }

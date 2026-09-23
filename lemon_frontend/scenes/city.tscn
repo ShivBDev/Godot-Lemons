@@ -1,0 +1,310 @@
+[gd_scene load_steps=24 format=3]
+
+; Downtown. A city block built around the one camera that ever looks at it.
+;
+; The camera is fixed in DaySimulation.tscn at (-9.89, 7.73, -9.65), pitched
+; about 40 degrees down with a 62 degree vertical FOV on a 720x1280 portrait
+; viewport. Worked out, the ground it can see runs from about 2.6 m to 46 m
+; away, inside a wedge only about +/-18.7 degrees wide. In practice the visible
+; ground is a narrow diagonal band running from roughly (3, -2) out to
+; (24, 11), and the stand sits dead centre of it at (2.51, 0, -3.50).
+;
+; So everything that carries the identity of this place is placed inside that
+; band: the shopfront block face at x = 6, the pavement furniture, and the
+; facade detail. Towers further out are kept tall so they still read above the
+; roofline. Nothing here is nested under a scaled parent - a child would
+; inherit that scale and a 2 m window would come out 100 m tall.
+
+[sub_resource type="StandardMaterial3D" id="MatPaving"]
+albedo_color = Color(0.898, 0.867, 0.784, 1)
+
+[sub_resource type="StandardMaterial3D" id="MatPavingDark"]
+albedo_color = Color(0.827, 0.792, 0.706, 1)
+
+[sub_resource type="StandardMaterial3D" id="MatKerb"]
+albedo_color = Color(0.937, 0.910, 0.843, 1)
+
+[sub_resource type="StandardMaterial3D" id="MatBodyA"]
+albedo_color = Color(0.780, 0.612, 0.463, 1)
+
+[sub_resource type="StandardMaterial3D" id="MatBodyB"]
+albedo_color = Color(0.596, 0.545, 0.612, 1)
+
+[sub_resource type="StandardMaterial3D" id="MatBodyC"]
+albedo_color = Color(0.702, 0.420, 0.353, 1)
+
+[sub_resource type="StandardMaterial3D" id="MatGlass"]
+albedo_color = Color(0.373, 0.565, 0.678, 1)
+
+[sub_resource type="StandardMaterial3D" id="MatGlassDark"]
+albedo_color = Color(0.161, 0.220, 0.278, 1)
+
+[sub_resource type="StandardMaterial3D" id="MatAwning"]
+albedo_color = Color(0.839, 0.259, 0.220, 1)
+
+[sub_resource type="StandardMaterial3D" id="MatAwningB"]
+albedo_color = Color(0.949, 0.706, 0.153, 1)
+
+[sub_resource type="StandardMaterial3D" id="MatTrim"]
+albedo_color = Color(0.961, 0.941, 0.871, 1)
+
+[sub_resource type="StandardMaterial3D" id="MatSteel"]
+albedo_color = Color(0.545, 0.580, 0.620, 1)
+
+[sub_resource type="StandardMaterial3D" id="MatDarkMetal"]
+albedo_color = Color(0.220, 0.231, 0.251, 1)
+
+[sub_resource type="StandardMaterial3D" id="MatPlanter"]
+albedo_color = Color(0.722, 0.451, 0.302, 1)
+
+[sub_resource type="StandardMaterial3D" id="MatTrunk"]
+albedo_color = Color(0.400, 0.259, 0.129, 1)
+
+[sub_resource type="StandardMaterial3D" id="MatLeaf"]
+albedo_color = Color(0.243, 0.518, 0.243, 1)
+
+[sub_resource type="BoxMesh" id="MeshUnit"]
+size = Vector3(1, 1, 1)
+
+[sub_resource type="PlaneMesh" id="MeshPlaza"]
+size = Vector2(54, 40)
+
+[sub_resource type="PlaneMesh" id="MeshPlazaInset"]
+size = Vector2(20, 20)
+
+[sub_resource type="PlaneMesh" id="MeshPad"]
+size = Vector2(4.2, 7.8)
+
+[sub_resource type="CylinderMesh" id="MeshPole"]
+top_radius = 0.09
+bottom_radius = 0.11
+height = 1.0
+
+[sub_resource type="SphereMesh" id="MeshShrub"]
+radius = 0.6
+height = 1.2
+
+[sub_resource type="SphereMesh" id="MeshCanopy"]
+radius = 1.1
+height = 2.2
+
+[node name="City" type="Node3D"]
+
+; --- Ground ---------------------------------------------------------------
+; One broad paved plaza so the foreground is not bare grass, plus a darker
+; inset slab to break it up.
+
+[node name="Plaza" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0.045, 0)
+material_override = SubResource("MatPaving")
+mesh = SubResource("MeshPlaza")
+
+[node name="PlazaInset" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 0.052, 4)
+material_override = SubResource("MatPavingDark")
+mesh = SubResource("MeshPlazaInset")
+
+; Paved hardstand under the stall, on the same transform as every other area.
+[node name="StandPad" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.7, 0.05, -2.1)
+material_override = SubResource("MatKerb")
+mesh = SubResource("MeshPad")
+
+; --- The hero block -------------------------------------------------------
+; Front face at x = 6 spanning z -6 to 7: the whole of that face reads from
+; the camera. Shopfront, awning and two window bands are separate top-level
+; nodes with absolute transforms, never children of the block.
+
+[node name="HeroBlock" type="MeshInstance3D" parent="."]
+transform = Transform3D(12, 0, 0, 0, 12, 0, 0, 0, 13, 12, 6, 0.5)
+material_override = SubResource("MatBodyA")
+mesh = SubResource("MeshUnit")
+
+[node name="HeroParapet" type="MeshInstance3D" parent="."]
+transform = Transform3D(12.6, 0, 0, 0, 0.7, 0, 0, 0, 13.6, 12, 12.35, 0.5)
+material_override = SubResource("MatBodyC")
+mesh = SubResource("MeshUnit")
+
+[node name="HeroShopfront" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.3, 0, 0, 0, 3, 0, 0, 0, 12.5, 6, 1.6, 0.5)
+material_override = SubResource("MatGlassDark")
+mesh = SubResource("MeshUnit")
+
+[node name="HeroShopFrame" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.4, 0, 0, 0, 0.3, 0, 0, 0, 12.5, 6.05, 3.2, 0.5)
+material_override = SubResource("MatTrim")
+mesh = SubResource("MeshUnit")
+
+[node name="HeroAwning" type="MeshInstance3D" parent="."]
+transform = Transform3D(1.8, 0, 0, 0, 0.25, 0, 0, 0, 11, 4.9, 3.4, -0.5)
+material_override = SubResource("MatAwning")
+mesh = SubResource("MeshUnit")
+
+[node name="HeroFascia" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.25, 0, 0, 0, 1.1, 0, 0, 0, 11, 6, 4.2, -0.5)
+material_override = SubResource("MatTrim")
+mesh = SubResource("MeshUnit")
+
+[node name="HeroSign1" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.2, 0, 0, 0, 1.3, 0, 0, 0, 2.6, 5.75, 4.6, -3.4)
+material_override = SubResource("MatAwningB")
+mesh = SubResource("MeshUnit")
+
+[node name="HeroSign2" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.2, 0, 0, 0, 1.3, 0, 0, 0, 2.6, 5.75, 4.6, 2.4)
+material_override = SubResource("MatAwning")
+mesh = SubResource("MeshUnit")
+
+[node name="HeroLedge" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.5, 0, 0, 0, 0.4, 0, 0, 0, 11.5, 6, 5.4, -0.5)
+material_override = SubResource("MatTrim")
+mesh = SubResource("MeshUnit")
+
+[node name="HeroWindowA" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.3, 0, 0, 0, 2.8, 0, 0, 0, 9, 6, 6.6, -0.5)
+material_override = SubResource("MatGlass")
+mesh = SubResource("MeshUnit")
+
+[node name="HeroWindowB" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.3, 0, 0, 0, 2.8, 0, 0, 0, 9, 6, 9.6, -0.5)
+material_override = SubResource("MatGlass")
+mesh = SubResource("MeshUnit")
+
+; --- Further along the avenue --------------------------------------------
+; A second frontage and two towers, all placed along the band the camera
+; sweeps, and all clear of the z = 10 walk corridor the crowd uses.
+
+[node name="BlockB" type="MeshInstance3D" parent="."]
+transform = Transform3D(12, 0, 0, 0, 16, 0, 0, 0, 12, 18, 8, 19)
+material_override = SubResource("MatBodyB")
+mesh = SubResource("MeshUnit")
+
+[node name="BlockBPlinth" type="MeshInstance3D" parent="."]
+transform = Transform3D(12.4, 0, 0, 0, 1.2, 0, 0, 0, 12.4, 18, 0.6, 19)
+material_override = SubResource("MatBodyA")
+mesh = SubResource("MeshUnit")
+
+[node name="BlockBRoof" type="MeshInstance3D" parent="."]
+transform = Transform3D(12.6, 0, 0, 0, 0.9, 0, 0, 0, 12.6, 18, 16.4, 19)
+material_override = SubResource("MatBodyC")
+mesh = SubResource("MeshUnit")
+
+[node name="BlockBWindow" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.4, 0, 0, 0, 9, 0, 0, 0, 9, 12, 8.5, 19)
+material_override = SubResource("MatGlass")
+mesh = SubResource("MeshUnit")
+
+[node name="TowerA" type="MeshInstance3D" parent="."]
+transform = Transform3D(10, 0, 0, 0, 26, 0, 0, 0, 10, 30, 13, 19)
+material_override = SubResource("MatBodyC")
+mesh = SubResource("MeshUnit")
+
+[node name="TowerAWindow" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.5, 0, 0, 0, 18, 0, 0, 0, 7, 25, 14, 19)
+material_override = SubResource("MatGlass")
+mesh = SubResource("MeshUnit")
+
+[node name="TowerACap" type="MeshInstance3D" parent="."]
+transform = Transform3D(10.8, 0, 0, 0, 1.2, 0, 0, 0, 10.8, 30, 26.6, 19)
+material_override = SubResource("MatSteel")
+mesh = SubResource("MeshUnit")
+
+[node name="TowerB" type="MeshInstance3D" parent="."]
+transform = Transform3D(8, 0, 0, 0, 30, 0, 0, 0, 8, 34, 15, 28)
+material_override = SubResource("MatBodyB")
+mesh = SubResource("MeshUnit")
+
+[node name="TowerBWindow" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.5, 0, 0, 0, 20, 0, 0, 0, 6, 30, 16, 28)
+material_override = SubResource("MatGlass")
+mesh = SubResource("MeshUnit")
+
+; --- Street furniture -----------------------------------------------------
+; Kept on the pavement either side of the shopfront, clear of every walk line.
+
+[node name="Lamp1Pole" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 4.6, 0, 0, 0, 1, 4.6, 2.3, -3)
+material_override = SubResource("MatDarkMetal")
+mesh = SubResource("MeshPole")
+
+[node name="Lamp1Head" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.6, 0, 0, 0, 0.22, 0, 0, 0, 0.34, 4.6, 4.7, -3)
+material_override = SubResource("MatAwningB")
+mesh = SubResource("MeshUnit")
+
+[node name="Lamp2Pole" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 4.6, 0, 0, 0, 1, 8, 2.3, 8.5)
+material_override = SubResource("MatDarkMetal")
+mesh = SubResource("MeshPole")
+
+[node name="Lamp2Head" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.6, 0, 0, 0, 0.22, 0, 0, 0, 0.34, 8, 4.7, 8.5)
+material_override = SubResource("MatAwningB")
+mesh = SubResource("MeshUnit")
+
+[node name="BenchSeat" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.55, 0, 0, 0, 0.12, 0, 0, 0, 2, 4.2, 0.55, 0.8)
+material_override = SubResource("MatBodyA")
+mesh = SubResource("MeshUnit")
+
+[node name="BenchBack" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.12, 0, 0, 0, 0.55, 0, 0, 0, 2, 3.95, 0.85, 0.8)
+material_override = SubResource("MatBodyA")
+mesh = SubResource("MeshUnit")
+
+[node name="BenchLeg1" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.12, 0, 0, 0, 0.5, 0, 0, 0, 0.12, 4.2, 0.25, 0.1)
+material_override = SubResource("MatDarkMetal")
+mesh = SubResource("MeshUnit")
+
+[node name="BenchLeg2" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.12, 0, 0, 0, 0.5, 0, 0, 0, 0.12, 4.2, 0.25, 1.5)
+material_override = SubResource("MatDarkMetal")
+mesh = SubResource("MeshUnit")
+
+[node name="PlanterBox" type="MeshInstance3D" parent="."]
+transform = Transform3D(1.4, 0, 0, 0, 0.7, 0, 0, 0, 1.4, 5.2, 0.35, 4.5)
+material_override = SubResource("MatPlanter")
+mesh = SubResource("MeshUnit")
+
+[node name="PlanterShrub" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1.5, 0, 0, 0, 1, 5.2, 1.15, 4.5)
+material_override = SubResource("MatLeaf")
+mesh = SubResource("MeshShrub")
+
+[node name="TreeTrunk" type="MeshInstance3D" parent="."]
+transform = Transform3D(1.6, 0, 0, 0, 2.4, 0, 0, 0, 1.6, 5, 1.2, 6.5)
+material_override = SubResource("MatTrunk")
+mesh = SubResource("MeshPole")
+
+[node name="TreeCanopy" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1.15, 0, 0, 0, 1, 5, 3.3, 6.5)
+material_override = SubResource("MatLeaf")
+mesh = SubResource("MeshCanopy")
+
+[node name="Bin1" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.55, 0, 0, 0, 0.9, 0, 0, 0, 0.55, 4.6, 0.45, -5.5)
+material_override = SubResource("MatDarkMetal")
+mesh = SubResource("MeshUnit")
+
+[node name="Bin1Lid" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.62, 0, 0, 0, 0.1, 0, 0, 0, 0.62, 4.6, 0.93, -5.5)
+material_override = SubResource("MatSteel")
+mesh = SubResource("MeshUnit")
+
+[node name="Bollard1" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.9, 0, 0, 0, 1, 3.7, 0.45, -4.6)
+material_override = SubResource("MatDarkMetal")
+mesh = SubResource("MeshPole")
+
+[node name="Bollard2" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.9, 0, 0, 0, 1, 3.7, 0.45, -2.2)
+material_override = SubResource("MatDarkMetal")
+mesh = SubResource("MeshPole")
+
+[node name="Bollard3" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.9, 0, 0, 0, 1, 3.7, 0.45, 0.2)
+material_override = SubResource("MatDarkMetal")
+mesh = SubResource("MeshPole")
+
+; --- APPEND POINT ---

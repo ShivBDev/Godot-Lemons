@@ -18,5 +18,8 @@ public record GameStateData(
     int recipeLemons,
     int recipeSugar,
     int recipeIce,
-    float salePrice
+    float salePrice,
+    Dictionary<string, object> weather,
+    Dictionary<string, object> forecast,
+    Dictionary<string, object> upgradeLevels
 );

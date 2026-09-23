@@ -1,0 +1,20 @@
+# Supply side effects, storage limits and the upgrades that answer them.
+
+- Supplies now have side effects. Ice melts overnight and lemons expire; sugar and cups do not.
+- Ice: any stock above 10 cubes loses 20 percent of itself each night, scaled by how warm the day was (x2 at 95F and up, x0.5 below 60F, rain cools it further). A holding of 10 or less never melts.
+- Lemons: a crate is good for 7 days. Freshness is tracked as day-stamped crates in PlayerData.lemon_lots ({count, expires, life}), kept in step with the lemon_stock counter. Brewing always eats the crate closest to going off first.
+- The walk-in cooler extends crates already on the shelf exactly once. Each crate records the shelf life it was packed under ("life"), so the daily freshness pass cannot push an expiry out forever.
+- Every stock is capped. Base limits: lemons 60, sugar 60, ice 200, cups 300.
+- Balance constants and all supply rules live in res://scripts/upgrades/Inventory.gd. Storage, ice and freshness numbers are read from there by PlayerData, DaySimulation and ShopMenu.
+- New upgrades live in res://scripts/upgrades/UpgradeCatalog.gd only. Add ONE entry there and UpgradesMenu draws it; the entry's "group" field controls its heading (The Stand, Storage, Supplies).
+- Ice maker produces 60 ice per day at level 1, plus 20 per level. Ice chest saves 15 percent of the melt per level. Walk-in cooler is a single 450 dollar upgrade taking lemons to a 28 day shelf life.
+- Purchases via ShopMenu go through PlayerData.add_stock(), so money can never buy stock the shelves cannot hold.
+- Day-end settlement order (PlayerData.resolve_day_end): flush the ice maker, melt ice, advance the day, then age lemon crates.
+
+# Areas: one level scene per location, swapped behind a stand that never moves.
+
+- The stand can be set up in three areas: neighborhood (level 1, free), city (level 2), stadium (level 3). Each has a higher traffic multiplier, a higher price multiplier, and a daily operating fee. Free / small / large.
+- All per-area numbers, teams and arrival routes live in res://scripts/areas/AreaCatalog.gd only. Add ONE entry there and the areas menu, the level swap, the traffic, the fee and the crowd all follow. The LevelHolder node in DaySimulation.tscn instances the area's level_scene, so every level must place the Stand on the same transform as the neighborhood.
+- The areas menu is res://scripts/areas/AreaMenu.gd, reachable from the Areas tab. Moving is one PlayerData.set_area() call; PlayerData emits area_changed and DaySimulation calls _refresh_level().
+- Stadium jerseys: PlayerData.team_pair holds two AreaCatalog.TEAM_THEMES entries drawn fresh at the start of every stadium day. Only the team names are serialized; colours are looked back up in the catalog.
+- Customer wardrobe is themed by area via Customer._dress_city() (suits, ties, briefcases) and Customer._dress_stadium() (team jerseys, club caps). Any area's price ceiling is PlayerData.area_price_multiplier() times the customer's own roll.
