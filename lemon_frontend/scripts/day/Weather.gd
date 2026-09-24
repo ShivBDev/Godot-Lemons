@@ -41,6 +41,21 @@ static func sanitize(data: Variant) -> Dictionary:
 		"raining": bool(raining_v),
 	}
 
+# News can push a day outside the usual roll. Same shape as sanitize(), but
+# the temperature is allowed past TEMP_MIN / TEMP_MAX.
+static func sanitize_loose(data: Variant) -> Dictionary:
+	if typeof(data) != TYPE_DICTIONARY:
+		return default_weather()
+	var d: Dictionary = data
+	var temp_v: Variant = d.get("temp", 75)
+	var temp: int = 75
+	if temp_v is float or temp_v is int:
+		temp = roundi(float(temp_v))
+	return {
+		"temp": clampi(temp, 30, 120),
+		"raining": bool(d.get("raining", false)),
+	}
+
 # Short comfort word so the status bar reads like a forecast strip.
 static func comfort_word(temp: int) -> String:
 	if temp >= 90:
@@ -57,7 +72,9 @@ static func describe(temp: int, raining: bool) -> String:
 	return "%dF %s %s" % [temp, comfort_word(temp), sky]
 
 static func describe_weather(weather: Dictionary) -> String:
-	var w: Dictionary = sanitize(weather)
+	# Loose, so a headline-pushed temperature reads the same here as it does on
+	# the status strip.
+	var w: Dictionary = sanitize_loose(weather)
 	return describe(int(w["temp"]), bool(w["raining"]))
 
 # Hotter means more thirsty customers; rain keeps people home.

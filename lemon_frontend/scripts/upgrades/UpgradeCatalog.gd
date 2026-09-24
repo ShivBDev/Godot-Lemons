@@ -30,54 +30,62 @@ class_name UpgradeCatalog
 #   *_capacity        Inventory       storage limit per ingredient
 # Capacity stats are paired with a stock field by Inventory.FIELD_TO_CAPACITY_STAT.
 
+# The upgrade that owns the passive ice machine. Inventory reads this to know
+# that ice production is zero until the machine has actually been bought.
+const ICE_MAKER_ID: String = "ice_maker"
+
 const UPGRADES: Array = [
 	# --- The stand --------------------------------------------------------
 	{
 		"id": "bigger_pitcher",
+		"icon": "res://assets/ui/icons/up_bigger_pitcher.png",
 		"name": "Bigger Pitcher",
 		"group": "The Stand",
-		"description": "Brew a larger batch: +10 cups per pitcher per level.",
-		"max_level": 5,
-		"base_cost": 45.0,
-		"cost_growth": 1.6,
+		"description": "Brew a larger batch: +6 cups per pitcher per level.",
+		"max_level": 8,
+		"base_cost": 35.0,
+		"cost_growth": 1.45,
 		"effects": [
-			{"stat": "pitcher_capacity", "mode": "add", "per_level": 10.0, "min_value": 10.0}
+			{"stat": "pitcher_capacity", "mode": "add", "per_level": 6.0, "min_value": 10.0}
 		]
 	},
 	{
 		"id": "faster_brewing",
+		"icon": "res://assets/ui/icons/up_faster_brewing.png",
 		"name": "Faster Brewing",
 		"group": "The Stand",
-		"description": "Better equipment cuts brewing time by 20 percent per level.",
-		"max_level": 4,
-		"base_cost": 60.0,
-		"cost_growth": 1.7,
+		"description": "Better equipment cuts brewing time by 12 percent per level.",
+		"max_level": 7,
+		"base_cost": 40.0,
+		"cost_growth": 1.5,
 		"effects": [
-			{"stat": "brew_time", "mode": "multiply", "per_level": 0.8, "min_value": 1.0}
+			{"stat": "brew_time", "mode": "multiply", "per_level": 0.88, "min_value": 1.0}
 		]
 	},
 	{
 		"id": "faster_serving",
+		"icon": "res://assets/ui/icons/up_faster_serving.png",
 		"name": "Faster Serving",
 		"group": "The Stand",
-		"description": "Sharper hands cut serving time by 20 percent per level.",
-		"max_level": 4,
-		"base_cost": 50.0,
-		"cost_growth": 1.7,
+		"description": "Sharper hands cut serving time by 12 percent per level.",
+		"max_level": 7,
+		"base_cost": 35.0,
+		"cost_growth": 1.5,
 		"effects": [
-			{"stat": "serve_time", "mode": "multiply", "per_level": 0.8, "min_value": 0.5}
+			{"stat": "serve_time", "mode": "multiply", "per_level": 0.88, "min_value": 0.5}
 		]
 	},
 	{
 		"id": "advertising",
+		"icon": "res://assets/ui/icons/up_advertising.png",
 		"name": "Advertising",
 		"group": "The Stand",
-		"description": "Flyers and a louder sign bring more customers: 15 percent shorter gaps.",
-		"max_level": 5,
-		"base_cost": 70.0,
-		"cost_growth": 1.55,
+		"description": "Flyers and a louder sign bring more customers: 8 percent shorter gaps.",
+		"max_level": 8,
+		"base_cost": 45.0,
+		"cost_growth": 1.42,
 		"effects": [
-			{"stat": "spawn_interval", "mode": "multiply", "per_level": 0.85, "min_value": 1.5}
+			{"stat": "spawn_interval", "mode": "multiply", "per_level": 0.92, "min_value": 1.5}
 		]
 	},
 
@@ -85,50 +93,54 @@ const UPGRADES: Array = [
 	# The stand only holds so much of each ingredient; these raise the limits.
 	{
 		"id": "extra_shelving",
+		"icon": "res://assets/ui/icons/up_extra_shelving.png",
 		"name": "Extra Shelving",
 		"group": "Storage",
-		"description": "More shelf space for fruit: +40 lemons of storage per level.",
-		"max_level": 5,
-		"base_cost": 40.0,
-		"cost_growth": 1.5,
+		"description": "More shelf space for fruit: +25 lemons of storage per level.",
+		"max_level": 8,
+		"base_cost": 28.0,
+		"cost_growth": 1.38,
 		"effects": [
-			{"stat": "lemon_capacity", "mode": "add", "per_level": 40.0, "min_value": 60.0}
+			{"stat": "lemon_capacity", "mode": "add", "per_level": 25.0, "min_value": 60.0}
 		]
 	},
 	{
 		"id": "bigger_sugar_bins",
+		"icon": "res://assets/ui/icons/up_bigger_sugar_bins.png",
 		"name": "Bigger Sugar Bins",
 		"group": "Storage",
-		"description": "Sealed bins hold more sweetener: +40 sugar of storage per level.",
-		"max_level": 5,
-		"base_cost": 35.0,
-		"cost_growth": 1.5,
+		"description": "Sealed bins hold more sweetener: +25 sugar of storage per level.",
+		"max_level": 8,
+		"base_cost": 24.0,
+		"cost_growth": 1.38,
 		"effects": [
-			{"stat": "sugar_capacity", "mode": "add", "per_level": 40.0, "min_value": 60.0}
+			{"stat": "sugar_capacity", "mode": "add", "per_level": 25.0, "min_value": 60.0}
 		]
 	},
 	{
 		"id": "chest_freezer",
+		"icon": "res://assets/ui/icons/up_chest_freezer.png",
 		"name": "Chest Freezer",
 		"group": "Storage",
-		"description": "A deep freezer for ice: +150 ice of storage per level.",
-		"max_level": 5,
-		"base_cost": 55.0,
-		"cost_growth": 1.5,
+		"description": "A deep freezer for ice: +80 ice of storage per level.",
+		"max_level": 8,
+		"base_cost": 36.0,
+		"cost_growth": 1.38,
 		"effects": [
-			{"stat": "ice_capacity", "mode": "add", "per_level": 150.0, "min_value": 200.0}
+			{"stat": "ice_capacity", "mode": "add", "per_level": 80.0, "min_value": 200.0}
 		]
 	},
 	{
 		"id": "cup_racking",
+		"icon": "res://assets/ui/icons/up_cup_racking.png",
 		"name": "Cup Racking",
 		"group": "Storage",
-		"description": "Stacked racking for cups: +200 cups of storage per level.",
-		"max_level": 5,
-		"base_cost": 30.0,
-		"cost_growth": 1.5,
+		"description": "Stacked racking for cups: +100 cups of storage per level.",
+		"max_level": 8,
+		"base_cost": 22.0,
+		"cost_growth": 1.38,
 		"effects": [
-			{"stat": "cup_capacity", "mode": "add", "per_level": 200.0, "min_value": 300.0}
+			{"stat": "cup_capacity", "mode": "add", "per_level": 100.0, "min_value": 300.0}
 		]
 	},
 
@@ -136,30 +148,33 @@ const UPGRADES: Array = [
 	# Ice and lemons go off on their own, so these are the counter-measures.
 	{
 		"id": "insulated_ice_chest",
+		"icon": "res://assets/ui/icons/up_insulated_ice_chest.png",
 		"name": "Insulated Ice Chest",
 		"group": "Supplies",
-		"description": "A better icebox loses 15 percent less ice to overnight melt per level.",
-		"max_level": 4,
-		"base_cost": 90.0,
-		"cost_growth": 1.7,
+		"description": "A better icebox loses 8 percent less ice to overnight melt per level.",
+		"max_level": 7,
+		"base_cost": 55.0,
+		"cost_growth": 1.48,
 		"effects": [
-			{"stat": "ice_melt_save", "mode": "add", "per_level": 0.15, "min_value": 0.0}
+			{"stat": "ice_melt_save", "mode": "add", "per_level": 0.08, "min_value": 0.0}
 		]
 	},
 	{
 		"id": "ice_maker",
+		"icon": "res://assets/ui/icons/up_ice_maker.png",
 		"name": "Ice Maker",
 		"group": "Supplies",
-		"description": "A slow machine makes 60 free ice cubes over each day, plus 20 per level.",
-		"max_level": 5,
-		"base_cost": 160.0,
-		"cost_growth": 1.6,
+		"description": "A slow machine makes ice over each day: 40 at level 1, plus 12 per level.",
+		"max_level": 8,
+		"base_cost": 90.0,
+		"cost_growth": 1.42,
 		"effects": [
-			{"stat": "ice_per_day", "mode": "add", "per_level": 20.0, "min_value": 0.0}
+			{"stat": "ice_per_day", "mode": "add", "per_level": 12.0, "min_value": 0.0}
 		]
 	},
 	{
 		"id": "walk_in_cooler",
+		"icon": "res://assets/ui/icons/up_walk_in_cooler.png",
 		"name": "Walk-in Cooler",
 		"group": "Supplies",
 		"description": "Refrigeration keeps lemons fresh for 28 days instead of 7, including the fruit already on the shelf.",

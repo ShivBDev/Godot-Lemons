@@ -3,10 +3,17 @@ extends Node
 signal profile_updated
 signal weather_changed
 signal area_changed(area_id: String)
+signal news_changed
 
 # Core State Model
 var username: String = "New Player"
-var money: float = 100.00
+# Money can never go below zero. Over-committing -- an area fee or a wage the
+# till could not cover -- floors at zero instead of carrying debt, so a free
+# day in the neighbourhood is always playable. The setter is the one choke
+# point, so a server load, a purchase and a charge all land on the same floor.
+var money: float = 100.00:
+	set(value):
+		money = maxf(0.0, value)
 var day_count: int = 1
 
 # Active Day Inventory
@@ -52,6 +59,30 @@ var team_pair: Array = []
 # What the last day's area fee cost, so the results panel can show it.
 var last_area_fee: float = 0.0
 
+# Per-area popularity. {area_id: {level, points}}. A loved cup is 3 points
+# and a neutral cup is 1. The next rank always costs more, and a busier area
+# costs more still. "perfects" is the old save key and is read as points.
+var popularity: Dictionary = {}
+
+# Staff hired for the coming day. {worker_id: true}. Wages are charged once
+# when that day ends, and only for whoever was still toggled on.
+var hired_staff: Dictionary = {}
+var last_staff_wage: float = 0.0
+
+# The headline that applies to the NEXT day. Rolled at day end, consumed when
+# that day starts, then replaced. Empty means "roll one on first open".
+var news: Dictionary = {}
+
+# Running taste tallies for the day that just ended, so the results panel can
+# show how the crowd felt. Reset by DaySimulation at start_day().
+var opinion_totals: Dictionary = {}
+
+# Lifetime career stats, shown in the Settings menu's stats panel. Plain
+# numbers and one nested count per area id, so the whole block rides the save
+# round trip as JSON. Every key is optional on load: _ensure_stats() fills in
+# whatever an older save did not carry.
+var stats: Dictionary = {}
+
 func update_from_server_payload(profile_dict: Dictionary) -> void:
 	if profile_dict.has("name"): username = profile_dict["name"]
 	if profile_dict.has("money"): money = float(profile_dict["money"])
@@ -65,14 +96,24 @@ func update_from_server_payload(profile_dict: Dictionary) -> void:
 	if profile_dict.has("recipeIce"): recipe_ice = profile_dict["recipeIce"]
 	if profile_dict.has("salePrice"): sale_price = profile_dict["salePrice"]
 	# Optional keys: absent on older saves, so each read is has()-guarded.
-	if profile_dict.has("weather"): weather = Weather.sanitize(profile_dict["weather"])
-	if profile_dict.has("forecast"): forecast = Weather.sanitize(profile_dict["forecast"])
+	# Loose on the way in too, so a headline-pushed day is still that day after
+	# a reload instead of snapping back into the usual 55-105 band.
+	if profile_dict.has("weather"): weather = Weather.sanitize_loose(profile_dict["weather"])
+	if profile_dict.has("forecast"): forecast = Weather.sanitize_loose(profile_dict["forecast"])
 	if profile_dict.has("upgradeLevels"): _read_upgrade_levels(profile_dict["upgradeLevels"])
 	# Area choice and today's stadium teams. Both optional on older saves.
 	if profile_dict.has("currentArea"):
 		current_area = AreaCatalog.sanitize(str(profile_dict["currentArea"]))
 	if profile_dict.has("teamPair"):
 		team_pair = sanitize_team_pair(profile_dict["teamPair"])
+	if profile_dict.has("popularity"):
+		popularity = _read_popularity(profile_dict["popularity"])
+	if profile_dict.has("hiredStaff"):
+		hired_staff = _read_hired(profile_dict["hiredStaff"])
+	if profile_dict.has("news"):
+		news = NewsCatalog.sanitize(profile_dict["news"])
+	if profile_dict.has("stats"):
+		stats = _read_stats(profile_dict["stats"])
 	# Storage limits and lemon crates settle last. A save can carry more stock
 	# than the stand now holds, so every counter is trimmed to fit, and any
 	# crate that arrived without a matching counter is lined up before the UI
@@ -107,7 +148,11 @@ func serialize_for_sync() -> Dictionary:
 			"lemonLots": lemon_lots,
 			"upgradeLevels": upgrade_levels,
 			"currentArea": current_area,
-			"teamPair": team_pair
+			"teamPair": team_pair,
+			"popularity": popularity,
+			"hiredStaff": hired_staff,
+			"news": news,
+			"stats": stats
 		}
 	}
 
@@ -121,13 +166,16 @@ func ensure_weather_rolled() -> void:
 	if forecast.is_empty():
 		forecast = Weather.roll()
 
+# Read loose, not clamped: tomorrow's headline can push the temperature past
+# the normal 55-105 roll, and the value the sim and the HUD act on has to be
+# the one the headline promised.
 func today_weather() -> Dictionary:
 	ensure_weather_rolled()
-	return Weather.sanitize(weather)
+	return Weather.sanitize_loose(weather)
 
 func next_forecast() -> Dictionary:
 	ensure_weather_rolled()
-	return Weather.sanitize(forecast)
+	return Weather.sanitize_loose(forecast)
 
 func weather_label() -> String:
 	return Weather.describe_weather(today_weather())
@@ -136,8 +184,10 @@ func forecast_label() -> String:
 	return Weather.describe_weather(next_forecast())
 
 # Called at day end: the forecast becomes today, and a new forecast is rolled.
+# Promoted loose so a headline's pushed temperature survives into the day it was
+# announced for instead of being clamped back into the usual range.
 func advance_weather() -> void:
-	weather = next_forecast()
+	weather = Weather.sanitize_loose(forecast)
 	forecast = Weather.roll()
 	weather_changed.emit()
 
@@ -165,7 +215,9 @@ func can_buy_upgrade(id: String) -> bool:
 func buy_upgrade(id: String) -> bool:
 	if not can_buy_upgrade(id):
 		return false
-	money -= upgrade_cost(id)
+	var cost: float = upgrade_cost(id)
+	money -= cost
+	note_spend(cost)
 	set_upgrade_level(id, get_upgrade_level(id) + 1)
 	# A storage or shelf-life upgrade must show up on the stocks the player is
 	# looking at, not only on the ones bought afterwards.
@@ -186,6 +238,44 @@ func stock_of(field: String) -> int:
 	if field == "lemon_stock":
 		return lemon_lots_total()
 	return int(self[field])
+
+# --- The pitcher floor ---------------------------------------------------
+# The fewest ingredients a day can open with: one pitcher's worth of lemons,
+# sugar and ice. The Start Day button is blocked on this, and the Shop hands
+# out a free rescue pack of anything the player is BOTH short of AND unable to
+# pay for, so a broke stand can always be dug out of the hole.
+
+# Every stock the pitcher floor reads, in one dictionary. Lemons report the
+# crates actually on the shelf, not the counter.
+func pitcher_stocks() -> Dictionary:
+	return {
+		"lemon_stock": stock_of("lemon_stock"),
+		"sugar_stock": sugar_stock,
+		"ice_stock": ice_stock,
+	}
+
+# How much of each pitcher ingredient is missing, keyed by stock field. Empty
+# means the stand can brew.
+func pitcher_shortfall() -> Dictionary:
+	return Inventory.pitcher_shortfall(pitcher_stocks(), recipe_lemons, recipe_sugar, recipe_ice)
+
+# What one pitcher needs of one field. Zero for anything a pitcher does not use
+# (cups), which is how the Shop knows a row has no rescue pack.
+func pitcher_need(field: String) -> int:
+	return Inventory.pitcher_amount(field, recipe_lemons, recipe_sugar, recipe_ice)
+
+func can_brew_pitcher() -> bool:
+	return pitcher_shortfall().is_empty()
+
+# Readable shortfall for the locked Start Day line, e.g. "4 lemons, 2 sugar".
+func pitcher_shortfall_text() -> String:
+	var short: Dictionary = pitcher_shortfall()
+	var parts: Array = []
+	for field in Inventory.PITCHER_FIELDS:
+		var key: String = str(field)
+		if short.has(key):
+			parts.append("%d %s" % [int(short[key]), Inventory.field_label(key)])
+	return ", ".join(parts)
 
 # Adds as much of quantity as fits and returns how many were accepted.
 func add_stock(field: String, quantity: int) -> int:
@@ -319,6 +409,10 @@ func set_area(id: String) -> bool:
 	var target: String = AreaCatalog.sanitize(id)
 	if target == current_area:
 		return false
+	# A move has to leave the day startable, so a fee the till cannot cover is
+	# refused here as well as in the areas menu.
+	if not can_afford_area(target):
+		return false
 	current_area = target
 	# A different area is a different crowd. Walking into the stadium rolls a
 	# fresh pair of team colours for the day; leaving clears them again.
@@ -380,3 +474,354 @@ func sanitize_team_pair(raw: Variant) -> Array:
 	# Nothing usable came back: draw a fresh pair rather than leave the crowd
 	# wearing half a colour scheme.
 	return AreaCatalog.roll_team_pair()
+
+# --- Popularity ----------------------------------------------------------
+
+func popularity_level(area_id: String = "") -> int:
+	var id: String = AreaCatalog.sanitize(area_id if not area_id.is_empty() else current_area)
+	return int(_popularity_entry(id).get("level", 0))
+
+func popularity_points(area_id: String = "") -> int:
+	var id: String = AreaCatalog.sanitize(area_id if not area_id.is_empty() else current_area)
+	var entry: Dictionary = _popularity_entry(id)
+	if entry.has("points"):
+		return int(entry.get("points", 0))
+	return int(entry.get("perfects", 0))
+
+func popularity_perfects(area_id: String = "") -> int:
+	return popularity_points(area_id)
+
+func popularity_goal(area_id: String = "") -> int:
+	var id: String = AreaCatalog.sanitize(area_id if not area_id.is_empty() else current_area)
+	return Popularity.cups_to_next(id, popularity_level(id))
+
+# Opinion points in the area being worked. A loved cup is 3, a neutral cup
+# is 1, a dislike is 0. Returns true when the points also raised a rank.
+func note_popularity_points(earned: int, area_id: String = "") -> bool:
+	if earned <= 0:
+		return false
+	var id: String = AreaCatalog.sanitize(area_id if not area_id.is_empty() else current_area)
+	var entry: Dictionary = _popularity_entry(id)
+	var level: int = int(entry.get("level", 0))
+	var points: int = popularity_points(id) + earned
+	var leveled: bool = false
+	while level < Popularity.MAX_RANK and points >= Popularity.points_needed(id, level):
+		points -= Popularity.points_needed(id, level)
+		level += 1
+		leveled = true
+	popularity[id] = {"level": level, "points": points}
+	return leveled
+
+func note_perfect_cup(area_id: String = "") -> bool:
+	return note_popularity_points(Popularity.POINTS_LOVE, area_id)
+
+func popularity_traffic() -> float:
+	return Popularity.traffic_bonus(popularity_level())
+
+func popularity_price() -> float:
+	return Popularity.price_bonus(popularity_level())
+
+func popularity_patience() -> float:
+	return Popularity.patience_bonus(popularity_level())
+
+func popularity_line() -> int:
+	return Popularity.line_bonus(popularity_level())
+
+func _popularity_entry(id: String) -> Dictionary:
+	var raw: Variant = popularity.get(id, {})
+	if typeof(raw) != TYPE_DICTIONARY:
+		return {"level": 0, "perfects": 0}
+	return raw
+
+func _read_popularity(raw: Variant) -> Dictionary:
+	if typeof(raw) != TYPE_DICTIONARY:
+		return {}
+	var stored: Dictionary = raw
+	var clean: Dictionary = {}
+	for key in stored.keys():
+		var id: String = AreaCatalog.sanitize(str(key))
+		var entry: Variant = stored[key]
+		if typeof(entry) != TYPE_DICTIONARY:
+			continue
+		var stored_points: int = int(entry.get("points", entry.get("perfects", 0)))
+		clean[id] = {
+			"level": clampi(int(entry.get("level", 0)), 0, Popularity.MAX_RANK),
+			"points": maxi(0, stored_points),
+		}
+	return clean
+
+# --- Staff ---------------------------------------------------------------
+
+func is_hired(id: StaffMember.STAFF_ID) -> bool:
+	return bool(hired_staff.get(id, false))
+
+func toggle_hire(id: StaffMember.STAFF_ID) -> bool:
+	if not StaffCatalog.has_worker(id):
+		return false
+	var now_on: bool = not is_hired(id)
+	# Taking someone on must leave the day startable, so the same check the
+	# menu makes is enforced here too.
+	if now_on and not can_afford_hire(id):
+		return false
+	if now_on:
+		hired_staff[id] = true
+	else:
+		hired_staff.erase(id)
+	profile_updated.emit()
+	return now_on
+
+func staff_daily_wage() -> float:
+	var total: float = 0.0
+	for id in hired_staff.keys():
+		if bool(hired_staff[id]):
+			total += StaffCatalog.daily_cost(id)
+	return total
+
+func charge_staff_wages() -> float:
+	last_staff_wage = staff_daily_wage()
+	# Only what the till could actually pay is recorded as spend, so the
+	# zero floor cannot make the career total claim money it never paid out.
+	note_spend(minf(last_staff_wage, money))
+	money = maxf(0.0, money - last_staff_wage)
+	return last_staff_wage
+
+# --- Day costs -----------------------------------------------------------
+
+# What setting up for the day costs before a single cup is sold: the pitch
+# fee for the current area plus a day's wage for everyone left switched on.
+# Charged once, up front, by pay_day_start_costs().
+func day_start_cost() -> float:
+	return area_daily_fee() + staff_daily_wage()
+
+# The day can only start while the till covers both the fee and the wages.
+# This is what locks the Start Day button out.
+func can_afford_day_start() -> bool:
+	return money >= day_start_cost()
+
+# A day also needs something to sell: one pitcher's worth of lemons, sugar and
+# ice on the shelf. The Shop's free rescue packs close this gap, so the two
+# together mean a day can always be reached without a soft lock.
+func can_start_day() -> bool:
+	return can_afford_day_start() and can_brew_pitcher()
+
+# Takes the day's costs out of the till up front and records them for the
+# results panel. Money is floored at zero, so a day can never open in debt.
+func pay_day_start_costs() -> float:
+	last_area_fee = area_daily_fee()
+	last_staff_wage = staff_daily_wage()
+	var total: float = last_area_fee + last_staff_wage
+	# The fee and the wages are the day's biggest spend, and only the part the
+	# till could cover counts, for the same reason as a wage charge.
+	note_spend(minf(total, money))
+	money = maxf(0.0, money - total)
+	profile_updated.emit()
+	return total
+
+# A new hire has to leave the day startable, so the fee, the wages already on
+# the books and this one all have to fit in the till together. Turning someone
+# off is always allowed.
+func can_afford_hire(id: StaffMember.STAFF_ID) -> bool:
+	if not StaffCatalog.has_worker(id):
+		return false
+	if is_hired(id):
+		return true
+	return money >= day_start_cost() + StaffCatalog.daily_cost(id)
+
+# Moving has to leave the day startable too: the new pitch fee plus the wages
+# already promised.
+func can_afford_area(id: String) -> bool:
+	if not AreaCatalog.has_area(id):
+		return false
+	return money >= AreaCatalog.daily_fee_for(id) + staff_daily_wage()
+
+func _read_hired(raw_data: Variant) -> Dictionary:
+	if typeof(raw_data) != TYPE_DICTIONARY:
+		return {}
+	var stored_data: Dictionary = raw_data
+	var cleaned_data: Dictionary = {}
+	for key in stored_data.keys():
+		var idStr: String = str(key)
+		var id: StaffMember.STAFF_ID = StaffMember.STAFF_ID.get(idStr)
+		if StaffCatalog.has_worker(id):
+			if bool(stored_data[key]): cleaned_data[id] = true
+			else: cleaned_data[id] = false
+	return cleaned_data
+
+# --- News ----------------------------------------------------------------
+
+func ensure_news() -> void:
+	if news.is_empty():
+		news = NewsCatalog.roll()
+		# The first headline of a session has no finished day behind it to have
+		# been folded in at day end, and the day it applies to is the one
+		# already sitting in `weather`, so fold it in there.
+		if _fold_news_weather(news, weather):
+			weather_changed.emit()
+		news_changed.emit()
+
+func current_news() -> Dictionary:
+	ensure_news()
+	return news
+
+func roll_next_news() -> void:
+	news = NewsCatalog.roll()
+	news_changed.emit()
+
+# Folds the current headline into tomorrow's forecast. DaySimulation calls this
+# at day end BEFORE the calendar rolls over, so resolve_day_end() promotes the
+# finished forecast to today: the headline lands on the day the ticker promised
+# rather than on the one after it.
+func apply_news_to_forecast() -> void:
+	if _fold_news_weather(current_news(), forecast):
+		weather_changed.emit()
+
+# The one place a headline's weather is written into a day. Returns true when
+# the headline was a weather story and the target changed.
+func _fold_news_weather(item: Dictionary, target: Dictionary) -> bool:
+	if item.is_empty():
+		return false
+	var effect: String = NewsCatalog.effect_of(item)
+	if effect == NewsCatalog.EFFECTS_WEATHER_TEMP:
+		target["temp"] = int(target.get("temp", 75)) + int(round(NewsCatalog.value_of(item)))
+		return true
+	if effect == NewsCatalog.EFFECTS_WEATHER_RAIN:
+		target["raining"] = NewsCatalog.value_of(item) >= 0.5
+		return true
+	return false
+
+# --- Career stats --------------------------------------------------------
+
+# Days, sales and spend across the whole save, plus the best single day's
+# takings. Read only by the Settings panel; every number is a plain int or
+# float so it round trips through the save like the rest of the profile.
+func note_day_finished(day_revenue: float, cups: int) -> void:
+	_ensure_stats()
+	stats["days_total"] = int(stats["days_total"]) + 1
+	var by_area: Dictionary = stats["days_by_area"]
+	var id: String = current_area_id()
+	by_area[id] = int(by_area.get(id, 0)) + 1
+	# A best day is judged on money, and the cup count is what made it.
+	if day_revenue > float(stats["best_day_money"]):
+		stats["best_day_money"] = day_revenue
+		stats["best_day_cups"] = cups
+		stats["best_day_day"] = day_count
+
+func note_sale(amount: float) -> void:
+	_ensure_stats()
+	stats["cups_sold"] = int(stats["cups_sold"]) + 1
+	stats["sales_money"] = float(stats["sales_money"]) + amount
+
+# Money leaving the till: shop packs, upgrades, the area fee, wages.
+func note_spend(amount: float) -> void:
+	if amount <= 0.0:
+		return
+	_ensure_stats()
+	stats["spend_money"] = float(stats["spend_money"]) + amount
+
+# The Settings panel's stat block, one formatted line per fact. Formatting
+# lives here so the panel stays a plain list of labels, and a save that is
+# missing a key still shows a full block.
+func stats_lines() -> PackedStringArray:
+	_ensure_stats()
+	var out := PackedStringArray()
+	out.append("Days played: %d" % int(stats["days_total"]))
+	# One line per fact keeps the block inside a fixed-height panel however
+	# many areas are ever added: the per-area counts share a single row.
+	out.append("By area: %s" % _area_days_line())
+	out.append("Total sales: %d cups  |  $%.2f" % [int(stats["cups_sold"]), float(stats["sales_money"])])
+	out.append("Total spent: $%.2f" % float(stats["spend_money"]))
+	if int(stats["best_day_day"]) <= 0:
+		out.append("Best day: none yet")
+	else:
+		out.append("Best day: $%.2f  |  %d cups (day %d)" % [
+			float(stats["best_day_money"]), int(stats["best_day_cups"]), int(stats["best_day_day"])])
+	return out
+
+# "The Neighborhood: 4 | Downtown: 2 | The Stadium: 1". Every area in the
+# catalog is named, including ones never worked, so the breakdown always reads
+# as a complete picture.
+func _area_days_line() -> String:
+	var parts := PackedStringArray()
+	for area in AreaCatalog.all():
+		var id: String = str(area.get("id", ""))
+		parts.append("%s: %d" % [AreaCatalog.name_for(id), stats_days_by_area(id)])
+	return " | ".join(parts)
+
+func stats_days_by_area(id: String) -> int:
+	_ensure_stats()
+	var by_area: Dictionary = stats["days_by_area"]
+	return int(by_area.get(AreaCatalog.sanitize(id), 0))
+
+func stats_days_total() -> int:
+	_ensure_stats()
+	return int(stats["days_total"])
+
+# Fills in any key a save from before stats existed would be missing, so the
+# panel and the note_* calls can all read the dictionary without guarding.
+func _ensure_stats() -> void:
+	if not stats.has("days_total"):
+		stats["days_total"] = 0
+	if typeof(stats.get("days_by_area")) != TYPE_DICTIONARY:
+		stats["days_by_area"] = {}
+	if not stats.has("cups_sold"):
+		stats["cups_sold"] = 0
+	if not stats.has("sales_money"):
+		stats["sales_money"] = 0.0
+	if not stats.has("spend_money"):
+		stats["spend_money"] = 0.0
+	if not stats.has("best_day_money"):
+		stats["best_day_money"] = 0.0
+	if not stats.has("best_day_cups"):
+		stats["best_day_cups"] = 0
+	if not stats.has("best_day_day"):
+		stats["best_day_day"] = 0
+
+func _read_stats(raw: Variant) -> Dictionary:
+	var blank: Dictionary = {
+		"days_total": 0,
+		"days_by_area": {},
+		"cups_sold": 0,
+		"sales_money": 0.0,
+		"spend_money": 0.0,
+		"best_day_money": 0.0,
+		"best_day_cups": 0,
+		"best_day_day": 0,
+	}
+	if typeof(raw) != TYPE_DICTIONARY:
+		return blank
+	var stored: Dictionary = raw
+	blank["days_total"] = maxi(0, int(stored.get("days_total", 0)))
+	blank["cups_sold"] = maxi(0, int(stored.get("cups_sold", 0)))
+	blank["sales_money"] = maxf(0.0, float(stored.get("sales_money", 0.0)))
+	blank["spend_money"] = maxf(0.0, float(stored.get("spend_money", 0.0)))
+	blank["best_day_money"] = maxf(0.0, float(stored.get("best_day_money", 0.0)))
+	blank["best_day_cups"] = maxi(0, int(stored.get("best_day_cups", 0)))
+	blank["best_day_day"] = maxi(0, int(stored.get("best_day_day", 0)))
+	var by_area: Dictionary = {}
+	var stored_areas: Variant = stored.get("days_by_area", {})
+	if typeof(stored_areas) == TYPE_DICTIONARY:
+		var areas: Dictionary = stored_areas
+		for key in areas.keys():
+			by_area[AreaCatalog.sanitize(str(key))] = maxi(0, int(areas[key]))
+	blank["days_by_area"] = by_area
+	return blank
+
+# --- Opinions ------------------------------------------------------------
+
+func reset_opinions() -> void:
+	opinion_totals = RecipeOpinion.empty_totals()
+
+func note_opinion(opinion: Dictionary) -> void:
+	if opinion_totals.is_empty():
+		opinion_totals = RecipeOpinion.empty_totals()
+	RecipeOpinion.add_totals(opinion_totals, opinion)
+
+func note_customer_arrival() -> void:
+	if opinion_totals.is_empty():
+		opinion_totals = RecipeOpinion.empty_totals()
+	RecipeOpinion.note_arrival(opinion_totals)
+
+func note_customer_skip(reason: String) -> void:
+	if opinion_totals.is_empty():
+		opinion_totals = RecipeOpinion.empty_totals()
+	RecipeOpinion.note_skip(opinion_totals, reason)

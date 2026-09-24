@@ -19,6 +19,8 @@ signal day_finished
 
 const CustomerScene: PackedScene = preload("res://scripts/day/Customer.tscn")
 const QUEUE_SPACING: float = 0.9
+# How far apart the two window lines sit, left and right of the counter.
+const QUEUE_LANE_GAP: float = 1.6
 const LEAVE_Z: float = -11.0
 
 # How far in front of the Stand node's origin the first customer stands. The
@@ -28,6 +30,16 @@ const LEAVE_Z: float = -11.0
 const QUEUE_FRONT_OFFSET: float = 2.2
 # Only used if the Stand node cannot be found, so the sim still has a sane line.
 const APPROACH_Z: float = -2.0
+
+# Weather art comes from the icon set in res://assets/ui/icons, preloaded so drawing a
+# forecast never stalls on a disk read. Keyed by what kind_for_weather returns.
+const WEATHER_ICONS: Dictionary = {
+	"sun": preload("res://assets/ui/icons/sun.png"),
+	"hot": preload("res://assets/ui/icons/hot.png"),
+	"cold": preload("res://assets/ui/icons/cold.png"),
+	"rain": preload("res://assets/ui/icons/rain.png"),
+	"cloudy": preload("res://assets/ui/icons/cloudy.png"),
+}
 
 # Arrival routes live in AreaCatalog now, one set per area, so the crowd walks
 # in from the right streets wherever the stand is set up. Every route in every
@@ -83,6 +95,16 @@ var cups_sold: int = 0
 var served_count: int = 0
 var rejected_count: int = 0
 var reject_reasons: Dictionary = {}
+var perfect_cups: int = 0
+var loved_count: int = 0
+var neutral_count: int = 0
+var disliked_count: int = 0
+var opinion_lines: Array = []
+# Second window. Null unless a server is hired for this day.
+var serve_target_b = null
+var serve_remaining_b: float = 0.0
+var queue_b: Array = []
+var _queue_front_b: Vector3 = Vector3(0.9, 0.0, APPROACH_Z)
 
 @onready var stand: Node3D = get_node_or_null("Stand")
 # The current area's scenery is instanced under this node and swapped for a
@@ -96,8 +118,8 @@ var loaded_level_scene: String = ""
 @onready var status_sugar_count: Label = $HUD/StatusBar/CountSugar
 @onready var status_ice_count: Label = $HUD/StatusBar/CountIce
 @onready var status_cup_count: Label = $HUD/StatusBar/CountCup
-@onready var status_weather_icon: Control = $HUD/StatusBar/WeatherIcon
-@onready var status_forecast_icon: Control = $HUD/StatusBar/ForecastIcon
+@onready var status_weather_icon: TextureRect = $HUD/StatusBar/WeatherIcon
+@onready var status_forecast_icon: TextureRect = $HUD/StatusBar/ForecastIcon
 @onready var status_weather_label: Label = $HUD/StatusBar/WeatherLabel
 @onready var status_forecast_label: Label = $HUD/StatusBar/ForecastLabel
 @onready var status_label: Label = $HUD/TopBar/StatusLabel
@@ -112,6 +134,13 @@ var loaded_level_scene: String = ""
 @onready var results_spoilage: Label = get_node_or_null("HUD/ResultsPanel/ResultsSpoilage")
 # Optional too: names the area worked and what its operating fee came to.
 @onready var results_area: Label = get_node_or_null("HUD/ResultsPanel/ResultsArea")
+@onready var results_opinions: Label = get_node_or_null("HUD/ResultsPanel/ResultsOpinions")
+@onready var results_popularity: Label = get_node_or_null("HUD/ResultsPanel/ResultsPopularity")
+@onready var news_banner: Label = get_node_or_null("HUD/NewsBanner")
+@onready var crew: Node3D = get_node_or_null("Stand/Crew")
+# The player's name, painted on the stand sign on the line above the LEMONADE
+# word. Optional: a scene without the label still runs, it just shows no name.
+@onready var sign_user_label: Label3D = get_node_or_null("Stand/SignUserLabel")
 
 func _ready() -> void:
 	results_panel.visible = false
@@ -139,6 +168,9 @@ func start_day() -> void:
 	if running:
 		return
 	running = true
+	# The pitch fee and the wages are paid up front, before the first customer
+	# walks up, so the day can never end with the till in the red.
+	PlayerData.pay_day_start_costs()
 	spawning = true
 	day_remaining = day_length
 	spawn_timer = 2.0
@@ -147,6 +179,16 @@ func start_day() -> void:
 	served_count = 0
 	rejected_count = 0
 	reject_reasons = {}
+	perfect_cups = 0
+	loved_count = 0
+	neutral_count = 0
+	disliked_count = 0
+	opinion_lines = []
+	serve_target_b = null
+	serve_remaining_b = 0.0
+	queue_b.clear()
+	PlayerData.reset_opinions()
+	PlayerData.ensure_news()
 	fast_forward = false
 	time_scale = 1.0
 	cups_left = 0
@@ -213,10 +255,14 @@ func _process(_delta: float) -> void:
 		serve_remaining -= delta
 		if serve_remaining <= 0.0:
 			_finish_service()
+	if serve_target_b != null:
+		serve_remaining_b -= delta
+		if serve_remaining_b <= 0.0:
+			_finish_service_b()
 	_update_queue_slots()
 	_process_queue_front()
 	update_hud()
-	if day_remaining <= 0.0 and customers.is_empty() and serve_target == null:
+	if day_remaining <= 0.0 and customers.is_empty() and serve_target == null and serve_target_b == null:
 		_end_day()
 
 # --- Area scenery ---------------------------------------------------------
@@ -266,8 +312,18 @@ func _refresh_queue_anchor() -> void:
 		return
 	facing = facing.normalized()
 	_queue_dir = facing
-	_queue_front = stand.global_position + facing * QUEUE_FRONT_OFFSET
-	_queue_front.y = 0.0
+	var side: Vector3 = stand.global_transform.basis.x
+	side.y = 0.0
+	if side.length() < 0.0001:
+		side = Vector3(1.0, 0.0, 0.0)
+	else:
+		side = side.normalized()
+	var center: Vector3 = stand.global_position + facing * QUEUE_FRONT_OFFSET
+	center.y = 0.0
+	# Two starts, side by side in front of the counter. One line still uses
+	# the left start; a hired server opens the right start beside it.
+	_queue_front = center - side * (QUEUE_LANE_GAP * 0.5)
+	_queue_front_b = center + side * (QUEUE_LANE_GAP * 0.5)
 
 # Direction a customer faces while waiting at or being served at the counter:
 # straight back at the stand, whichever way it was turned.
@@ -278,30 +334,58 @@ func get_queue_facing() -> Vector3:
 func get_line_end_point() -> Vector3:
 	return _queue_front + _queue_dir * (float(queue.size()) * QUEUE_SPACING)
 
+func _server_hired() -> bool:
+	return PlayerData.is_hired(StaffMember.STAFF_ID.server)
+
+func get_line_end_point_b() -> Vector3:
+	return _queue_front_b + _queue_dir * (float(queue_b.size()) * QUEUE_SPACING)
+
 func get_line_end_z() -> float:
 	return get_line_end_point().z
 
+# Whether one cup could actually be handed over right now: the ice the recipe
+# puts in a cup, plus either a cup already poured or a batch that can still be
+# brewed. Ice is charged per cup, so a dry tray is a hard stop even with cups
+# ready to pour.
+func _can_serve_a_cup() -> bool:
+	if PlayerData.ice_stock < PlayerData.recipe_ice:
+		return false
+	if cups_left > 0:
+		return true
+	return brewing or _can_brew()
+
 func on_customer_arrived(c) -> void:
-	if cups_left == 0 and not brewing and not _can_brew():
+	# Nobody joins the line when not even one cup could be served.
+	if not _can_serve_a_cup():
 		_reject_customer(c, "Out of stock!")
 		return
-	var line_len: int = queue.size() + (1 if serve_target != null else 0)
+	var use_b: bool = _server_hired() and _line_length(queue_b, serve_target_b) < _line_length(queue, serve_target)
+	var line: Array = queue_b if use_b else queue
+	var serving = serve_target_b if use_b else serve_target
+	var line_len: int = _line_length(line, serving)
 	if line_len > c.line_tolerance:
 		_reject_customer(c, "Line too long!")
 		return
-	queue.append(c)
+	line.append(c)
 	c.enter_queue()
+	c.queue_lane = 1 if use_b else 0
 
 func on_customer_gave_up(c) -> void:
 	queue.erase(c)
+	queue_b.erase(c)
 	_reject_customer(c, "Gotta go!")
+
+func _line_length(line: Array, serving) -> int:
+	return line.size() + (1 if serving != null else 0)
 
 func on_customer_finished(c) -> void:
 	customers.erase(c)
 	queue.erase(c)
+	queue_b.erase(c)
 	c.queue_free()
 
 func _spawn_customer() -> void:
+	PlayerData.note_customer_arrival()
 	var c = CustomerScene.instantiate()
 	# Routes come from the area, so the crowd walks in off the right streets
 	# for wherever the stand is set up today.
@@ -316,10 +400,12 @@ func _spawn_customer() -> void:
 	add_child(c)
 	customers.append(c)
 
+# A batch eats lemons and sugar. Ice is deliberately NOT here: the recipe's
+# ice count is what one CUP holds, and it is spent when that cup is sold, so a
+# batch can be brewed with a dry tray and it is the sale that refuses.
 func _can_brew() -> bool:
 	return PlayerData.lemon_stock >= PlayerData.recipe_lemons \
-		and PlayerData.sugar_stock >= PlayerData.recipe_sugar \
-		and PlayerData.ice_stock >= PlayerData.recipe_ice
+		and PlayerData.sugar_stock >= PlayerData.recipe_sugar
 
 func _try_start_brewing() -> void:
 	if brewing:
@@ -330,12 +416,10 @@ func _try_start_brewing() -> void:
 		return
 	# consume_stock() refuses a partial spend and takes lemons from the crate
 	# closest to going off first, so a stale crate is used before fresh fruit.
-	# _can_brew() above already checked all three, so these are all-or-nothing.
+	# _can_brew() above already checked both, so these are all-or-nothing.
 	if not PlayerData.consume_stock("lemon_stock", PlayerData.recipe_lemons):
 		return
 	if not PlayerData.consume_stock("sugar_stock", PlayerData.recipe_sugar):
-		return
-	if not PlayerData.consume_stock("ice_stock", PlayerData.recipe_ice):
 		return
 	brewing = true
 	brew_remaining = eff_brew_time
@@ -346,33 +430,49 @@ func _reject_customer(c, reason: String) -> void:
 		reject_reasons[reason] += 1
 	else:
 		reject_reasons[reason] = 1
+	PlayerData.note_customer_skip(reason)
 	c.reject(reason)
 
 func _update_queue_slots() -> void:
-	for i in queue.size():
-		# Slots step back from the counter along the stand's own facing, so a
-		# turned stand drags the whole line with it.
-		var slot: Vector3 = _queue_front + _queue_dir * (float(i) * QUEUE_SPACING)
-		queue[i].queue_slot = slot.z
-		queue[i].queue_slot_x = slot.x
+	_write_slots(queue, _queue_front)
+	_write_slots(queue_b, _queue_front_b)
+
+func _write_slots(line: Array, front: Vector3) -> void:
+	for i in line.size():
+		var slot: Vector3 = front + _queue_dir * (float(i) * QUEUE_SPACING)
+		slot.y = 0.0
+		line[i].queue_slot_pos = slot
+		line[i].queue_slot = slot.z
+		line[i].queue_slot_x = slot.x
 
 func _process_queue_front() -> void:
-	if queue.is_empty():
+	_serve_from(queue, false)
+	if _server_hired():
+		_serve_from(queue_b, true)
+
+func _serve_from(line: Array, second: bool) -> void:
+	if line.is_empty():
 		return
-	if serve_target != null:
+	if second and serve_target_b != null:
+		return
+	if not second and serve_target != null:
 		return
 	if brewing:
 		return
 	if cups_left <= 0:
 		if not _can_brew():
-			var front = queue[0]
-			queue.pop_front()
-			_reject_customer(front, "Out of stock!")
+			var waiting = line[0]
+			line.pop_front()
+			_reject_customer(waiting, "Out of stock!")
 		return
-	var front = queue[0]
-	queue.pop_front()
-	serve_target = front
-	serve_remaining = eff_serve_time
+	var front = line[0]
+	line.pop_front()
+	if second:
+		serve_target_b = front
+		serve_remaining_b = eff_serve_time
+	else:
+		serve_target = front
+		serve_remaining = eff_serve_time
 	front.begin_service()
 
 func _finish_service() -> void:
@@ -381,20 +481,61 @@ func _finish_service() -> void:
 	serve_remaining = 0.0
 	if c == null or not is_instance_valid(c):
 		return
+	_resolve_sale(c)
+
+func _finish_service_b() -> void:
+	var c = serve_target_b
+	serve_target_b = null
+	serve_remaining_b = 0.0
+	_resolve_sale(c)
+
+func _resolve_sale(c) -> void:
+	if c == null or not is_instance_valid(c):
+		return
+	# Ice is a per-cup cost: the recipe's ice count is what one cup holds, so a
+	# tray that cannot fill the cup turns the customer away like an empty rack.
+	if PlayerData.ice_stock < PlayerData.recipe_ice:
+		_reject_customer(c, "Out of stock!")
+		return
 	if c.evaluate_purchase():
 		cups_left -= 1
 		cups_sold += 1
-		# A cup always sells for exactly the price set in the recipe menu. The
-		# area never inflates the till: it only decides which customers will
-		# pay that price, through their own ceiling in evaluate_purchase().
 		revenue += PlayerData.sale_price
 		served_count += 1
 		PlayerData.cup_stock = maxi(0, PlayerData.cup_stock - 1)
-		c.buy()
+		# The ice this cup is made of leaves the tray with the cup.
+		PlayerData.consume_stock("ice_stock", PlayerData.recipe_ice)
+		PlayerData.note_sale(PlayerData.sale_price)
+		# The cup is scored once, and that one score drives both the popularity
+		# tally and what the customer says about it, so the bubble on screen and
+		# the points behind it can never disagree. Nobody tastes before they
+		# buy, so a recipe that misses the ideal costs popularity here instead
+		# of costing the sale.
+		var opinion: Dictionary = c.score_recipe()
+		_record_opinion(opinion)
+		c.buy(c.taste_reaction(opinion))
 		if cups_left <= 0:
 			_try_start_brewing()
 	else:
 		_reject_customer(c, c.reason)
+
+func _record_opinion(opinion: Dictionary) -> void:
+	PlayerData.note_opinion(opinion)
+	var band: String = str(opinion.get("band", RecipeOpinion.NEUTRAL))
+	if band == RecipeOpinion.LOVE:
+		loved_count += 1
+	elif band == RecipeOpinion.DISLIKE:
+		disliked_count += 1
+	else:
+		neutral_count += 1
+	var earned: int = Popularity.points_for_verdict(str(opinion.get("verdict", opinion.get("band", RecipeOpinion.NEUTRAL))))
+	if bool(opinion.get("perfect", false)):
+		perfect_cups += 1
+	if PlayerData.note_popularity_points(earned):
+		opinion_lines.append("Popularity up")
+	var note: String = RecipeOpinion.summary_line(opinion)
+	if not note.is_empty():
+		opinion_lines.append(note)
 
 # Pays out the fraction of a cube the day happened to end on, so a full played
 # day yields the ice maker's whole output instead of stopping one cube short.
@@ -413,18 +554,19 @@ func _end_day() -> void:
 	time_scale = 1.0
 	_update_speed_button()
 	PlayerData.money += revenue
-	# Operating fee for the area just worked, charged whether or not the day
-	# went well. The neighbourhood is free; the city and the stadium rent the
-	# pitch, and the stadium rents it dearly.
-	var area_fee: float = PlayerData.area_daily_fee()
-	PlayerData.last_area_fee = area_fee
-	PlayerData.money -= area_fee
-	# Pay out the part of a cube the day happened to end on, so a full played
-	# day always yields the ice maker's whole output.
+	# The pitch fee and the wages were already taken at start_day(), so day end
+	# only settles the stock and the calendar.
 	_flush_ice_maker()
-	# PlayerData owns the between-days bookkeeping: ice melts over night, lemon
-	# crates age, and the day counter and the weather roll forward.
+	# Tomorrow's headline is rolled and folded into tomorrow's forecast BEFORE
+	# the calendar rolls over. resolve_day_end() then promotes that forecast to
+	# today, so the headline lands on the day the ticker promised instead of
+	# the one after it.
+	PlayerData.roll_next_news()
+	PlayerData.apply_news_to_forecast()
 	PlayerData.resolve_day_end()
+	# One career-stat entry per played day, filed against the area it was
+	# worked in and weighed against the best day so far.
+	PlayerData.note_day_finished(revenue, cups_sold)
 	PlayerData.profile_updated.emit()
 	GameNet.sync_user_data()
 	_show_results()
@@ -443,7 +585,15 @@ func _show_results() -> void:
 	# Which area was worked and what the pitch cost, so the fee is never a
 	# silent deduction from the money total.
 	if results_area != null:
-		results_area.text = "%s - fee $%.2f" % [PlayerData.current_area_name(), PlayerData.last_area_fee]
+		results_area.text = "%s - paid up front: $%.2f fee, $%.2f wages" % [
+			PlayerData.current_area_name(), PlayerData.last_area_fee, PlayerData.last_staff_wage]
+	if results_opinions != null:
+		var lines: PackedStringArray = RecipeOpinion.summary_lines(PlayerData.opinion_totals)
+		results_opinions.text = "\n".join(lines)
+	if results_popularity != null:
+		results_popularity.text = "Popularity %d (%d/%d pts) - %d loved, %d neutral today" % [
+			PlayerData.popularity_level(), PlayerData.popularity_points(),
+			PlayerData.popularity_goal(), loved_count, neutral_count]
 	results_panel.visible = true
 
 func _on_finish_day_pressed() -> void:
@@ -482,6 +632,8 @@ func update_hud() -> void:
 	revenue_label.text = "Revenue: $%.2f" % revenue
 	if brewing:
 		status_label.text = "Brewing... %.1fs" % brew_remaining
+	elif PlayerData.ice_stock < PlayerData.recipe_ice:
+		status_label.text = "Out of ice"
 	elif cups_left > 0:
 		status_label.text = "%d cups ready" % cups_left
 	elif _can_brew():
@@ -514,8 +666,14 @@ func _apply_effective_stats() -> void:
 	# day and the neighbourhood stays calm on a hot one. The area's price
 	# multiplier goes to the crowd only: it raises the ceiling a customer will
 	# pay, and never the price the cup actually sells for.
-	eff_area_traffic = PlayerData.area_traffic()
-	eff_price_mult = PlayerData.area_price_multiplier()
+	eff_area_traffic = PlayerData.area_traffic() * PlayerData.popularity_traffic()
+	if PlayerData.is_hired(StaffMember.STAFF_ID.advertiser):
+		eff_area_traffic *= StaffCatalog.AD_TRAFFIC
+	var news_item: Dictionary = PlayerData.current_news()
+	if NewsCatalog.effect_of(news_item) == NewsCatalog.EFFECTS_TRAFFIC \
+			and NewsCatalog.applies_to_area(news_item, PlayerData.current_area_id()):
+		eff_area_traffic *= NewsCatalog.value_of(news_item)
+	eff_price_mult = PlayerData.area_price_multiplier() * PlayerData.popularity_price()
 	var demand: float = Weather.demand_for(PlayerData.today_weather()) * eff_area_traffic
 	if demand <= 0.0:
 		demand = 1.0
@@ -530,6 +688,10 @@ func _refresh_status_bar() -> void:
 	if not is_inside_tree() or status_money_label == null:
 		return
 	PlayerData.ensure_weather_rolled()
+	# The sign shows the player's name. This method already listens to
+	# profile_updated, which is what a rename emits, so the board follows along.
+	if sign_user_label != null:
+		sign_user_label.text = PlayerData.username
 	status_money_label.text = "Money: $%.2f" % PlayerData.money
 	# One icon + number per ingredient, so the strip reads at a glance.
 	# Count over capacity, so the strip shows both what is on the stand and how
@@ -540,20 +702,34 @@ func _refresh_status_bar() -> void:
 	status_cup_count.text = "%d/%d" % [PlayerData.cup_stock, PlayerData.capacity_for("cup_stock")]
 	var today: Dictionary = PlayerData.today_weather()
 	var tomorrow: Dictionary = PlayerData.next_forecast()
-	_set_icon(status_weather_icon, UiIcon.kind_for_weather(int(today["temp"]), bool(today["raining"])))
-	_set_icon(status_forecast_icon, UiIcon.kind_for_weather(int(tomorrow["temp"]), bool(tomorrow["raining"])))
-	status_weather_label.text = "Today %s" % PlayerData.weather_label()
-	status_forecast_label.text = "Tomorrow %s" % PlayerData.forecast_label()
+	_set_weather_icon(status_weather_icon, kind_for_weather(int(today["temp"]), bool(today["raining"])))
+	_set_weather_icon(status_forecast_icon, kind_for_weather(int(tomorrow["temp"]), bool(tomorrow["raining"])))
+	# Icon, day word and temperature only. The icon already says which sky it
+	# is, so repeating "warm sunny" beside it just crowds the strip.
+	status_weather_label.text = "Today %dF" % int(today["temp"])
+	status_forecast_label.text = "Tomorrow %dF" % int(tomorrow["temp"])
 	# The day bar only carries live numbers while a day is running.
 	if top_bar != null:
 		top_bar.visible = running
 
-# Points a UiIcon node at a different drawing kind, skipping a redraw when the
-# icon is already showing the right thing. get/set keeps this optional-safe if
-# an icon node is ever missing from a stale scene.
-func _set_icon(node: Control, icon_kind: String) -> void:
+# Which icon suits a weather dictionary. Rain wins over temperature, and the
+# mild middle band is plain sun.
+static func kind_for_weather(temp: int, raining: bool) -> String:
+	if raining:
+		return "rain"
+	if temp >= 90:
+		return "hot"
+	if temp <= 60:
+		return "cold"
+	return "sun"
+
+# Swaps a status-bar weather icon onto the texture for its kind, skipping a
+# reload when the icon is already showing the right art. Optional-safe: a stale
+# scene without the node just goes without an icon.
+func _set_weather_icon(node: TextureRect, icon_kind: String) -> void:
 	if node == null or not is_instance_valid(node):
 		return
-	if str(node.get("kind")) == icon_kind:
+	var texture: Texture2D = WEATHER_ICONS.get(icon_kind)
+	if texture == null or node.texture == texture:
 		return
-	node.set("kind", icon_kind)
+	node.texture = texture

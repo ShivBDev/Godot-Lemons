@@ -7,9 +7,16 @@
 - Every stock is capped. Base limits: lemons 60, sugar 60, ice 200, cups 300.
 - Balance constants and all supply rules live in res://scripts/upgrades/Inventory.gd. Storage, ice and freshness numbers are read from there by PlayerData, DaySimulation and ShopMenu.
 - New upgrades live in res://scripts/upgrades/UpgradeCatalog.gd only. Add ONE entry there and UpgradesMenu draws it; the entry's "group" field controls its heading (The Stand, Storage, Supplies).
-- Ice maker produces 60 ice per day at level 1, plus 20 per level. Ice chest saves 15 percent of the melt per level. Walk-in cooler is a single 450 dollar upgrade taking lemons to a 28 day shelf life.
+- Ice maker produces 40 ice per day at level 1, plus 12 per level. Ice chest saves 8 percent of the melt per level. Walk-in cooler is a single 450 dollar upgrade taking lemons to a 28 day shelf life.
 - Purchases via ShopMenu go through PlayerData.add_stock(), so money can never buy stock the shelves cannot hold.
 - Day-end settlement order (PlayerData.resolve_day_end): flush the ice maker, melt ice, advance the day, then age lemon crates.
+
+# The pitcher floor: a day cannot open without ingredients for one pitcher.
+
+- A day needs the lemons and sugar for one batch, plus the ice for one cup: ice is charged to the cup that is sold, so one cup's worth is the honest floor. Cups are deliberately excluded: an empty cup rack never blocks a sale, so it is not a soft lock. The requirement is Inventory.PITCHER_FIELDS, read from the recipe, never hardcoded.
+- GameControl blocks Start Day on PlayerData.can_start_day() (fee and wages paid AND one pitcher brewable) and the cost line prints PlayerData.pitcher_shortfall_text() to say what is missing.
+- Soft-lock escape: while the day is unreachable AND the till cannot cover the cheapest pack of every short ingredient, the smallest pack on each short ingredient's Shop row is free. One per ingredient per day, stamped with PlayerData.day_count so the allowance refills by itself.
+- The free pack hands over ShopMenu._free_grant() (the pack size, or enough to reach the floor when the pack is smaller than the recipe needs), through PlayerData.add_stock() like any paid pack, so it can never break a shelf limit. The rescue never applies to a player who could simply pay.
 
 # Areas: one level scene per location, swapped behind a stand that never moves.
 
@@ -18,3 +25,33 @@
 - The areas menu is res://scripts/areas/AreaMenu.gd, reachable from the Areas tab. Moving is one PlayerData.set_area() call; PlayerData emits area_changed and DaySimulation calls _refresh_level().
 - Stadium jerseys: PlayerData.team_pair holds two AreaCatalog.TEAM_THEMES entries drawn fresh at the start of every stadium day. Only the team names are serialized; colours are looked back up in the catalog.
 - Customer wardrobe is themed by area via Customer._dress_city() (suits, ties, briefcases) and Customer._dress_stadium() (team jerseys, club caps). Any area's price ceiling is PlayerData.area_price_multiplier() times the customer's own roll.
+- Cup opinions live in res://scripts/day/RecipeOpinion.gd. A served cup is loved when every ingredient is within 1 of that customer's ideal, neutral within 3, otherwise disliked. DaySimulation records the tally on PlayerData.opinion_totals and shows it on the end-of-day panel.
+- Popularity is per area in PlayerData.popularity ({level, points}). A loved cup is 3 points and a neutral cup is 1; a dislike is 0. Neighbourhood needs 18, 36, 54... points per rank (990 to max); downtown 45, 90... (2475); stadium 91, 182... (5005). Rank caps at 10 and adds 5 percent traffic, patience, and price ceiling per rank, plus a longer line every two ranks.
+- Customer opinions and skips are tallied in PlayerData.opinion_totals for the day that just ended. Every arrival is counted, and every rejection is filed as price, queue, wait, stock, or other. RecipeOpinion.summary_lines prints loved/neutral/disliked plus those skip counts for the end-of-day panel.
+- Staff hires live in StaffCatalog and toggle in the Staff tab. Wages charge at day end. A hired server opens a second line. A hired advertiser adds 15 percent foot traffic. Stand/Crew shows the keeper, the server, and a pacing advertiser.
+- Tomorrow's headline is one of 32 NewsCatalog items, rolled at day end and shown on the NewsTicker while shopping. It can shift recipe ideals, weather, area traffic, patience, line length, price ceiling, or shop pack prices. ShopMenu reads the sale through NewsCatalog.sale_multiplier.
+
+# Buying is about price; taste is about reputation.
+
+- A customer's flavour preference NEVER blocks a sale. Customer.evaluate_purchase() tests price alone: nobody tastes a cup before paying for it. A disliked mix costs popularity, not the sale, and shows only as the reaction bubble.
+- DaySimulation._resolve_sale() scores the cup once via Customer.score_recipe() and hands that same dictionary to both the popularity tally and Customer.taste_reaction(), so the bubble and the points can never disagree.
+- RecipeOpinion.SKIP_TASTE is therefore only ever 0 on a normal day, so its line on the end-of-day panel is printed only when a taste skip actually occurred.
+- Career stats live in PlayerData.stats (days_total, days_by_area, cups_sold, sales_money, spend_money, best_day_money/cups/day), are written to the save, and are printed by PlayerData.stats_lines() into the Settings tab's panel. Every money movement is recorded through PlayerData.note_spend(), so the spend total can never drift from the till.
+- The stand sign (DaySimulation.tscn Stand/SignUserLabel) carries PlayerData.username above the LEMONADE line; it is refreshed from _refresh_status_bar(), which already listens to profile_updated, so a rename follows through.
+
+# Nothing produces or re-prices itself behind the player's back.
+
+- Inventory.ice_per_day() returns 0 until the ice_maker upgrade is actually owned. ICE_PER_DAY_BASE is that machine's level 1 output, not a passive baseline, and ICE_MAKER_ID in UpgradeCatalog is what gates it. No stand makes ice for free.
+- Shop pack prices are never stored. The ITEMS table holds a base price, and _sale_price() is applied live in three places: the label when the rows are built, the label on every _refresh(), and again inside _buy_item() at the click. The row re-prices itself on PlayerData.news_changed, so a sale headline lasts exactly as long as the headline does.
+- Every other news effect is already read live where it applies: traffic in DaySimulation._apply_effective_stats() at start_day(), and price, patience, line and recipe in Customer._ready() as each customer spawns. Only the shop had frozen a price.
+- A pitcher's ingredient cost is charged once per pitcher in DaySimulation._try_start_brewing() (one recipe's worth for the whole batch); see the pitcher-floor rule above.
+
+# The headline has to land on the day it was announced for.
+
+- A rolled headline is folded into the forecast with the normal, clamping Weather.sanitize(), NOT the loose one, and it is applied before the day-end roll-over. So advance_weather() promotes a foldable forecast into today and none of PlayerData's reads clamp the result back. A heat wave announced on the ticker is the weather of the day you play next.
+- Weather.sanitize_loose() is the one place the usual 55-105 band is widened (30-120), used only where a headline-pushed value is being read or written. today_weather()/next_forecast() and the save load path all use it; the non-news writers keep the measured clamp.
+- Sales, recipe, traffic, price, patience and line headlines were never affected: they read PlayerData.current_news() at the moment they apply, so the old weather bug was only ever the forecast being rolled over the top of the headline.
+
+# Free rescue packs never block a purchase.
+
+- ShopMenu._free_grant() decides on affordability alone (PlayerData.can_afford_day_start()), never on whether one pitcher is currently brewable, so a player with a startable day who taps the smallest pack still pays the normal price and still gets the pack. The rescue only fills a shelf that cannot be paid for.

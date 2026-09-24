@@ -1,10 +1,15 @@
 [gd_scene format=3 uid="uid://b874jqp5hyprr"]
 
 [ext_resource type="Script" uid="uid://b04d6ph40w84t" path="res://scripts/day/DaySimulation.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://cgxok2bn0i4l" path="res://assets/ui/icons/lemon.png" id="4_qh4xx"]
+[ext_resource type="Texture2D" uid="uid://l243q2p2ctsw" path="res://assets/ui/icons/sugar.png" id="5_3grbq"]
 [ext_resource type="PackedScene" path="res://scenes/neighborhood.tscn" id="5_ef33t"]
-[ext_resource type="StyleBox" path="res://ui/style_bar.tres" id="8_bar"]
-[ext_resource type="StyleBox" path="res://ui/style_card.tres" id="8_card"]
-[ext_resource type="Script" uid="uid://ehbnrcro4u1e" path="res://ui/icon.gd" id="9_icon"]
+[ext_resource type="Texture2D" uid="uid://c1i486y6kgv51" path="res://assets/ui/icons/ice.png" id="6_g2exv"]
+[ext_resource type="Texture2D" uid="uid://cou8oetj2yqoa" path="res://assets/ui/icons/cup.png" id="7_nhasu"]
+[ext_resource type="StyleBox" path="res://assets/ui/style_bar.tres" id="8_bar"]
+[ext_resource type="Texture2D" uid="uid://bs6558bvw7530" path="res://assets/ui/icons/sun.png" id="8_bggbl"]
+[ext_resource type="StyleBox" path="res://assets/ui/style_card.tres" id="8_card"]
+[ext_resource type="Script" uid="uid://bhp28tmwy3lla" path="res://scripts/staff/StandCrew.gd" id="10_crew"]
 
 [sub_resource type="ProceduralSkyMaterial" id="SkyMat"]
 sky_top_color = Color(0.44, 0.71, 0.96, 1)
@@ -64,7 +69,7 @@ height = 1.0
 albedo_color = Color(0.98, 0.97, 0.92, 1)
 
 [sub_resource type="BoxMesh" id="MeshSign"]
-size = Vector3(1, 0.55, 0.1)
+size = Vector3(1.2, 0.55, 0.1)
 
 [sub_resource type="CylinderMesh" id="MeshSignPole"]
 top_radius = 0.05
@@ -86,16 +91,6 @@ albedo_color = Color(1, 0.85, 0.25, 1)
 
 [node name="DaySimulation" type="Node3D" unique_id=895767277]
 script = ExtResource("1_script")
-day_length = null
-serve_time = null
-brew_time = null
-pitcher_capacity = null
-spawn_min_interval = null
-spawn_max_interval = null
-spawn_stop_buffer = null
-fast_forward_scale = null
-min_spawn_interval = null
-max_spawn_interval = null
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=254049285]
 environment = SubResource("Env")
@@ -238,6 +233,16 @@ outline_modulate = Color(1, 1, 1, 1)
 text = "LEMONADE"
 font_size = 64
 
+[node name="SignUserLabel" type="Label3D" parent="Stand" unique_id=812138057]
+transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 0, 3.1, -1.3)
+modulate = Color(0.36, 0.24, 0.15, 1)
+outline_modulate = Color(1, 1, 1, 1)
+text = "New Player"
+font_size = 28
+
+[node name="Crew" type="Node3D" parent="Stand" unique_id=2099772007]
+script = ExtResource("10_crew")
+
 [node name="Camera3D" type="Camera3D" parent="." unique_id=685657432]
 transform = Transform3D(-0.52249914, 0.55322933, -0.6487927, 0, 0.7609224, 0.64884293, 0.8526398, 0.33901986, -0.39758128, -9.891931, 7.7284184, -9.651525)
 fov = 62.0
@@ -261,13 +266,16 @@ theme_override_colors/font_color = Color(0.992, 0.965, 0.89, 1)
 theme_override_font_sizes/font_size = 20
 text = "Money: $0.00"
 
-[node name="IconLemon" type="Control" parent="HUD/StatusBar" unique_id=763302440]
-anchors_preset = 0
+[node name="IconLemon" type="TextureRect" parent="HUD/StatusBar" unique_id=763302440]
+layout_mode = 0
 offset_left = 200.0
-offset_top = 7.0
-offset_right = 226.0
-offset_bottom = 33.0
-script = ExtResource("9_icon")
+offset_top = 6.0
+offset_right = 228.0
+offset_bottom = 34.0
+mouse_filter = 2
+texture = ExtResource("4_qh4xx")
+expand_mode = 1
+stretch_mode = 5
 
 [node name="CountLemon" type="Label" parent="HUD/StatusBar" unique_id=763302441]
 layout_mode = 0
@@ -280,18 +288,20 @@ theme_override_font_sizes/font_size = 20
 text = "0"
 vertical_alignment = 1
 
-[node name="IconSugar" type="Control" parent="HUD/StatusBar" unique_id=763302442]
-anchors_preset = 0
+[node name="IconSugar" type="TextureRect" parent="HUD/StatusBar" unique_id=763302442]
+layout_mode = 0
 offset_left = 326.0
-offset_top = 7.0
-offset_right = 352.0
-offset_bottom = 33.0
-script = ExtResource("9_icon")
-kind = "sugar"
+offset_top = 6.0
+offset_right = 354.0
+offset_bottom = 34.0
+mouse_filter = 2
+texture = ExtResource("5_3grbq")
+expand_mode = 1
+stretch_mode = 5
 
 [node name="CountSugar" type="Label" parent="HUD/StatusBar" unique_id=763302443]
 layout_mode = 0
-offset_left = 356.0
+offset_left = 358.0
 offset_top = 6.0
 offset_right = 440.0
 offset_bottom = 34.0
@@ -300,18 +310,20 @@ theme_override_font_sizes/font_size = 20
 text = "0"
 vertical_alignment = 1
 
-[node name="IconIce" type="Control" parent="HUD/StatusBar" unique_id=763302444]
-anchors_preset = 0
+[node name="IconIce" type="TextureRect" parent="HUD/StatusBar" unique_id=763302444]
+layout_mode = 0
 offset_left = 452.0
-offset_top = 7.0
-offset_right = 478.0
-offset_bottom = 33.0
-script = ExtResource("9_icon")
-kind = "ice"
+offset_top = 6.0
+offset_right = 480.0
+offset_bottom = 34.0
+mouse_filter = 2
+texture = ExtResource("6_g2exv")
+expand_mode = 1
+stretch_mode = 5
 
 [node name="CountIce" type="Label" parent="HUD/StatusBar" unique_id=763302445]
 layout_mode = 0
-offset_left = 482.0
+offset_left = 484.0
 offset_top = 6.0
 offset_right = 566.0
 offset_bottom = 34.0
@@ -320,18 +332,20 @@ theme_override_font_sizes/font_size = 20
 text = "0"
 vertical_alignment = 1
 
-[node name="IconCup" type="Control" parent="HUD/StatusBar" unique_id=763302446]
-anchors_preset = 0
+[node name="IconCup" type="TextureRect" parent="HUD/StatusBar" unique_id=763302446]
+layout_mode = 0
 offset_left = 578.0
-offset_top = 7.0
-offset_right = 604.0
-offset_bottom = 33.0
-script = ExtResource("9_icon")
-kind = "cup"
+offset_top = 6.0
+offset_right = 606.0
+offset_bottom = 34.0
+mouse_filter = 2
+texture = ExtResource("7_nhasu")
+expand_mode = 1
+stretch_mode = 5
 
 [node name="CountCup" type="Label" parent="HUD/StatusBar" unique_id=763302447]
 layout_mode = 0
-offset_left = 608.0
+offset_left = 610.0
 offset_top = 6.0
 offset_right = 692.0
 offset_bottom = 34.0
@@ -340,44 +354,47 @@ theme_override_font_sizes/font_size = 20
 text = "0"
 vertical_alignment = 1
 
-[node name="WeatherIcon" type="Control" parent="HUD/StatusBar" unique_id=763302448]
-anchors_preset = 0
+[node name="WeatherIcon" type="TextureRect" parent="HUD/StatusBar" unique_id=763302448]
+layout_mode = 0
 offset_left = 18.0
 offset_top = 46.0
-offset_right = 48.0
-offset_bottom = 76.0
-script = ExtResource("9_icon")
-kind = "sun"
+offset_right = 44.0
+offset_bottom = 72.0
+mouse_filter = 2
+texture = ExtResource("8_bggbl")
+expand_mode = 1
+stretch_mode = 5
 
 [node name="WeatherLabel" type="Label" parent="HUD/StatusBar" unique_id=1122169128]
 layout_mode = 0
-offset_left = 54.0
+offset_left = 50.0
 offset_top = 46.0
 offset_right = 344.0
 offset_bottom = 78.0
 theme_override_colors/font_color = Color(0.992, 0.965, 0.89, 1)
 theme_override_font_sizes/font_size = 20
-text = "Today 75F Warm Sunny"
+text = "Today 75F"
 
-[node name="ForecastIcon" type="Control" parent="HUD/StatusBar" unique_id=763302449]
-anchors_preset = 0
-offset_left = 358.0
+[node name="ForecastIcon" type="TextureRect" parent="HUD/StatusBar" unique_id=763302449]
+layout_mode = 0
+offset_left = 330.0
 offset_top = 48.0
-offset_right = 384.0
+offset_right = 356.0
 offset_bottom = 74.0
-script = ExtResource("9_icon")
-kind = "sun"
+mouse_filter = 2
+texture = ExtResource("8_bggbl")
+expand_mode = 1
+stretch_mode = 5
 
 [node name="ForecastLabel" type="Label" parent="HUD/StatusBar" unique_id=324718727]
 layout_mode = 0
-offset_left = 388.0
+offset_left = 362.0
 offset_top = 47.0
 offset_right = 682.0
 offset_bottom = 77.0
 theme_override_colors/font_color = Color(0.729, 0.769, 0.639, 1)
 theme_override_font_sizes/font_size = 18
-text = "Tomorrow 75F Warm Sunny"
-horizontal_alignment = 2
+text = "Tomorrow 75F"
 
 [node name="TopBar" type="Panel" parent="HUD" unique_id=1817992142]
 offset_left = 10.0
@@ -449,33 +466,33 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -270.0
-offset_top = -270.0
-offset_right = 270.0
-offset_bottom = 270.0
+offset_left = -330.0
+offset_top = -430.0
+offset_right = 330.0
+offset_bottom = 430.0
 grow_horizontal = 2
 grow_vertical = 2
 
 [node name="Backdrop" type="ColorRect" parent="HUD/ResultsPanel" unique_id=2046628905]
 layout_mode = 0
-offset_right = 540.0
-offset_bottom = 540.0
+offset_right = 660.0
+offset_bottom = 860.0
 color = Color(0, 0, 0, 0.7)
 
 [node name="Panel" type="Panel" parent="HUD/ResultsPanel" unique_id=1967840164]
 layout_mode = 0
-offset_left = 60.0
-offset_top = 40.0
-offset_right = 480.0
-offset_bottom = 500.0
+offset_left = 24.0
+offset_top = 16.0
+offset_right = 636.0
+offset_bottom = 844.0
 theme_override_styles/panel = ExtResource("8_card")
 
 [node name="TitleLabel" type="Label" parent="HUD/ResultsPanel" unique_id=810255806]
 layout_mode = 0
-offset_left = 60.0
-offset_top = 70.0
-offset_right = 480.0
-offset_bottom = 120.0
+offset_left = 40.0
+offset_top = 28.0
+offset_right = 620.0
+offset_bottom = 78.0
 theme_override_colors/font_color = Color(0, 0, 0, 1)
 theme_override_font_sizes/font_size = 40
 text = "Day Complete!"
@@ -484,72 +501,103 @@ vertical_alignment = 1
 
 [node name="ResultsRevenue" type="Label" parent="HUD/ResultsPanel" unique_id=1230414419]
 layout_mode = 0
-offset_left = 90.0
-offset_top = 150.0
-offset_right = 450.0
-offset_bottom = 190.0
+offset_left = 48.0
+offset_top = 168.0
+offset_right = 612.0
+offset_bottom = 204.0
 theme_override_colors/font_color = Color(0, 0, 0, 1)
 theme_override_font_sizes/font_size = 26
 text = "Revenue: $0.00"
 
 [node name="ResultsCups" type="Label" parent="HUD/ResultsPanel" unique_id=1200889561]
 layout_mode = 0
-offset_left = 90.0
-offset_top = 200.0
-offset_right = 450.0
-offset_bottom = 240.0
+offset_left = 48.0
+offset_top = 208.0
+offset_right = 612.0
+offset_bottom = 244.0
 theme_override_colors/font_color = Color(0, 0, 0, 1)
 theme_override_font_sizes/font_size = 26
 text = "Cups Sold: 0"
 
 [node name="ResultsServed" type="Label" parent="HUD/ResultsPanel" unique_id=168098686]
 layout_mode = 0
-offset_left = 90.0
-offset_top = 250.0
-offset_right = 450.0
-offset_bottom = 290.0
+offset_left = 48.0
+offset_top = 248.0
+offset_right = 612.0
+offset_bottom = 284.0
 theme_override_colors/font_color = Color(0, 0, 0, 1)
 theme_override_font_sizes/font_size = 26
 text = "Customers Served: 0"
 
 [node name="ResultsRejected" type="Label" parent="HUD/ResultsPanel" unique_id=1813934326]
 layout_mode = 0
-offset_left = 90.0
-offset_top = 300.0
-offset_right = 450.0
-offset_bottom = 340.0
+offset_left = 48.0
+offset_top = 288.0
+offset_right = 612.0
+offset_bottom = 324.0
 theme_override_colors/font_color = Color(0, 0, 0, 1)
 theme_override_font_sizes/font_size = 26
 text = "Customers Rejected: 0"
 
 [node name="FinishDayButton" type="Button" parent="HUD/ResultsPanel" unique_id=242765334]
 layout_mode = 0
-offset_left = 140.0
-offset_top = 390.0
-offset_right = 400.0
-offset_bottom = 460.0
+offset_left = 180.0
+offset_top = 748.0
+offset_right = 480.0
+offset_bottom = 816.0
 theme_override_font_sizes/font_size = 28
 text = "Finish Day"
 
 [node name="ResultsSpoilage" type="Label" parent="HUD/ResultsPanel" unique_id=869675500]
 layout_mode = 0
-offset_left = 90.0
-offset_top = 332.0
-offset_right = 450.0
-offset_bottom = 372.0
+offset_left = 48.0
+offset_top = 328.0
+offset_right = 612.0
+offset_bottom = 364.0
 theme_override_colors/font_color = Color(0.72, 0.28, 0.16, 1)
 theme_override_font_sizes/font_size = 22
 text = "Losses: 0 ice melted, 0 lemons spoiled"
 
 [node name="ResultsArea" type="Label" parent="HUD/ResultsPanel" unique_id=1099607055]
 layout_mode = 0
-offset_left = 90.0
-offset_top = 120.0
-offset_right = 450.0
-offset_bottom = 148.0
+offset_left = 48.0
+offset_top = 84.0
+offset_right = 612.0
+offset_bottom = 120.0
 theme_override_colors/font_color = Color(0.36, 0.24, 0.15, 1)
 theme_override_font_sizes/font_size = 22
 text = "Fee: $0.00"
+
+[node name="ResultsOpinions" type="Label" parent="HUD/ResultsPanel" unique_id=991216969]
+layout_mode = 0
+offset_left = 48.0
+offset_top = 372.0
+offset_right = 612.0
+offset_bottom = 736.0
+theme_override_colors/font_color = Color(0.16, 0.11, 0.06, 1)
+theme_override_font_sizes/font_size = 16
+text = "Loved 0 | Neutral 0 | Disliked 0"
+autowrap_mode = 3
+
+[node name="ResultsPopularity" type="Label" parent="HUD/ResultsPanel" unique_id=327945522]
+layout_mode = 0
+offset_left = 48.0
+offset_top = 124.0
+offset_right = 612.0
+offset_bottom = 160.0
+theme_override_colors/font_color = Color(0.24, 0.42, 0.2, 1)
+theme_override_font_sizes/font_size = 16
+text = "Popularity"
+
+[node name="NewsBanner" type="Label" parent="HUD" unique_id=346751202]
+visible = false
+offset_left = 10.0
+offset_top = 100.0
+offset_right = 710.0
+offset_bottom = 132.0
+theme_override_colors/font_color = Color(0.99, 0.96, 0.89, 1)
+theme_override_font_sizes/font_size = 16
+clip_text = true
 
 [node name="LevelHolder" type="Node3D" parent="." unique_id=285066890]
 

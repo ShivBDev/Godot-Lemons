@@ -75,6 +75,11 @@ var line_tolerance: int = 3
 var patience: float = 15.0
 var queue_slot: float = APPROACH_Z
 var queue_slot_x: float = 0.0
+# Full slot the sim writes each frame. Walking uses this so a sideways
+# second line is not flattened onto the first.
+var queue_slot_pos: Vector3 = Vector3(0.0, 0.0, APPROACH_Z)
+# 0 is the keeper's line, 1 is the hired server's line.
+var queue_lane: int = 0
 var reason: String = ""
 var walk_speed: float = 1.4
 
@@ -150,11 +155,12 @@ func _ready() -> void:
 	ideal_sugar = randi_range(1, 6)
 	# Hotter weather shifts the ideal ice up, colder weather shifts it down.
 	ideal_ice = maxi(0, randi_range(0, 8) + ice_bias)
-	# Price ceiling scales with the area: downtown and the stadium will pay for
-	# the same cup what the neighbourhood would flatly refuse.
-	max_price = randf_range(0.75, 2.5) * _area_price_mult()
-	line_tolerance = randi_range(1, 5)
-	patience = randf_range(8.0, 25.0)
+	_apply_news_to_ideals()
+	# Price ceiling scales with the area, today's headline, and how well known
+	# the stand is here. The till still charges the recipe price.
+	max_price = randf_range(0.75, 2.5) * _area_price_mult() * _news_price_mult() * PlayerData.popularity_price()
+	line_tolerance = randi_range(1, 5) + PlayerData.popularity_line() + _news_line_bonus()
+	patience = randf_range(8.0, 25.0) * PlayerData.popularity_patience() * _news_patience_mult()
 	walk_speed = randf_range(1.1, 1.6)
 	_randomize_outfit()
 	# Spawn already facing the stand so nobody starts a step backwards.
@@ -421,7 +427,7 @@ func _process(_delta: float) -> void:
 					sim.on_customer_arrived(self)
 		State.WAIT_IN_QUEUE:
 			_bob(delta)
-			var to_slot := Vector3(queue_slot_x - position.x, 0.0, queue_slot - position.z)
+			var to_slot := Vector3(queue_slot_pos.x - position.x, 0.0, queue_slot_pos.z - position.z)
 			var slot_dist: float = to_slot.length()
 			if slot_dist > 0.0005:
 				# Shuffling along the line: keep facing where we are going. The
@@ -518,8 +524,8 @@ func enter_queue() -> void:
 func begin_service() -> void:
 	state = State.COUNTER
 
-func buy() -> void:
-	show_bubble("Yum!")
+func buy(reaction: String = "Yum!") -> void:
+	show_bubble(reaction)
 	state = State.LEAVE
 
 func reject(reason_text: String) -> void:
@@ -527,22 +533,77 @@ func reject(reason_text: String) -> void:
 	show_bubble(reason_text)
 	state = State.LEAVE
 
+func score_recipe() -> Dictionary:
+	var opinion: Dictionary = RecipeOpinion.score(
+		PlayerData.recipe_lemons, PlayerData.recipe_sugar, PlayerData.recipe_ice,
+		ideal_lemons, ideal_sugar, ideal_ice)
+	opinion["band"] = str(opinion.get("verdict", RecipeOpinion.NEUTRAL))
+	return opinion
+
+# Only the price can stop a sale. Nobody tastes a cup before they buy it, so a
+# recipe that misses this customer's ideal is still sold, and the miss is scored
+# afterwards by the sim, where it costs popularity instead of costing the sale.
 func evaluate_purchase() -> bool:
 	if PlayerData.sale_price > max_price:
 		reason = "Too expensive!"
 		return false
-	var d_lemons: float = absf(float(PlayerData.recipe_lemons) - float(ideal_lemons)) / 5.0
-	var d_sugar: float = absf(float(PlayerData.recipe_sugar) - float(ideal_sugar)) / 5.0
-	var d_ice: float = absf(float(PlayerData.recipe_ice) - float(ideal_ice)) / 8.0
-	var taste: float = 1.0 - (d_lemons + d_sugar + d_ice) / 3.0
-	if taste < 0.45:
-		if PlayerData.recipe_lemons > ideal_lemons + 1:
-			reason = "Too sour!"
-		elif PlayerData.recipe_sugar > ideal_sugar + 1:
-			reason = "Too sweet!"
-		elif PlayerData.recipe_lemons < ideal_lemons - 1 and PlayerData.recipe_sugar < ideal_sugar - 1:
-			reason = "Too weak!"
-		else:
-			reason = "Not my taste!"
-		return false
 	return true
+
+# What this customer says about the cup they just paid for. Reads the same
+# RecipeOpinion score the popularity tally uses, so the bubble on screen and the
+# points behind it can never disagree.
+func taste_reaction(opinion: Dictionary = {}) -> String:
+	if opinion.is_empty():
+		opinion = score_recipe()
+	if str(opinion.get("verdict", "")) == RecipeOpinion.DISLIKE:
+		return _dislike_reason(opinion)
+	return "Yum!"
+
+func _dislike_reason(opinion: Dictionary) -> String:
+	var worst: String = str(opinion.get("worst", ""))
+	var delta: int = int(opinion.get("worst_delta", 0))
+	if worst == "lemons" and delta > 0:
+		return "Too sour!"
+	if worst == "sugar" and delta > 0:
+		return "Too sweet!"
+	if worst == "ice" and delta > 0:
+		return "Too cold!"
+	if worst == "ice" and delta < 0:
+		return "Not cold enough!"
+	if delta < 0:
+		return "Too weak!"
+	return "Not my taste!"
+
+func _apply_news_to_ideals() -> void:
+	var shift: Dictionary = NewsCatalog.recipe_shift(PlayerData.current_news())
+	if shift.is_empty():
+		return
+	if not NewsCatalog.applies_to_area(PlayerData.current_news(), PlayerData.current_area_id()):
+		return
+	ideal_lemons = clampi(ideal_lemons + int(shift.get("lemons", 0)), 0, 12)
+	ideal_sugar = clampi(ideal_sugar + int(shift.get("sugar", 0)), 0, 12)
+	ideal_ice = clampi(ideal_ice + int(shift.get("ice", 0)), 0, 16)
+
+func _news_for_here() -> Dictionary:
+	var item: Dictionary = PlayerData.current_news()
+	if not NewsCatalog.applies_to_area(item, PlayerData.current_area_id()):
+		return {}
+	return item
+
+func _news_price_mult() -> float:
+	var item: Dictionary = _news_for_here()
+	if NewsCatalog.effect_of(item) != NewsCatalog.EFFECTS_PRICE:
+		return 1.0
+	return maxf(0.5, NewsCatalog.value_of(item))
+
+func _news_patience_mult() -> float:
+	var item: Dictionary = _news_for_here()
+	if NewsCatalog.effect_of(item) != NewsCatalog.EFFECTS_PATIENCE:
+		return 1.0
+	return maxf(0.4, NewsCatalog.value_of(item))
+
+func _news_line_bonus() -> int:
+	var item: Dictionary = _news_for_here()
+	if NewsCatalog.effect_of(item) != NewsCatalog.EFFECTS_LINE:
+		return 0
+	return int(round(NewsCatalog.value_of(item)))

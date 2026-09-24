@@ -37,7 +37,7 @@ const BASE_CUP_CAPACITY: int = 300
 # chest shaves the loss down per level.
 const ICE_KEEP_FLOOR: int = 10
 const ICE_MELT_RATE: float = 0.20
-const ICE_PER_DAY_BASE: float = 0.0
+const ICE_PER_DAY_BASE: float = 28.0
 
 # --- Lemons --------------------------------------------------------------
 # A crate bought today is good for LEMON_SHELF_LIFE_DAYS days. The walk-in
@@ -74,14 +74,71 @@ static func capacity_for(field: String, levels: Dictionary) -> int:
 static func room_for(field: String, current: int, levels: Dictionary) -> int:
 	return maxi(0, capacity_for(field, levels) - maxi(0, current))
 
+# --- The pitcher floor ---------------------------------------------------
+# The floor is the least a day can open with and still sell something: the
+# lemons and sugar for one batch, plus the ice for ONE cup. Ice is charged to
+# the cup that is sold rather than to the batch, so a single cup's worth is
+# the honest minimum. Cups are deliberately NOT here, because an empty cup
+# rack never stops a sale being recorded, so it is not a soft lock.
+const PITCHER_FIELDS: Array = ["lemon_stock", "sugar_stock", "ice_stock"]
+
+# Single-word lowercase name for a stock field, for messages.
+static func field_label(field: String) -> String:
+	match field:
+		"lemon_stock":
+			return "lemons"
+		"sugar_stock":
+			return "sugar"
+		"ice_stock":
+			return "ice"
+		"cup_stock":
+			return "cups"
+	return field
+
+# What the floor asks of one stock field, read from the recipe: a batch's
+# lemons and sugar, and for ice the amount ONE cup holds, since ice is spent
+# per cup. Anything else needs nothing, so cup_stock asks for zero.
+static func pitcher_amount(field: String, recipe_lemons: int, recipe_sugar: int,
+		recipe_ice: int) -> int:
+	match field:
+		"lemon_stock":
+			return maxi(0, recipe_lemons)
+		"sugar_stock":
+			return maxi(0, recipe_sugar)
+		"ice_stock":
+			return maxi(0, recipe_ice)
+	return 0
+
+# How much of each pitcher ingredient the given stocks are short of one
+# pitcher, keyed by stock field. Empty means the stand can brew.
+static func pitcher_shortfall(stocks: Dictionary, recipe_lemons: int,
+		recipe_sugar: int, recipe_ice: int) -> Dictionary:
+	var short: Dictionary = {}
+	for field in PITCHER_FIELDS:
+		var key: String = str(field)
+		var need: int = pitcher_amount(key, recipe_lemons, recipe_sugar, recipe_ice)
+		var have: int = int(stocks.get(key, 0))
+		if have < need:
+			short[key] = need - have
+	return short
+
+# True when the stocks hold enough for one pitcher.
+static func can_brew_pitcher(stocks: Dictionary, recipe_lemons: int,
+		recipe_sugar: int, recipe_ice: int) -> bool:
+	return pitcher_shortfall(stocks, recipe_lemons, recipe_sugar, recipe_ice).is_empty()
+
 # --- Ice -----------------------------------------------------------------
 
 # Share of the overnight melt the player has bought off, 0.0 to 0.9.
 static func melt_save(levels: Dictionary) -> float:
 	return clampf(UpgradeCatalog.stat_value("ice_melt_save", 0.0, levels), 0.0, 0.9)
 
-# Cubes one full day of ice making produces. 0 until the ice maker is bought.
+# Cubes one full day of ice making produces. Zero until the ice maker itself is
+# owned: ICE_PER_DAY_BASE is that machine's level 1 output, so it must never be
+# handed out to a stand that never bought one.
 static func ice_per_day(levels: Dictionary) -> float:
+	if UpgradeCatalog.level_of(levels, UpgradeCatalog.ICE_MAKER_ID) <= 0:
+		return 0.0
 	return maxf(0.0, UpgradeCatalog.stat_value("ice_per_day", ICE_PER_DAY_BASE, levels))
 
 # How much faster ice goes in warm weather. A hot spell hurts an uninsulated

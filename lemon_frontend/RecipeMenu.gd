@@ -20,12 +20,15 @@ const STEP_FONT: int = 24
 const SECTION_FONT: int = 17
 const HINT_FONT: int = 15
 
+const RowIcon = preload("res://assets/ui/row_icon.gd")
+const ROW_ICON_SIZE: int = 34
+
 # Stepper rows for the pitcher mix. "money" rows step in cents and print with
 # two decimals; the others are whole units.
 const MIX_ROWS: Array = [
-	{"field": "recipe_lemons", "name": "Lemons", "min": 1.0, "max": 20.0, "step": 1.0, "money": false},
-	{"field": "recipe_sugar", "name": "Sugar", "min": 1.0, "max": 20.0, "step": 1.0, "money": false},
-	{"field": "recipe_ice", "name": "Ice Cubes", "min": 0.0, "max": 20.0, "step": 1.0, "money": false},
+	{"field": "recipe_lemons", "name": "Lemons", "min": 1.0, "max": 20.0, "step": 1.0, "money": false, "icon": "res://assets/ui/icons/lemon.png"},
+	{"field": "recipe_sugar", "name": "Sugar", "min": 1.0, "max": 20.0, "step": 1.0, "money": false, "icon": "res://assets/ui/icons/sugar.png"},
+	{"field": "recipe_ice", "name": "Ice Cubes", "min": 0.0, "max": 20.0, "step": 1.0, "money": false, "icon": "res://assets/ui/icons/ice.png"},
 ]
 
 const PRICE_ROWS: Array = [
@@ -142,6 +145,16 @@ func _build_row(def: Dictionary) -> HBoxContainer:
 	row.name = field
 	row.custom_minimum_size = Vector2(0, ROW_HEIGHT)
 	row.add_theme_constant_override("separation", 10)
+
+	# Rows without art (the price row) still get a spacer of the same width, so
+	# every name in the list starts at the same x and the grid stays even.
+	var icon: Control = RowIcon.make(str(def.get("icon", "")), ROW_ICON_SIZE)
+	if icon == null:
+		icon = Control.new()
+		icon.name = "IconSpacer"
+		icon.custom_minimum_size = Vector2(float(ROW_ICON_SIZE), 0.0)
+		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_child(icon)
 
 	var row_name := Label.new()
 	row_name.name = "Name"

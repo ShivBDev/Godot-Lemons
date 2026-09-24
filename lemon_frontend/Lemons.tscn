@@ -7,11 +7,18 @@
 [ext_resource type="Script" uid="uid://d04fdgdl1npv3" path="res://scripts/areas/AreaMenu.gd" id="4_areas"]
 [ext_resource type="Script" uid="uid://dakfv1llfdo4u" path="res://RecipeMenu.gd" id="5_1c78g"]
 [ext_resource type="Script" uid="uid://do4pb4e4vex7y" path="res://ShopMenu.gd" id="5_12p6v"]
-[ext_resource type="StyleBox" path="res://ui/style_card.tres" id="7_card"]
+[ext_resource type="StyleBox" path="res://assets/ui/style_card.tres" id="7_card"]
 [ext_resource type="PackedScene" uid="uid://b874jqp5hyprr" path="res://DaySimulation.tscn" id="7_daySim"]
-[ext_resource type="StyleBox" path="res://ui/style_bar.tres" id="8_bar"]
-[ext_resource type="Script" uid="uid://ehbnrcro4u1e" path="res://ui/icon.gd" id="9_icon"]
+[ext_resource type="StyleBox" path="res://assets/ui/style_bar.tres" id="8_bar"]
 [ext_resource type="Script" uid="uid://o5odkeavgscb" path="res://UpgradesMenu.gd" id="9_upgrade"]
+[ext_resource type="Script" uid="uid://b0w4sargx7ewq" path="res://scripts/staff/StaffMenu.gd" id="10_staff"]
+[ext_resource type="Script" uid="uid://dsgjn5ubcnyl2" path="res://scripts/news/NewsTicker.gd" id="11_news"]
+[ext_resource type="Texture2D" uid="uid://d7268jfoo4sf" path="res://assets/ui/icons/recipe.png" id="14_y4gtc"]
+[ext_resource type="Texture2D" uid="uid://bu3kgrbo5qi82" path="res://assets/ui/icons/shop.png" id="15_axek6"]
+[ext_resource type="Texture2D" uid="uid://fxteijow3l2d" path="res://assets/ui/icons/upgrades.png" id="16_aknww"]
+[ext_resource type="Texture2D" uid="uid://bnr5gnuiwioa7" path="res://assets/ui/icons/staff.png" id="17_yhgdi"]
+[ext_resource type="Texture2D" uid="uid://bo4k8ugplj137" path="res://assets/ui/icons/map.png" id="18_b1rpu"]
+[ext_resource type="Texture2D" uid="uid://bfxiinr6k6dg7" path="res://assets/ui/icons/settings.png" id="19_m5vgt"]
 
 [sub_resource type="LabelSettings" id="LabelSettings_t2uw5"]
 font_size = 80
@@ -165,16 +172,7 @@ size = Vector2i(720, 1230)
 render_target_update_mode = 4
 
 [node name="DaySimulation" parent="GamePanel/DaySimulator/SubViewport" unique_id=1723501023 instance=ExtResource("7_daySim")]
-day_length = 120.0
-serve_time = 4.0
-brew_time = 8.0
-pitcher_capacity = 10
-spawn_min_interval = 4.0
-spawn_max_interval = 9.0
-spawn_stop_buffer = 25.0
 fast_forward_scale = 10.0
-min_spawn_interval = 1.0
-max_spawn_interval = 4.0
 
 [node name="StartDayButton" type="Button" parent="GamePanel" unique_id=2038416365]
 custom_minimum_size = Vector2(160, 70)
@@ -184,6 +182,17 @@ offset_top = 500.0
 offset_right = 440.0
 offset_bottom = 570.0
 text = "Start Day"
+
+[node name="StartDayCost" type="Label" parent="GamePanel" unique_id=741074342]
+layout_mode = 0
+offset_left = 10.0
+offset_top = 578.0
+offset_right = 710.0
+offset_bottom = 610.0
+theme_override_colors/font_color = Color(0.2, 0.14, 0.07, 1)
+theme_override_font_sizes/font_size = 18
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="AutoSave" type="Timer" parent="GamePanel" unique_id=655385413]
 
@@ -224,9 +233,9 @@ label_settings = SubResource("LabelSettings_swyiq")
 custom_minimum_size = Vector2(360, 56)
 layout_mode = 0
 offset_left = 170.0
-offset_top = 210.0
+offset_top = 352.0
 offset_right = 530.0
-offset_bottom = 266.0
+offset_bottom = 408.0
 text = "Log Out"
 
 [node name="LogoutConfirmation" type="ConfirmationDialog" parent="GamePanel/Menus/SettingsMenu" unique_id=1950567349]
@@ -249,9 +258,9 @@ vertical_alignment = 1
 custom_minimum_size = Vector2(360, 56)
 layout_mode = 0
 offset_left = 170.0
-offset_top = 120.0
+offset_top = 282.0
 offset_right = 530.0
-offset_bottom = 176.0
+offset_bottom = 338.0
 text = "Change Username"
 
 [node name="ChangeUsernameModal" type="ConfirmationDialog" parent="GamePanel/Menus/SettingsMenu" unique_id=2088707939]
@@ -314,6 +323,25 @@ offset_right = 710.0
 offset_bottom = 1230.0
 script = ExtResource("4_areas")
 
+[node name="StaffMenu" type="Control" parent="GamePanel/Menus" unique_id=1154780729]
+visible = false
+custom_minimum_size = Vector2(700, 500)
+anchors_preset = 0
+offset_left = 10.0
+offset_top = 730.0
+offset_right = 710.0
+offset_bottom = 1230.0
+script = ExtResource("10_staff")
+
+[node name="NewsTicker" type="Panel" parent="GamePanel" unique_id=2018144720]
+layout_mode = 0
+offset_left = 10.0
+offset_top = 100.0
+offset_right = 710.0
+offset_bottom = 148.0
+theme_override_styles/panel = ExtResource("8_bar")
+script = ExtResource("11_news")
+
 [node name="MenuBarBG" type="Panel" parent="GamePanel" unique_id=771002001]
 layout_mode = 1
 anchors_preset = 12
@@ -350,14 +378,16 @@ size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 14
 text = "Recipe"
 
-[node name="Icon" type="Control" parent="GamePanel/MenuBar/RecipeMenu" unique_id=771002011]
-anchors_preset = 0
-offset_left = 6.0
+[node name="Icon" type="TextureRect" parent="GamePanel/MenuBar/RecipeMenu" unique_id=771002011]
+layout_mode = 0
+offset_left = 3.0
 offset_top = 21.0
-offset_right = 28.0
+offset_right = 31.0
 offset_bottom = 51.0
-script = ExtResource("9_icon")
-kind = "recipe"
+mouse_filter = 2
+texture = ExtResource("14_y4gtc")
+expand_mode = 1
+stretch_mode = 5
 
 [node name="ShopMenu" type="Button" parent="GamePanel/MenuBar" unique_id=559755763]
 layout_mode = 2
@@ -365,14 +395,16 @@ size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 14
 text = "Shop"
 
-[node name="Icon" type="Control" parent="GamePanel/MenuBar/ShopMenu" unique_id=771002012]
-anchors_preset = 0
-offset_left = 6.0
+[node name="Icon" type="TextureRect" parent="GamePanel/MenuBar/ShopMenu" unique_id=771002012]
+layout_mode = 0
+offset_left = 3.0
 offset_top = 21.0
-offset_right = 28.0
+offset_right = 31.0
 offset_bottom = 51.0
-script = ExtResource("9_icon")
-kind = "shop"
+mouse_filter = 2
+texture = ExtResource("15_axek6")
+expand_mode = 1
+stretch_mode = 5
 
 [node name="Upgrades" type="Button" parent="GamePanel/MenuBar" unique_id=1907334513]
 layout_mode = 2
@@ -380,14 +412,33 @@ size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 14
 text = "Upgrades"
 
-[node name="Icon" type="Control" parent="GamePanel/MenuBar/Upgrades" unique_id=771002013]
-anchors_preset = 0
-offset_left = 6.0
+[node name="Icon" type="TextureRect" parent="GamePanel/MenuBar/Upgrades" unique_id=771002013]
+layout_mode = 0
+offset_left = 3.0
 offset_top = 21.0
-offset_right = 28.0
+offset_right = 31.0
 offset_bottom = 51.0
-script = ExtResource("9_icon")
-kind = "upgrades"
+mouse_filter = 2
+texture = ExtResource("16_aknww")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Staff" type="Button" parent="GamePanel/MenuBar" unique_id=2105221643]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 14
+text = "Staff"
+
+[node name="Icon" type="TextureRect" parent="GamePanel/MenuBar/Staff" unique_id=1593383430]
+layout_mode = 0
+offset_left = 3.0
+offset_top = 21.0
+offset_right = 31.0
+offset_bottom = 51.0
+mouse_filter = 2
+texture = ExtResource("17_yhgdi")
+expand_mode = 1
+stretch_mode = 5
 
 [node name="Areas" type="Button" parent="GamePanel/MenuBar" unique_id=771002015]
 layout_mode = 2
@@ -395,14 +446,16 @@ size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 14
 text = "Areas"
 
-[node name="Icon" type="Control" parent="GamePanel/MenuBar/Areas" unique_id=771002016]
-anchors_preset = 0
-offset_left = 6.0
+[node name="Icon" type="TextureRect" parent="GamePanel/MenuBar/Areas" unique_id=771002016]
+layout_mode = 0
+offset_left = 3.0
 offset_top = 21.0
-offset_right = 28.0
+offset_right = 31.0
 offset_bottom = 51.0
-script = ExtResource("9_icon")
-kind = "map"
+mouse_filter = 2
+texture = ExtResource("18_b1rpu")
+expand_mode = 1
+stretch_mode = 5
 
 [node name="Settings" type="Button" parent="GamePanel/MenuBar" unique_id=1688769654]
 layout_mode = 2
@@ -410,11 +463,13 @@ size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 14
 text = "Settings"
 
-[node name="Icon" type="Control" parent="GamePanel/MenuBar/Settings" unique_id=771002014]
-anchors_preset = 0
-offset_left = 6.0
+[node name="Icon" type="TextureRect" parent="GamePanel/MenuBar/Settings" unique_id=771002014]
+layout_mode = 0
+offset_left = 3.0
 offset_top = 21.0
-offset_right = 28.0
+offset_right = 31.0
 offset_bottom = 51.0
-script = ExtResource("9_icon")
-kind = "settings"
+mouse_filter = 2
+texture = ExtResource("19_m5vgt")
+expand_mode = 1
+stretch_mode = 5
