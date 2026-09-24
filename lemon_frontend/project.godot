@@ -13,7 +13,6 @@ config_version=5
 config/name="Lemon_Frontend"
 run/main_scene="uid://d3pb86mio8bc4"
 config/features=PackedStringArray("4.7", "Mobile")
-config/icon="res://Sandbox/icon.svg"
 
 [autoload]
 
@@ -32,7 +31,7 @@ project/assembly_name="Lemon_Frontend"
 
 [gui]
 
-theme/custom="res://ui/theme.tres"
+theme/custom="res://assets/ui/theme.tres"
 
 [physics]
 

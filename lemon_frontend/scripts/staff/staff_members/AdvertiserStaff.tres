@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="StaffMember" format=3 uid="uid://c0jvqpyd7ia8j"]
+
+[ext_resource type="Script" uid="uid://d2aoq6cnpabxb" path="res://scripts/staff/staff_members/StaffMemberResource.gd" id="1_lvjbb"]
+
+[resource]
+script = ExtResource("1_lvjbb")
+id = 1
+icon = "uid://brpxv85lw2jqy"
+name = "Advertiser"
+wage = 12.0
+blurb = "Walks the pavement in front of the stand and brings in about 15 percent more foot traffic."
+metadata/_custom_type_script = "uid://d2aoq6cnpabxb"

@@ -132,6 +132,7 @@ const ROUTES_STADIUM: Array = [ROUTE_GATE, ROUTE_CONCOURSE, ROUTE_TAILGATE, ROUT
 const AREAS: Array = [
 	{
 		"id": NEIGHBORHOOD,
+		"icon": "res://assets/ui/icons/area_neighborhood.png",
 		"name": "The Neighborhood",
 		"blurb": "The quiet residential block. Free to work, steady foot traffic, and the locals know what a cup is worth.",
 		"level_scene": "res://scenes/neighborhood.tscn",
@@ -143,6 +144,7 @@ const AREAS: Array = [
 	},
 	{
 		"id": CITY,
+		"icon": "res://assets/ui/icons/area_city.png",
 		"name": "Downtown",
 		"blurb": "Office towers and a busy avenue. More people walking past, and they will pay a little more for a cold cup.",
 		"level_scene": "res://scenes/city.tscn",
@@ -154,6 +156,7 @@ const AREAS: Array = [
 	},
 	{
 		"id": STADIUM,
+		"icon": "res://assets/ui/icons/area_stadium.png",
 		"name": "The Stadium",
 		"blurb": "A full concourse on match day. The biggest crowds and the loosest wallets, with the steepest fee to match.",
 		"level_scene": "res://scenes/stadium.tscn",

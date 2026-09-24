@@ -14,6 +14,7 @@ extends Control
 const ROW_SEPARATION: int = 12
 const BUY_BUTTON_SIZE: Vector2 = Vector2(150, 52)
 const SECTION_FONT: int = 19
+const RowIcon = preload("res://assets/ui/row_icon.gd")
 
 var _moneyLabel: Label
 var _rowsBox: VBoxContainer
@@ -137,6 +138,10 @@ func _build_row(def: Dictionary) -> HBoxContainer:
 	var row := HBoxContainer.new()
 	row.name = id
 	row.add_theme_constant_override("separation", 28)
+
+	var icon := RowIcon.make(str(def.get("icon", "")))
+	if icon != null:
+		row.add_child(icon)
 
 	var info := VBoxContainer.new()
 	info.name = "Info"
