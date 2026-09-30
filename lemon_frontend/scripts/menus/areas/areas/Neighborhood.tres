@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="MapArea" format=3 uid="uid://ri6gp7g3cp2j"]
+
+[ext_resource type="Script" uid="uid://cd82w8n1vw4sk" path="res://scripts/menus/areas/AreaResource.gd" id="1_tysgu"]
+
+[resource]
+script = ExtResource("1_tysgu")
+icon = "uid://vbnfv1sb5kws"
+name = "The Neighborhood"
+blurb = "The quiet residential block. Free to work, steady foot traffic, and the locals know what a cup is worth."
+level = "res://scenes/simulation_scenes/neighborhood.tscn"
+metadata/_custom_type_script = "uid://cd82w8n1vw4sk"

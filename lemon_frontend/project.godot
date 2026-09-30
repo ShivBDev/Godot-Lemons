@@ -18,6 +18,8 @@ config/features=PackedStringArray("4.7", "Mobile")
 
 GameNet="*uid://bpfm4b6y6y1ej"
 PlayerData="*uid://3cpctkrvy6me"
+NewsCatalog="*uid://dutjxglldwtmr"
+AreaCatalog="*uid://btxpnraf6totu"
 
 [display]
 
@@ -28,6 +30,14 @@ window/stretch/mode="canvas_items"
 [dotnet]
 
 project/assembly_name="Lemon_Frontend"
+
+[file_customization]
+
+folder_colors={
+"res://assets/": "red",
+"res://scenes/": "green",
+"res://scripts/": "blue"
+}
 
 [gui]
 

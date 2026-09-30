@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="NewsItem" format=3 uid="uid://qsf3soxrkt6t"]
+
+[ext_resource type="Script" uid="uid://u5nwi7uyyt6" path="res://scripts/news/NewsResource.gd" id="1_wfeg5"]
+
+[resource]
+script = ExtResource("1_wfeg5")
+newsId = "storewide_sale"
+text = "The supply shop is running a storewide sale. Every pack is cheaper."
+effects = 7
+value = 0.8
+data = ""

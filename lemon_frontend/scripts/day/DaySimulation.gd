@@ -17,7 +17,7 @@ signal day_finished
 @export var min_spawn_interval: float = 1.0
 @export var max_spawn_interval: float = 4.0
 
-const CustomerScene: PackedScene = preload("res://scripts/day/Customer.tscn")
+const CustomerScene: PackedScene = preload("res://scenes/simulation_scenes/Customer.tscn")
 const QUEUE_SPACING: float = 0.9
 # How far apart the two window lines sit, left and right of the counter.
 const QUEUE_LANE_GAP: float = 1.6
@@ -203,11 +203,9 @@ func start_day() -> void:
 	customers.clear()
 	queue.clear()
 	results_panel.visible = false
+	if PlayerData.current_area == MapArea.AreaID.Stadium:
+		AreaCatalog.roll_new_team_themes()
 	_apply_effective_stats()
-	# A stadium day draws its own pair of kits: the two colours the crowd can be
-	# wearing today, re-rolled every time the stand is set up there.
-	if PlayerData.current_area_id() == AreaCatalog.STADIUM:
-		PlayerData.roll_team_pair()
 	_refresh_level()
 	# Re-read the stand, so moving or turning it in the editor lands on the next
 	# day rather than only after a scene reload.
@@ -273,7 +271,7 @@ func _process(_delta: float) -> void:
 func _refresh_level() -> void:
 	if level_holder == null or not is_instance_valid(level_holder):
 		return
-	var scene_path: String = AreaCatalog.level_scene_for(PlayerData.current_area_id())
+	var scene_path: String = AreaCatalog.get_area(PlayerData.current_area).level
 	if scene_path.is_empty():
 		return
 	if scene_path == loaded_level_scene and level_holder.get_child_count() > 0:
@@ -293,7 +291,7 @@ func _refresh_level() -> void:
 # Moving the stand lands immediately, even mid-shop: the scenery swaps under the
 # HUD so the player can see where they just set up. The day's numbers and the
 # fee are read at start_day() and _end_day(), so they pick it up on their own.
-func _on_area_changed(_area_id: String) -> void:
+func _on_area_changed(_area_id: MapArea.AreaID) -> void:
 	_apply_effective_stats()
 	_refresh_level()
 	_refresh_status_bar()
@@ -531,7 +529,7 @@ func _record_opinion(opinion: Dictionary) -> void:
 	var earned: int = Popularity.points_for_verdict(str(opinion.get("verdict", opinion.get("band", RecipeOpinion.NEUTRAL))))
 	if bool(opinion.get("perfect", false)):
 		perfect_cups += 1
-	if PlayerData.note_popularity_points(earned):
+	if PlayerData.note_popularity_points(earned, PlayerData.current_area):
 		opinion_lines.append("Popularity up")
 	var note: String = RecipeOpinion.summary_line(opinion)
 	if not note.is_empty():
@@ -586,14 +584,14 @@ func _show_results() -> void:
 	# silent deduction from the money total.
 	if results_area != null:
 		results_area.text = "%s - paid up front: $%.2f fee, $%.2f wages" % [
-			PlayerData.current_area_name(), PlayerData.last_area_fee, PlayerData.last_staff_wage]
+			AreaCatalog.get_area(PlayerData.current_area).name, PlayerData.last_area_fee, PlayerData.last_staff_wage]
 	if results_opinions != null:
 		var lines: PackedStringArray = RecipeOpinion.summary_lines(PlayerData.opinion_totals)
 		results_opinions.text = "\n".join(lines)
 	if results_popularity != null:
 		results_popularity.text = "Popularity %d (%d/%d pts) - %d loved, %d neutral today" % [
-			PlayerData.popularity_level(), PlayerData.popularity_points(),
-			PlayerData.popularity_goal(), loved_count, neutral_count]
+			PlayerData.popularity_level(PlayerData.current_area), PlayerData.popularity_points(PlayerData.current_area),
+			PlayerData.popularity_goal(PlayerData.current_area), loved_count, neutral_count]
 	results_panel.visible = true
 
 func _on_finish_day_pressed() -> void:
@@ -669,10 +667,10 @@ func _apply_effective_stats() -> void:
 	eff_area_traffic = PlayerData.area_traffic() * PlayerData.popularity_traffic()
 	if PlayerData.is_hired(StaffMember.STAFF_ID.advertiser):
 		eff_area_traffic *= StaffCatalog.AD_TRAFFIC
-	var news_item: Dictionary = PlayerData.current_news()
-	if NewsCatalog.effect_of(news_item) == NewsCatalog.EFFECTS_TRAFFIC \
-			and NewsCatalog.applies_to_area(news_item, PlayerData.current_area_id()):
-		eff_area_traffic *= NewsCatalog.value_of(news_item)
+	var news_item: NewsItem = NewsCatalog.get_item(PlayerData.current_news())
+	if news_item.effects == NewsItem.EffectTarget.traffic \
+			and NewsCatalog.applies_to_area(news_item.newsId, PlayerData.current_area):
+		eff_area_traffic *= news_item.value
 	eff_price_mult = PlayerData.area_price_multiplier() * PlayerData.popularity_price()
 	var demand: float = Weather.demand_for(PlayerData.today_weather()) * eff_area_traffic
 	if demand <= 0.0:

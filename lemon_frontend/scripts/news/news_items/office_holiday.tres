@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="NewsItem" format=3 uid="uid://co463ctsjyer1"]
+
+[ext_resource type="Script" uid="uid://u5nwi7uyyt6" path="res://scripts/news/NewsResource.gd" id="1_q8vah"]
+
+[resource]
+script = ExtResource("1_q8vah")
+newsId = "office_holiday"
+text = "Downtown offices are closed tomorrow. The avenue will be quiet."
+value = 0.7
+data = "city"

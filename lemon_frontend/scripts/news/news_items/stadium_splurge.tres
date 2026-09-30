@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="NewsItem" format=3 uid="uid://ty2ygqerkcxd"]
+
+[ext_resource type="Script" uid="uid://u5nwi7uyyt6" path="res://scripts/news/NewsResource.gd" id="1_8w3up"]
+
+[resource]
+script = ExtResource("1_8w3up")
+newsId = "stadium_splurge"
+text = "Match-day spending is up. Stadium customers will pay more for a cold cup."
+effects = 1
+value = 1.25
+data = "stadium"

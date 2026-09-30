@@ -1,0 +1,475 @@
+[gd_scene format=3 uid="uid://d3pb86mio8bc4"]
+
+[ext_resource type="Script" uid="uid://rl2qbemx22c0" path="res://scripts/LoginControl.gd" id="1_lv54m"]
+[ext_resource type="Script" uid="uid://d3ctiqrc05h3u" path="res://scripts/GameControl.gd" id="2_522g8"]
+[ext_resource type="Script" uid="uid://cq60olaox1l8j" path="res://scripts/menus/SettingsMenu.gd" id="3_522g8"]
+[ext_resource type="Script" uid="uid://cuji38rmb5i7i" path="res://scripts/menus/MenuBar.gd" id="3_egube"]
+[ext_resource type="Script" uid="uid://d04fdgdl1npv3" path="res://scripts/menus/areas/AreaMenu.gd" id="4_areas"]
+[ext_resource type="Script" uid="uid://dakfv1llfdo4u" path="res://scripts/menus/RecipeMenu.gd" id="5_1c78g"]
+[ext_resource type="Script" uid="uid://do4pb4e4vex7y" path="res://scripts/menus/ShopMenu.gd" id="5_12p6v"]
+[ext_resource type="StyleBox" path="res://assets/ui/style_card.tres" id="7_card"]
+[ext_resource type="PackedScene" uid="uid://b874jqp5hyprr" path="res://scenes/DaySimulation.tscn" id="7_daySim"]
+[ext_resource type="StyleBox" path="res://assets/ui/style_bar.tres" id="8_bar"]
+[ext_resource type="Script" uid="uid://o5odkeavgscb" path="res://scripts/menus/upgrades/UpgradesMenu.gd" id="9_upgrade"]
+[ext_resource type="Script" uid="uid://b0w4sargx7ewq" path="res://scripts/menus/staff/StaffMenu.gd" id="10_staff"]
+[ext_resource type="Script" uid="uid://dsgjn5ubcnyl2" path="res://scripts/news/NewsTicker.gd" id="11_news"]
+[ext_resource type="Texture2D" uid="uid://d7268jfoo4sf" path="res://assets/ui/icons/recipe.png" id="14_y4gtc"]
+[ext_resource type="Texture2D" uid="uid://bu3kgrbo5qi82" path="res://assets/ui/icons/shop.png" id="15_axek6"]
+[ext_resource type="Texture2D" uid="uid://fxteijow3l2d" path="res://assets/ui/icons/upgrades.png" id="16_aknww"]
+[ext_resource type="Texture2D" uid="uid://bnr5gnuiwioa7" path="res://assets/ui/icons/staff.png" id="17_yhgdi"]
+[ext_resource type="Texture2D" uid="uid://bo4k8ugplj137" path="res://assets/ui/icons/map.png" id="18_b1rpu"]
+[ext_resource type="Texture2D" uid="uid://bfxiinr6k6dg7" path="res://assets/ui/icons/settings.png" id="19_m5vgt"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_t2uw5"]
+font_size = 80
+font_color = Color(0, 0, 0, 1)
+
+[sub_resource type="LabelSettings" id="LabelSettings_njuqu"]
+font_size = 40
+font_color = Color(0, 0, 0, 1)
+
+[sub_resource type="LabelSettings" id="LabelSettings_lv54m"]
+font_size = 32
+font_color = Color(0, 0, 0, 1)
+
+[sub_resource type="LabelSettings" id="LabelSettings_swyiq"]
+font_size = 32
+font_color = Color(0, 0, 0, 1)
+
+[sub_resource type="LabelSettings" id="LabelSettings_qk17a"]
+font_size = 20
+
+[node name="LoginControl" type="Node" unique_id=1490560837]
+script = ExtResource("1_lv54m")
+
+[node name="BG" type="ColorRect" parent="." unique_id=494950054]
+custom_minimum_size = Vector2(720, 1280)
+offset_right = 720.0
+offset_bottom = 1280.0
+color = Color(0.804, 0.882, 0.663, 1)
+
+[node name="LoginPanel" type="Control" parent="." unique_id=37850031]
+visible = false
+custom_minimum_size = Vector2(720, 1280)
+layout_mode = 3
+anchors_preset = 0
+offset_right = 720.0
+offset_bottom = 1280.0
+
+[node name="LoginLabel" type="Label" parent="LoginPanel" unique_id=192719785]
+custom_minimum_size = Vector2(720, 150)
+layout_mode = 0
+offset_right = 720.0
+offset_bottom = 150.0
+text = "Login"
+label_settings = SubResource("LabelSettings_t2uw5")
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="EmailLabel" type="Label" parent="LoginPanel" unique_id=625513637]
+custom_minimum_size = Vector2(720, 100)
+layout_mode = 0
+offset_top = 400.0
+offset_right = 720.0
+offset_bottom = 550.0
+text = "Login With Email"
+label_settings = SubResource("LabelSettings_njuqu")
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="EmailField" type="LineEdit" parent="LoginPanel" unique_id=209378073]
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 0
+offset_top = 550.0
+offset_right = 720.0
+offset_bottom = 600.0
+placeholder_text = "Enter Your Email..."
+alignment = 1
+
+[node name="LoginButton" type="Button" parent="LoginPanel" unique_id=1578172928]
+custom_minimum_size = Vector2(400, 60)
+layout_mode = 0
+offset_left = 160.0
+offset_top = 1000.0
+offset_right = 560.0
+offset_bottom = 1060.0
+text = "Log In"
+
+[node name="OtpPanel" type="Control" parent="." unique_id=696622700]
+visible = false
+custom_minimum_size = Vector2(720, 1280)
+layout_mode = 3
+anchors_preset = 0
+offset_right = 720.0
+offset_bottom = 1280.0
+
+[node name="LoginLabel" type="Label" parent="OtpPanel" unique_id=2139787411]
+custom_minimum_size = Vector2(720, 150)
+layout_mode = 0
+offset_right = 720.0
+offset_bottom = 150.0
+text = "Login"
+label_settings = SubResource("LabelSettings_t2uw5")
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="OtpLabel" type="Label" parent="OtpPanel" unique_id=295534475]
+custom_minimum_size = Vector2(720, 100)
+layout_mode = 0
+offset_top = 400.0
+offset_right = 720.0
+offset_bottom = 550.0
+text = "Enter your 6-digit One-Time Passcode"
+label_settings = SubResource("LabelSettings_lv54m")
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="OtpField" type="LineEdit" parent="OtpPanel" unique_id=729310290]
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 0
+offset_top = 550.0
+offset_right = 720.0
+offset_bottom = 600.0
+placeholder_text = "Enter OTP Code"
+alignment = 1
+
+[node name="OtpSubmitButton" type="Button" parent="OtpPanel" unique_id=379911999]
+custom_minimum_size = Vector2(450, 60)
+layout_mode = 0
+offset_left = 135.0
+offset_top = 900.0
+offset_right = 585.0
+offset_bottom = 960.0
+text = "Submit One-Time Passcode"
+
+[node name="BackToLoginButton" type="Button" parent="OtpPanel" unique_id=1940175161]
+custom_minimum_size = Vector2(320, 60)
+layout_mode = 0
+offset_left = 200.0
+offset_top = 1100.0
+offset_right = 520.0
+offset_bottom = 1160.0
+text = "Back to Log In."
+
+[node name="GamePanel" type="Control" parent="." unique_id=647420713]
+custom_minimum_size = Vector2(720, 1280)
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+script = ExtResource("2_522g8")
+
+[node name="DaySimulator" type="SubViewportContainer" parent="GamePanel" unique_id=982510860]
+custom_minimum_size = Vector2(720, 1230)
+layout_mode = 0
+offset_right = 720.0
+offset_bottom = 1230.0
+stretch = true
+
+[node name="SubViewport" type="SubViewport" parent="GamePanel/DaySimulator" unique_id=319335689]
+handle_input_locally = false
+size = Vector2i(720, 1230)
+render_target_update_mode = 4
+
+[node name="DaySimulation" parent="GamePanel/DaySimulator/SubViewport" unique_id=1723501023 instance=ExtResource("7_daySim")]
+fast_forward_scale = 10.0
+
+[node name="StartDayButton" type="Button" parent="GamePanel" unique_id=2038416365]
+custom_minimum_size = Vector2(160, 70)
+layout_mode = 0
+offset_left = 280.0
+offset_top = 500.0
+offset_right = 440.0
+offset_bottom = 570.0
+text = "Start Day"
+
+[node name="StartDayCost" type="Label" parent="GamePanel" unique_id=741074342]
+layout_mode = 0
+offset_left = 10.0
+offset_top = 578.0
+offset_right = 710.0
+offset_bottom = 610.0
+theme_override_colors/font_color = Color(0.2, 0.14, 0.07, 1)
+theme_override_font_sizes/font_size = 18
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="AutoSave" type="Timer" parent="GamePanel" unique_id=655385413]
+
+[node name="Menus" type="Control" parent="GamePanel" unique_id=325092562]
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="BG" type="Panel" parent="GamePanel/Menus" unique_id=2146652685]
+custom_minimum_size = Vector2(700, 500)
+layout_mode = 0
+offset_left = 10.0
+offset_top = 730.0
+offset_right = 710.0
+offset_bottom = 1230.0
+theme_override_styles/panel = ExtResource("7_card")
+
+[node name="SettingsMenu" type="Control" parent="GamePanel/Menus" unique_id=821759036]
+visible = false
+custom_minimum_size = Vector2(700, 500)
+anchors_preset = 0
+offset_left = 10.0
+offset_top = 730.0
+offset_right = 710.0
+offset_bottom = 1230.0
+script = ExtResource("3_522g8")
+
+[node name="Title" type="Label" parent="GamePanel/Menus/SettingsMenu" unique_id=614281121]
+layout_mode = 0
+offset_left = 24.0
+offset_top = 24.0
+offset_right = 676.0
+offset_bottom = 72.0
+text = "Settings"
+label_settings = SubResource("LabelSettings_swyiq")
+
+[node name="LogoutButton" type="Button" parent="GamePanel/Menus/SettingsMenu" unique_id=820284982]
+custom_minimum_size = Vector2(360, 56)
+layout_mode = 0
+offset_left = 170.0
+offset_top = 352.0
+offset_right = 530.0
+offset_bottom = 408.0
+text = "Log Out"
+
+[node name="LogoutConfirmation" type="ConfirmationDialog" parent="GamePanel/Menus/SettingsMenu" unique_id=1950567349]
+oversampling_override = 1.0
+initial_position = 1
+size = Vector2i(200, 107)
+
+[node name="Label" type="Label" parent="GamePanel/Menus/SettingsMenu/LogoutConfirmation" unique_id=1140915616]
+custom_minimum_size = Vector2(0, 50)
+offset_left = 8.0
+offset_top = 8.0
+offset_right = 192.0
+offset_bottom = 58.0
+text = "Logout?"
+label_settings = SubResource("LabelSettings_qk17a")
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ChangeNameButton" type="Button" parent="GamePanel/Menus/SettingsMenu" unique_id=461061608]
+custom_minimum_size = Vector2(360, 56)
+layout_mode = 0
+offset_left = 170.0
+offset_top = 282.0
+offset_right = 530.0
+offset_bottom = 338.0
+text = "Change Username"
+
+[node name="ChangeUsernameModal" type="ConfirmationDialog" parent="GamePanel/Menus/SettingsMenu" unique_id=2088707939]
+oversampling_override = 1.0
+initial_position = 1
+size = Vector2i(200, 115)
+
+[node name="Layout" type="VBoxContainer" parent="GamePanel/Menus/SettingsMenu/ChangeUsernameModal" unique_id=1101833241]
+offset_left = 8.0
+offset_top = 8.0
+offset_right = 192.0
+offset_bottom = 66.0
+
+[node name="EnterUsernameLabel" type="Label" parent="GamePanel/Menus/SettingsMenu/ChangeUsernameModal/Layout" unique_id=2110394380]
+layout_mode = 2
+text = "Enter New Username:"
+horizontal_alignment = 1
+
+[node name="UsernameField" type="LineEdit" parent="GamePanel/Menus/SettingsMenu/ChangeUsernameModal/Layout" unique_id=1266828221]
+layout_mode = 2
+max_length = 20
+
+[node name="ShopMenu" type="Control" parent="GamePanel/Menus" unique_id=893313510]
+visible = false
+custom_minimum_size = Vector2(700, 500)
+anchors_preset = 0
+offset_left = 10.0
+offset_top = 730.0
+offset_right = 710.0
+offset_bottom = 1230.0
+script = ExtResource("5_12p6v")
+
+[node name="RecipeMenu" type="Control" parent="GamePanel/Menus" unique_id=2034686580]
+visible = false
+custom_minimum_size = Vector2(700, 500)
+anchors_preset = 0
+offset_left = 10.0
+offset_top = 730.0
+offset_right = 710.0
+offset_bottom = 1230.0
+script = ExtResource("5_1c78g")
+
+[node name="UpgradesMenu" type="Control" parent="GamePanel/Menus" unique_id=1907334512]
+visible = false
+custom_minimum_size = Vector2(700, 500)
+anchors_preset = 0
+offset_left = 10.0
+offset_top = 730.0
+offset_right = 710.0
+offset_bottom = 1230.0
+script = ExtResource("9_upgrade")
+
+[node name="AreasMenu" type="Control" parent="GamePanel/Menus" unique_id=1907334514]
+visible = false
+custom_minimum_size = Vector2(700, 500)
+anchors_preset = 0
+offset_left = 10.0
+offset_top = 730.0
+offset_right = 710.0
+offset_bottom = 1230.0
+script = ExtResource("4_areas")
+
+[node name="StaffMenu" type="Control" parent="GamePanel/Menus" unique_id=1154780729]
+visible = false
+custom_minimum_size = Vector2(700, 500)
+anchors_preset = 0
+offset_left = 10.0
+offset_top = 730.0
+offset_right = 710.0
+offset_bottom = 1230.0
+script = ExtResource("10_staff")
+
+[node name="NewsTicker" type="Panel" parent="GamePanel" unique_id=2018144720]
+layout_mode = 0
+offset_left = 10.0
+offset_top = 100.0
+offset_right = 710.0
+offset_bottom = 148.0
+theme_override_styles/panel = ExtResource("8_bar")
+script = ExtResource("11_news")
+
+[node name="MenuBarBG" type="Panel" parent="GamePanel" unique_id=771002001]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 8.0
+offset_top = -80.0
+offset_right = -8.0
+offset_bottom = -8.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_styles/panel = ExtResource("8_bar")
+
+[node name="MenuBar" type="HBoxContainer" parent="GamePanel" unique_id=1668980079]
+custom_minimum_size = Vector2(720, 72)
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 14.0
+offset_top = -74.0
+offset_right = -14.0
+offset_bottom = -14.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_constants/separation = 4
+script = ExtResource("3_egube")
+
+[node name="RecipeMenu" type="Button" parent="GamePanel/MenuBar" unique_id=1010492662]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 14
+text = "Recipe"
+
+[node name="Icon" type="TextureRect" parent="GamePanel/MenuBar/RecipeMenu" unique_id=771002011]
+layout_mode = 0
+offset_left = 3.0
+offset_top = 21.0
+offset_right = 31.0
+offset_bottom = 51.0
+mouse_filter = 2
+texture = ExtResource("14_y4gtc")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ShopMenu" type="Button" parent="GamePanel/MenuBar" unique_id=559755763]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 14
+text = "Shop"
+
+[node name="Icon" type="TextureRect" parent="GamePanel/MenuBar/ShopMenu" unique_id=771002012]
+layout_mode = 0
+offset_left = 3.0
+offset_top = 21.0
+offset_right = 31.0
+offset_bottom = 51.0
+mouse_filter = 2
+texture = ExtResource("15_axek6")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Upgrades" type="Button" parent="GamePanel/MenuBar" unique_id=1907334513]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 14
+text = "Upgrades"
+
+[node name="Icon" type="TextureRect" parent="GamePanel/MenuBar/Upgrades" unique_id=771002013]
+layout_mode = 0
+offset_left = 3.0
+offset_top = 21.0
+offset_right = 31.0
+offset_bottom = 51.0
+mouse_filter = 2
+texture = ExtResource("16_aknww")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Staff" type="Button" parent="GamePanel/MenuBar" unique_id=2105221643]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 14
+text = "Staff"
+
+[node name="Icon" type="TextureRect" parent="GamePanel/MenuBar/Staff" unique_id=1593383430]
+layout_mode = 0
+offset_left = 3.0
+offset_top = 21.0
+offset_right = 31.0
+offset_bottom = 51.0
+mouse_filter = 2
+texture = ExtResource("17_yhgdi")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Areas" type="Button" parent="GamePanel/MenuBar" unique_id=771002015]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 14
+text = "Areas"
+
+[node name="Icon" type="TextureRect" parent="GamePanel/MenuBar/Areas" unique_id=771002016]
+layout_mode = 0
+offset_left = 3.0
+offset_top = 21.0
+offset_right = 31.0
+offset_bottom = 51.0
+mouse_filter = 2
+texture = ExtResource("18_b1rpu")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Settings" type="Button" parent="GamePanel/MenuBar" unique_id=1688769654]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 14
+text = "Settings"
+
+[node name="Icon" type="TextureRect" parent="GamePanel/MenuBar/Settings" unique_id=771002014]
+layout_mode = 0
+offset_left = 3.0
+offset_top = 21.0
+offset_right = 31.0
+offset_bottom = 51.0
+mouse_filter = 2
+texture = ExtResource("19_m5vgt")
+expand_mode = 1
+stretch_mode = 5

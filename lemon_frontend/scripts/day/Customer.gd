@@ -192,10 +192,10 @@ func _randomize_outfit() -> void:
 	_randomize_extra()
 	# Then let the area dress whoever it wants to over the top. The
 	# neighbourhood leaves the mixed crowd above exactly as it was.
-	match _wardrobe_theme():
-		AreaCatalog.ATTIRE_CITY:
+	match PlayerData.area_attire():
+		MapArea.Attire.City:
 			_dress_city()
-		AreaCatalog.ATTIRE_STADIUM:
+		MapArea.Attire.Stadium:
 			_dress_stadium()
 
 # --- Bottoms --------------------------------------------------------------
@@ -331,10 +331,6 @@ func _roll_extra() -> int:
 
 # --- Area wardrobe --------------------------------------------------------
 
-# Which wardrobe the area hands out, read from wherever the stand is set up.
-func _wardrobe_theme() -> String:
-	return PlayerData.area_attire()
-
 # The area's price multiplier, read off the running day so it matches the
 # traffic the sim is spawning with. Falls back to 1.0 outside a day.
 func _area_price_mult() -> float:
@@ -370,11 +366,9 @@ func _dress_city() -> void:
 # Match day: most of the crowd backs one of the two kits drawn for today, so
 # the concourse reads as two blocks of colour instead of a random crowd.
 func _dress_stadium() -> void:
-	if not PlayerData.has_team_pair():
-		return
 	if randf() > 0.8:
 		return
-	var theme: Dictionary = PlayerData.team_pair[randi() % 2]
+	var theme: Dictionary = AreaCatalog.get_team_themes()[randi() % 2]
 	var primary: Color = theme.get("primary", Color(0.8, 0.8, 0.8))
 	var secondary: Color = theme.get("secondary", Color(0.15, 0.15, 0.15))
 	_tint(body_mesh, primary)
@@ -578,32 +572,32 @@ func _apply_news_to_ideals() -> void:
 	var shift: Dictionary = NewsCatalog.recipe_shift(PlayerData.current_news())
 	if shift.is_empty():
 		return
-	if not NewsCatalog.applies_to_area(PlayerData.current_news(), PlayerData.current_area_id()):
+	if not NewsCatalog.applies_to_area(PlayerData.current_news(), PlayerData.current_area):
 		return
 	ideal_lemons = clampi(ideal_lemons + int(shift.get("lemons", 0)), 0, 12)
 	ideal_sugar = clampi(ideal_sugar + int(shift.get("sugar", 0)), 0, 12)
 	ideal_ice = clampi(ideal_ice + int(shift.get("ice", 0)), 0, 16)
 
-func _news_for_here() -> Dictionary:
-	var item: Dictionary = PlayerData.current_news()
-	if not NewsCatalog.applies_to_area(item, PlayerData.current_area_id()):
-		return {}
-	return item
+func _news_for_here() -> NewsItem:
+	var newsItem: NewsItem = NewsCatalog.get_item(PlayerData.current_news())
+	if not NewsCatalog.applies_to_area(newsItem.newsId, PlayerData.current_area):
+		return null
+	return newsItem
 
 func _news_price_mult() -> float:
-	var item: Dictionary = _news_for_here()
-	if NewsCatalog.effect_of(item) != NewsCatalog.EFFECTS_PRICE:
+	var item: NewsItem = _news_for_here()
+	if item == null or item.effects != NewsItem.EffectTarget.price:
 		return 1.0
-	return maxf(0.5, NewsCatalog.value_of(item))
+	return maxf(0.5, item.value)
 
 func _news_patience_mult() -> float:
-	var item: Dictionary = _news_for_here()
-	if NewsCatalog.effect_of(item) != NewsCatalog.EFFECTS_PATIENCE:
+	var item: NewsItem = _news_for_here()
+	if item == null or item.effects != NewsItem.EffectTarget.patience:
 		return 1.0
-	return maxf(0.4, NewsCatalog.value_of(item))
+	return maxf(0.4, item.value)
 
 func _news_line_bonus() -> int:
-	var item: Dictionary = _news_for_here()
-	if NewsCatalog.effect_of(item) != NewsCatalog.EFFECTS_LINE:
+	var item: NewsItem = _news_for_here()
+	if item == null or item.effects != NewsItem.EffectTarget.line:
 		return 0
-	return int(round(NewsCatalog.value_of(item)))
+	return int(round(item.value))

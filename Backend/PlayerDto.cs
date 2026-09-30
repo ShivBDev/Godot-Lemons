@@ -21,5 +21,11 @@ public record GameStateData(
     float salePrice,
     Dictionary<string, object> weather,
     Dictionary<string, object> forecast,
-    Dictionary<string, object> upgradeLevels
+    List<Dictionary<string, object>> lemonLots,
+    Dictionary<string, object> upgradeLevels,
+    string currentArea,
+    Dictionary<string, object> popularity,
+    Dictionary<string, object> hiredStaff,
+    string newsId,
+    Dictionary<string, object> stats
 );

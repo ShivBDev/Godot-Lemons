@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="NewsItem" format=3 uid="uid://c7qf7wfvrgotr"]
+
+[ext_resource type="Script" uid="uid://u5nwi7uyyt6" path="res://scripts/news/NewsResource.gd" id="1_g1i86"]
+
+[resource]
+script = ExtResource("1_g1i86")
+newsId = "price_hike"
+text = "Supply costs jumped overnight. Shop prices are up across the board."
+effects = 7
+value = 1.25
+data = ""

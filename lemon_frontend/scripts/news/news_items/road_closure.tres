@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="NewsItem" format=3 uid="uid://c7djtlfjogetq"]
+
+[ext_resource type="Script" uid="uid://u5nwi7uyyt6" path="res://scripts/news/NewsResource.gd" id="1_yxrhj"]
+
+[resource]
+script = ExtResource("1_yxrhj")
+newsId = "road_closure"
+text = "A road closure is diverting cars past the neighborhood stand."
+value = 1.25
+data = "neighborhood"

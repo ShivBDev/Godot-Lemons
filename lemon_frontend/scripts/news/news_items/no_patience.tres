@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="NewsItem" format=3 uid="uid://b73b8rnf6i8h"]
+
+[ext_resource type="Script" uid="uid://u5nwi7uyyt6" path="res://scripts/news/NewsResource.gd" id="1_e8i6q"]
+
+[resource]
+script = ExtResource("1_e8i6q")
+newsId = "no_patience"
+text = "A transit delay has everyone irritable. Short lines only."
+effects = 3
+value = -1.0
+data = null

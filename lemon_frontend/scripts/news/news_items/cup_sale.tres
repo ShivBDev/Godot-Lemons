@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="NewsItem" format=3 uid="uid://cis6of4cr62yw"]
+
+[ext_resource type="Script" uid="uid://u5nwi7uyyt6" path="res://scripts/news/NewsResource.gd" id="1_mo4t3"]
+
+[resource]
+script = ExtResource("1_mo4t3")
+newsId = "cup_sale"
+text = "A cup supplier is clearing inventory. Cup packs are discounted."
+effects = 7
+value = 0.7
+data = "cup_stock"

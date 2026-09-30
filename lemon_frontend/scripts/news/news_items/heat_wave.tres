@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="NewsItem" format=3 uid="uid://blct7qt0ev6ag"]
+
+[ext_resource type="Script" uid="uid://u5nwi7uyyt6" path="res://scripts/news/NewsResource.gd" id="1_ywj5r"]
+
+[resource]
+script = ExtResource("1_ywj5r")
+newsId = "heat_wave"
+text = "A heat wave is rolling in. Tomorrow will run well past the usual high."
+effects = 4
+value = 18.0
+data = null

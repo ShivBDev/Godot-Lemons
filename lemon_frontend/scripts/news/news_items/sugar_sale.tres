@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="NewsItem" format=3 uid="uid://b3n2e47vncg1f"]
+
+[ext_resource type="Script" uid="uid://u5nwi7uyyt6" path="res://scripts/news/NewsResource.gd" id="1_u0yf3"]
+
+[resource]
+script = ExtResource("1_u0yf3")
+newsId = "sugar_sale"
+text = "A wholesaler is dumping sugar. Sugar packs are cheaper tomorrow."
+effects = 7
+value = 0.75
+data = "sugar_stock"
