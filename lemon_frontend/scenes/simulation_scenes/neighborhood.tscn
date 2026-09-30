@@ -1,0 +1,189 @@
+[gd_scene format=3 uid="uid://cjqoaam5pcmwf"]
+
+[ext_resource type="PackedScene" path="res://scenes/simulation_scenes/neightborhood_houses/house_a.tscn" id="8_house_a"]
+[ext_resource type="PackedScene" path="res://scenes/simulation_scenes/neightborhood_houses/house_b.tscn" id="9_house_b"]
+[ext_resource type="PackedScene" path="res://scenes/simulation_scenes/neightborhood_houses/house_c.tscn" id="10_house_c"]
+
+[sub_resource type="StandardMaterial3D" id="MatSidewalk"]
+albedo_color = Color(0.937, 0.902, 0.776, 1)
+
+[sub_resource type="PlaneMesh" id="MeshSidewalkEast"]
+size = Vector2(4.2, 110)
+
+[sub_resource type="PlaneMesh" id="MeshStandPad"]
+size = Vector2(4.2, 7.8)
+
+[sub_resource type="PlaneMesh" id="MeshSidewalkWest"]
+size = Vector2(4.7, 110)
+
+[sub_resource type="PlaneMesh" id="MeshCrossEast"]
+size = Vector2(78, 2.4)
+
+[sub_resource type="PlaneMesh" id="MeshCrossWest"]
+size = Vector2(46, 2.4)
+
+[sub_resource type="StandardMaterial3D" id="MatTrunk"]
+albedo_color = Color(0.4, 0.26, 0.13, 1)
+
+[sub_resource type="CylinderMesh" id="MeshTrunk"]
+top_radius = 0.12
+bottom_radius = 0.12
+height = 1.6
+
+[sub_resource type="StandardMaterial3D" id="MatCanopy"]
+albedo_color = Color(0.24, 0.5, 0.22, 1)
+
+[sub_resource type="SphereMesh" id="MeshCanopy"]
+radius = 0.7
+height = 1.4
+
+[node name="Neighborhood" type="Node3D" unique_id=1219677764]
+
+[node name="SidewalkEastSouth" type="MeshInstance3D" parent="." unique_id=1695397774]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5, 0.05, -46.4)
+material_override = SubResource("MatSidewalk")
+mesh = SubResource("MeshSidewalkEast")
+
+[node name="SidewalkEastNorth" type="MeshInstance3D" parent="." unique_id=590737578]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5, 0.05, 66.4)
+material_override = SubResource("MatSidewalk")
+mesh = SubResource("MeshSidewalkEast")
+
+[node name="StandPad" type="MeshInstance3D" parent="." unique_id=445882977]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.7, 0.052, -2.1)
+material_override = SubResource("MatSidewalk")
+mesh = SubResource("MeshStandPad")
+
+[node name="SidewalkWestSouth" type="MeshInstance3D" parent="." unique_id=1081062204]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.75, 0.05, -46.4)
+material_override = SubResource("MatSidewalk")
+mesh = SubResource("MeshSidewalkWest")
+
+[node name="SidewalkWestNorth" type="MeshInstance3D" parent="." unique_id=1697333192]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.75, 0.05, 66.4)
+material_override = SubResource("MatSidewalk")
+mesh = SubResource("MeshSidewalkWest")
+
+[node name="SidewalkCrossSouthE" type="MeshInstance3D" parent="." unique_id=63113538]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 41, 0.05, 6.4)
+material_override = SubResource("MatSidewalk")
+mesh = SubResource("MeshCrossEast")
+
+[node name="SidewalkCrossNorthE" type="MeshInstance3D" parent="." unique_id=24160090]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 41, 0.05, 13.6)
+material_override = SubResource("MatSidewalk")
+mesh = SubResource("MeshCrossEast")
+
+[node name="SidewalkCrossSouthW" type="MeshInstance3D" parent="." unique_id=1674503024]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -37, 0.05, 6.4)
+material_override = SubResource("MatSidewalk")
+mesh = SubResource("MeshCrossWest")
+
+[node name="SidewalkCrossNorthW" type="MeshInstance3D" parent="." unique_id=48060548]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -37, 0.05, 13.6)
+material_override = SubResource("MatSidewalk")
+mesh = SubResource("MeshCrossWest")
+
+[node name="EastRow1" parent="." unique_id=583642504 instance=ExtResource("8_house_a")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 0, -34)
+
+[node name="EastRow2" parent="." unique_id=511064446 instance=ExtResource("9_house_b")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 0, -22)
+
+[node name="EastRow3" parent="." unique_id=1810040747 instance=ExtResource("10_house_c")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 0, -10)
+
+[node name="EastRow4" parent="." unique_id=838869092 instance=ExtResource("8_house_a")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 0, 2)
+
+[node name="EastRow5" parent="." unique_id=668335797 instance=ExtResource("9_house_b")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 0, 20)
+
+[node name="EastRow6" parent="." unique_id=505480231 instance=ExtResource("10_house_c")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 0, 32)
+
+[node name="EastRow7" parent="." unique_id=1292640361 instance=ExtResource("8_house_a")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 0, 44)
+
+[node name="EastRow8" parent="." unique_id=1199347504 instance=ExtResource("9_house_b")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 0, 56)
+
+[node name="EastRow9" parent="." unique_id=1067874750 instance=ExtResource("10_house_c")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 0, 68)
+
+[node name="WestRow1" parent="." unique_id=1858863832 instance=ExtResource("9_house_b")]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -19, 0, -34)
+
+[node name="WestRow2" parent="." unique_id=1989659406 instance=ExtResource("10_house_c")]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -19, 0, -22)
+
+[node name="WestRow3" parent="." unique_id=1228329276 instance=ExtResource("8_house_a")]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -19, 0, -10)
+
+[node name="WestRow4" parent="." unique_id=1887553940 instance=ExtResource("9_house_b")]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -19, 0, 2)
+
+[node name="WestRow5" parent="." unique_id=1572470426 instance=ExtResource("10_house_c")]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -19, 0, 20)
+
+[node name="WestRow6" parent="." unique_id=2061594708 instance=ExtResource("8_house_a")]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -19, 0, 32)
+
+[node name="WestRow7" parent="." unique_id=1848349154 instance=ExtResource("9_house_b")]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -19, 0, 44)
+
+[node name="WestRow8" parent="." unique_id=2052575366 instance=ExtResource("10_house_c")]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -19, 0, 56)
+
+[node name="WestRow9" parent="." unique_id=1172891055 instance=ExtResource("8_house_a")]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -19, 0, 68)
+
+[node name="CrossNorth1" parent="." unique_id=191605166 instance=ExtResource("10_house_c")]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -44, 0, 22)
+
+[node name="CrossNorth2" parent="." unique_id=704905935 instance=ExtResource("8_house_a")]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -32, 0, 22)
+
+[node name="CrossNorth3" parent="." unique_id=1964705876 instance=ExtResource("9_house_b")]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 22, 0, 22)
+
+[node name="CrossNorth4" parent="." unique_id=504594842 instance=ExtResource("10_house_c")]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 34, 0, 22)
+
+[node name="CrossSouth1" parent="." unique_id=365722519 instance=ExtResource("8_house_a")]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -44, 0, -2)
+
+[node name="CrossSouth2" parent="." unique_id=1445989936 instance=ExtResource("9_house_b")]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -32, 0, -2)
+
+[node name="CrossSouth3" parent="." unique_id=1183825573 instance=ExtResource("10_house_c")]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 22, 0, -2)
+
+[node name="CrossSouth4" parent="." unique_id=1066384800 instance=ExtResource("8_house_a")]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 34, 0, -2)
+
+[node name="TreeFar" type="Node3D" parent="." unique_id=1272126722]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.5, 0, -5)
+
+[node name="Trunk" type="MeshInstance3D" parent="TreeFar" unique_id=1567153018]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8, 0)
+material_override = SubResource("MatTrunk")
+mesh = SubResource("MeshTrunk")
+
+[node name="Canopy" type="MeshInstance3D" parent="TreeFar" unique_id=2023854347]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.1, 0)
+material_override = SubResource("MatCanopy")
+mesh = SubResource("MeshCanopy")
+
+[node name="TreeC" type="Node3D" parent="." unique_id=950917712]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.9, 0, 3.2)
+
+[node name="Trunk" type="MeshInstance3D" parent="TreeC" unique_id=268054330]
+transform = Transform3D(1.35, 0, 0, 0, 1.25, 0, 0, 0, 1.35, 0, 1, 0)
+material_override = SubResource("MatTrunk")
+mesh = SubResource("MeshTrunk")
+
+[node name="Canopy" type="MeshInstance3D" parent="TreeC" unique_id=1601344932]
+transform = Transform3D(1.6, 0, 0, 0, 1.4, 0, 0, 0, 1.6, 0, 2.6, 0)
+material_override = SubResource("MatCanopy")
+mesh = SubResource("MeshCanopy")

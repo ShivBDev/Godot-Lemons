@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="NewsItem" format=3 uid="uid://cuix8q5elar01"]
+
+[ext_resource type="Script" uid="uid://u5nwi7uyyt6" path="res://scripts/news/NewsResource.gd" id="1_dnn7o"]
+
+[resource]
+script = ExtResource("1_dnn7o")
+newsId = "ice_sale"
+text = "The ice plant is overstocked. Ice packs are on sale."
+effects = 7
+value = 0.6
+data = "ice_stock"

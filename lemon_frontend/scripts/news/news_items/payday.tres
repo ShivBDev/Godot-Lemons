@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="NewsItem" format=3 uid="uid://bxfgg7v555l2u"]
+
+[ext_resource type="Script" uid="uid://u5nwi7uyyt6" path="res://scripts/news/NewsResource.gd" id="1_jca5t"]
+
+[resource]
+script = ExtResource("1_jca5t")
+newsId = "payday"
+text = "Payday just landed. Customers will pay a little more without blinking."
+effects = 1
+value = 1.2
+data = null

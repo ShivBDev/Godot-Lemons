@@ -41,13 +41,16 @@ public class PlayerProfileObj {
   public int recipeSugar { get; set; } = 1;
   public int recipeIce { get; set; } = 0;
   public float salePrice { get; set; } = 0.50f;
-
-  [Column(TypeName = "jsonb")]
-  public JsonDocument weather { get; set; } = JsonDocument.Parse("{}");
-  [Column(TypeName = "jsonb")]
-  public JsonDocument forecast { get; set; } = JsonDocument.Parse("{}");
-  [Column(TypeName = "jsonb")]
-  public JsonDocument upgradeLevels { get; set; } = JsonDocument.Parse("{}");
+  // Game State Data
+  [Column(TypeName = "jsonb")] public JsonDocument weather { get; set; } = JsonDocument.Parse("{}");
+  [Column(TypeName = "jsonb")] public JsonDocument forecast { get; set; } = JsonDocument.Parse("{}");
+  [Column(TypeName = "jsonb")] public JsonDocument lemonLots { get; set; } = JsonDocument.Parse("[]");
+  [Column(TypeName = "jsonb")] public JsonDocument upgradeLevels { get; set; } = JsonDocument.Parse("{}");
+  public string currentArea { get; set; } = "";
+  [Column(TypeName = "jsonb")] public JsonDocument popularity { get; set; } = JsonDocument.Parse("{}");
+  [Column(TypeName = "jsonb")] public JsonDocument hiredStaff { get; set; } = JsonDocument.Parse("{}");
+  public string newsId { get; set; } = "";
+  [Column(TypeName = "jsonb")] public JsonDocument stats { get; set; } = JsonDocument.Parse("{}");
 
   public object ToResponsePayload(EncryptionUtils encryptionUtils) {
     // Decrypt the player username securely on demand
@@ -59,8 +62,14 @@ public class PlayerProfileObj {
       recipeLemons, recipeSugar, recipeIce,
       salePrice,
       weather = weather.RootElement, 
-      forecast = forecast.RootElement, 
-      upgradeLevels = upgradeLevels.RootElement
+      forecast = forecast.RootElement,
+      lemonLots = lemonLots.RootElement,
+      upgradeLevels = upgradeLevels.RootElement,
+      currentArea,
+      popularity = popularity.RootElement,
+      hiredStaff = hiredStaff.RootElement,
+      newsId,
+      stats = stats.RootElement
     };
   }
 
@@ -76,12 +85,14 @@ public class PlayerProfileObj {
     recipeSugar = request.state.recipeSugar;
     recipeIce = request.state.recipeIce;
     salePrice = request.state.salePrice;
-
-    string rawWeather = JsonSerializer.Serialize(request.state.weather);
-    string rawForecast = JsonSerializer.Serialize(request.state.forecast);
-    string rawUpgradeLevels = JsonSerializer.Serialize(request.state.upgradeLevels);
-    weather = JsonDocument.Parse(rawWeather);
-    forecast = JsonDocument.Parse(rawForecast);
-    upgradeLevels = JsonDocument.Parse(rawUpgradeLevels);
+    weather = JsonDocument.Parse(JsonSerializer.Serialize(request.state.weather));
+    forecast = JsonDocument.Parse(JsonSerializer.Serialize(request.state.forecast));
+    lemonLots = JsonDocument.Parse(JsonSerializer.Serialize(request.state.lemonLots));
+    upgradeLevels = JsonDocument.Parse(JsonSerializer.Serialize(request.state.upgradeLevels));
+    currentArea = request.state.currentArea;
+    popularity = JsonDocument.Parse(JsonSerializer.Serialize(request.state.popularity));
+    hiredStaff = JsonDocument.Parse(JsonSerializer.Serialize(request.state.hiredStaff));
+    newsId = request.state.newsId;
+    stats = JsonDocument.Parse(JsonSerializer.Serialize(request.state.stats));
   }
 }

@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="NewsItem" format=3 uid="uid://5b7cmv4k5q3a"]
+
+[ext_resource type="Script" uid="uid://u5nwi7uyyt6" path="res://scripts/news/NewsResource.gd" id="1_61n4t"]
+
+[resource]
+script = ExtResource("1_61n4t")
+newsId = "stadium_doubleheader"
+text = "The stadium has a doubleheader. The concourse will be shoulder to shoulder."
+value = 1.5
+data = "stadium"

@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="NewsItem" format=3 uid="uid://c6u7655b4v6tr"]
+
+[ext_resource type="Script" uid="uid://u5nwi7uyyt6" path="res://scripts/news/NewsResource.gd" id="1_w22h1"]
+
+[resource]
+script = ExtResource("1_w22h1")
+newsId = "tourist_weekend"
+text = "A tourist weekend is starting. More people everywhere, and they linger."
+value = 1.2
+data = null

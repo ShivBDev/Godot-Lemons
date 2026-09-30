@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="StaffMember" format=3 uid="uid://bw5uyesc5o3v3"]
+
+[ext_resource type="Script" uid="uid://d2aoq6cnpabxb" path="res://scripts/menus/staff/StaffMemberResource.gd" id="2_6acro"]
+
+[resource]
+script = ExtResource("2_6acro")
+icon = "uid://d2r2mku88iyja"
+name = "Server"
+wage = 18.0
+blurb = "Works the second window. Two customers can be served at once, in two lines."
+metadata/_custom_type_script = "uid://d2aoq6cnpabxb"

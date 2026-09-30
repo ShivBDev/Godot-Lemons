@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="NewsItem" format=3 uid="uid://bvvxt6kdlfnjv"]
+
+[ext_resource type="Script" uid="uid://u5nwi7uyyt6" path="res://scripts/news/NewsResource.gd" id="1_jhshf"]
+
+[resource]
+script = ExtResource("1_jhshf")
+newsId = "citrus_shortage"
+text = "A citrus shortage is hitting the market. Lemons cost more tomorrow."
+effects = 7
+value = 1.4
+data = "lemon_stock"

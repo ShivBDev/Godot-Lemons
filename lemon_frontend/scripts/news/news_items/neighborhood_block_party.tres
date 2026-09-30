@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="NewsItem" format=3 uid="uid://4lhrpcdeavi7"]
+
+[ext_resource type="Script" uid="uid://u5nwi7uyyt6" path="res://scripts/news/NewsResource.gd" id="1_n7tb3"]
+
+[resource]
+script = ExtResource("1_n7tb3")
+newsId = "neighborhood_block_party"
+text = "A block party is posted for the neighborhood. Foot traffic there jumps."
+value = 1.45
+data = "neighborhood"

@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="NewsItem" format=3 uid="uid://crmj4r446mxqr"]
+
+[ext_resource type="Script" uid="uid://u5nwi7uyyt6" path="res://scripts/news/NewsResource.gd" id="1_7rnp5"]
+
+[resource]
+script = ExtResource("1_7rnp5")
+newsId = "downtown_expense_accounts"
+text = "Expense accounts are open downtown. Office crowds will pay up."
+effects = 1
+value = 1.2
+data = "city"

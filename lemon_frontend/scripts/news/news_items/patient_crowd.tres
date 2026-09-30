@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="NewsItem" format=3 uid="uid://5x8uf6hrpebg"]
+
+[ext_resource type="Script" uid="uid://u5nwi7uyyt6" path="res://scripts/news/NewsResource.gd" id="1_4ehw6"]
+
+[resource]
+script = ExtResource("1_4ehw6")
+newsId = "patient_crowd"
+text = "Nothing else is open nearby. People will wait longer in line."
+effects = 2
+value = 1.4
+data = null

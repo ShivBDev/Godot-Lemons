@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="NewsItem" format=3 uid="uid://duat16src6mlt"]
+
+[ext_resource type="Script" uid="uid://u5nwi7uyyt6" path="res://scripts/news/NewsResource.gd" id="1_epgi5"]
+
+[resource]
+script = ExtResource("1_epgi5")
+newsId = "tight_wallets"
+text = "A local paper says wallets are tight. Price ceilings drop a notch."
+effects = 1
+value = 0.85
+data = null

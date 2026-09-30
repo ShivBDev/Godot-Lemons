@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="MapArea" format=3 uid="uid://c7tb0gs5yj8mt"]
+
+[ext_resource type="Script" uid="uid://cd82w8n1vw4sk" path="res://scripts/menus/areas/AreaResource.gd" id="1_3e6e7"]
+
+[resource]
+script = ExtResource("1_3e6e7")
+id = 2
+icon = "uid://biwrmaa7pdym6"
+name = "The Stadium"
+blurb = "A full concourse on match day. The biggest crowds and the loosest wallets, with the steepest fee to match."
+level = "res://scenes/simulation_scenes/stadium.tscn"
+traffic = 2.0
+price_tolerance = 2.2
+daily_fee = 60.0
+attire = 2
+routes = 2
+metadata/_custom_type_script = "uid://cd82w8n1vw4sk"

@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="NewsItem" format=3 uid="uid://bcslygutx0tcs"]
+
+[ext_resource type="Script" uid="uid://u5nwi7uyyt6" path="res://scripts/news/NewsResource.gd" id="1_wj4ne"]
+
+[resource]
+script = ExtResource("1_wj4ne")
+newsId = "cold_snap"
+text = "A cold snap is due overnight. Tomorrow drops well below the usual range."
+effects = 4
+value = -18.0
+data = null

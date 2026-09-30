@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="NewsItem" format=3 uid="uid://bkd2n64vl1su1"]
+
+[ext_resource type="Script" uid="uid://u5nwi7uyyt6" path="res://scripts/news/NewsResource.gd" id="1_uxn37"]
+
+[resource]
+script = ExtResource("1_uxn37")
+newsId = "mild_palate"
+text = "A wellness blog is telling people to ease off. Milder cups will sell."
+effects = 6
+value = 1.0
+data = {
+"lemons": -2,
+"sugar": -1
+}

@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="NewsItem" format=3 uid="uid://dthlmn7uhnlvu"]
+
+[ext_resource type="Script" uid="uid://u5nwi7uyyt6" path="res://scripts/news/NewsResource.gd" id="1_1sgs8"]
+
+[resource]
+script = ExtResource("1_1sgs8")
+newsId = "clear_skies"
+text = "Clear skies are locked in. Tomorrow stays dry even if the odds said otherwise."
+effects = 5
+data = null

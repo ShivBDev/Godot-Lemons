@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="NewsItem" format=3 uid="uid://bi0wure4wq1hw"]
+
+[ext_resource type="Script" uid="uid://u5nwi7uyyt6" path="res://scripts/news/NewsResource.gd" id="1_fwdl3"]
+
+[resource]
+script = ExtResource("1_fwdl3")
+newsId = "rained_out_game"
+text = "The stadium game may be rained out. Expect a thinner concourse."
+value = 0.65
+data = "stadium"

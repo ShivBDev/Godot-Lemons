@@ -37,6 +37,5 @@ func _process(delta: float) -> void:
 func _refresh() -> void:
 	if _label == null:
 		return
-	PlayerData.ensure_news()
 	_label.text = NewsCatalog.headline(PlayerData.current_news())
 	_offset = size.x if size.x > 0.0 else 700.0
