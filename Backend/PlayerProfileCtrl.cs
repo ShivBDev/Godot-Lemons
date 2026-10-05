@@ -64,7 +64,7 @@ public class PlayerController : ControllerBase {
       return Ok(new { message = "OTP generated successfully.", email = request.email });
     }
     catch (Exception ex) {
-      Console.WriteLine($"[EMAIL CRASH] SMTP failed to deliver: {ex.Message}");
+      Console.WriteLine($"[EMAIL CRASH] Gmail API failed to deliver: {ex.Message}");
       return StatusCode(500, new ProblemDetailsResponse("Internal Server Error", 500, "Failed to dispatch system verification email."));
     }
   }
