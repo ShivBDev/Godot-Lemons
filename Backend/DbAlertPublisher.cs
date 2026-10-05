@@ -32,7 +32,7 @@ public class DbAlertPublisher : IHealthCheckPublisher {
         _logger.LogInformation("Outage alert notification successfully dispatched to admin inbox.");
       }
       catch (Exception ex) {
-        _logger.LogError(ex, "Failed to dispatch infrastructure crash alert email via SMTP connection path.");
+        _logger.LogError(ex, "Failed to dispatch infrastructure crash alert email via Gmail API.");
       }
     }
     // Condition B: The database has successfully recovered and booted back up

@@ -1,63 +1,162 @@
+using System.Net.Http.Headers;
+using System.Text;
+using System.Text.Json;
 using MimeKit;
-using MailKit.Net.Smtp;
-using MailKit.Security;
 using Microsoft.Extensions.Configuration;
 
 namespace Backend.Services;
 
 public class EmailService {
-  private readonly string _smtpUser;
-  private readonly string _smtpPass;
+  private const string GoogleTokenEndpoint = "https://oauth2.googleapis.com/token";
+  private const string GmailSendEndpoint = "https://gmail.googleapis.com/gmail/v1/users/me/messages/send";
+
+  private static readonly HttpClient HttpClient = new();
+  private readonly string _gmailUser;
+  private readonly string _clientId;
+  private readonly string _clientSecret;
+  private readonly string _refreshToken;
+
+  // Gmail access tokens are short-lived, so keep one in memory and refresh it only when needed.
+  private readonly SemaphoreSlim _tokenLock = new(1, 1);
+  private string? _accessToken;
+  private DateTimeOffset _accessTokenExpiresAt = DateTimeOffset.MinValue;
 
   public EmailService(IConfiguration configuration) {
-    _smtpUser = configuration["EmailSettings:SmtpUser"] 
-      ?? throw new InvalidOperationException("Missing SmtpUser Configuration.");
-    _smtpPass = configuration["EmailSettings:SmtpPass"] 
-      ?? throw new InvalidOperationException("Missing SmtpPass Configuration.");
+    _gmailUser = configuration["EmailSettings:GmailUser"]
+      ?? throw new InvalidOperationException("Missing GmailUser configuration.");
+    _clientId = configuration["GoogleOAuth:ClientId"]
+      ?? throw new InvalidOperationException("Missing Google OAuth ClientId configuration.");
+    _clientSecret = configuration["GoogleOAuth:ClientSecret"]
+      ?? throw new InvalidOperationException("Missing Google OAuth ClientSecret configuration.");
+    _refreshToken = configuration["GoogleOAuth:RefreshToken"]
+      ?? throw new InvalidOperationException("Missing Google OAuth RefreshToken configuration.");
   }
 
-  public async Task SendOtpEmailAsync(string targetEmail, string rawOtpCode) {
+  public Task SendOtpEmailAsync(string targetEmail, string rawOtpCode) {
+    const string subject = "Your One-Time Passcode";
+    string htmlBody = $@"
+      <h2>Welcome to the Game!</h2>
+      <p>Your secure one-time login passcode is:</p>
+      <h1 style='color:#4CAF50; letter-spacing: 5px;'>{rawOtpCode}</h1>
+      <p>This code is short-lived and will expire in 15 minutes.</p>";
+
+    return SendEmailAsync(
+      targetEmail,
+      subject,
+      htmlBody,
+      "Godot Game Auth Server");
+  }
+
+  public Task SendCustomSystemEmailAsync(string targetEmail, string customSubject, string htmlBody) {
+    return SendEmailAsync(
+      targetEmail,
+      customSubject,
+      htmlBody,
+      "System Monitoring Engine");
+  }
+
+  private async Task SendEmailAsync(
+    string targetEmail,
+    string subject,
+    string htmlBody,
+    string senderDisplayName) {
+
+    if (string.IsNullOrWhiteSpace(targetEmail)) {
+      throw new ArgumentException("Target email cannot be empty.", nameof(targetEmail));
+    }
+
     var message = new MimeMessage();
-    message.From.Add(new MailboxAddress("Godot Game Auth Server", _smtpUser));
-    message.To.Add(new MailboxAddress("", targetEmail));
-    message.Subject = "Your One-Time Passcode";
+    message.From.Add(new MailboxAddress(senderDisplayName, _gmailUser));
+    message.To.Add(new MailboxAddress(string.Empty, targetEmail));
+    message.Subject = subject;
+
     var bodyBuilder = new BodyBuilder {
-        HtmlBody = $@"
-          <h2>Welcome to the Game!</h2>
-          <p>Your secure one-time login passcode is:</p>
-          <h1 style='color:#4CAF50; letter-spacing: 5px;'>{rawOtpCode}</h1>
-          <p>This code is short-lived and will expire in 15 minutes.</p>"
+      HtmlBody = htmlBody,
+      TextBody = $"{subject}\n\nPlease view this message in an HTML-capable email client."
     };
     message.Body = bodyBuilder.ToMessageBody();
-    
-    using var client = new SmtpClient();
-    try {
-        await client.ConnectAsync("smtp.gmail.com", 587, SecureSocketOptions.StartTls);
-        await client.AuthenticateAsync(_smtpUser, _smtpPass);
-        await client.SendAsync(message);
-    }
-    finally {
-        await client.DisconnectAsync(true);
+
+    using var messageStream = new MemoryStream();
+    message.WriteTo(messageStream);
+
+    // Gmail expects the RFC 2822/MIME message as unpadded base64url.
+    string encodedMessage = Convert.ToBase64String(messageStream.ToArray())
+      .Replace('+', '-')
+      .Replace('/', '_')
+      .TrimEnd('=');
+
+    string accessToken = await GetAccessTokenAsync();
+
+    using var request = new HttpRequestMessage(HttpMethod.Post, GmailSendEndpoint);
+    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+    request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+    request.Content = new StringContent(
+      JsonSerializer.Serialize(new { raw = encodedMessage }),
+      Encoding.UTF8,
+      "application/json");
+
+    using HttpResponseMessage response = await HttpClient.SendAsync(request);
+
+    if (!response.IsSuccessStatusCode) {
+      string errorBody = await response.Content.ReadAsStringAsync();
+      throw new HttpRequestException(
+        $"Gmail API send failed with {(int)response.StatusCode} {response.ReasonPhrase}: {errorBody}");
     }
   }
 
-  public async Task SendCustomSystemEmailAsync(string targetEmail, string customSubject, string htmlBody) {
-    var message = new MimeMessage();
-    message.From.Add(new MailboxAddress("System Monitoring Engine", _smtpUser));
-    message.To.Add(new MailboxAddress("", targetEmail));
-    message.Subject = customSubject;
-    var bodyBuilder = new BodyBuilder { HtmlBody = htmlBody };
-    message.Body = bodyBuilder.ToMessageBody();
+  private async Task<string> GetAccessTokenAsync() {
+    if (!string.IsNullOrEmpty(_accessToken) &&
+        DateTimeOffset.UtcNow < _accessTokenExpiresAt) {
+      return _accessToken;
+    }
 
-    using var client = new SmtpClient();
+    await _tokenLock.WaitAsync();
     try {
-        await client.ConnectAsync("smtp.gmail.com", 587, SecureSocketOptions.StartTls);
-        await client.AuthenticateAsync(_smtpUser, _smtpPass);
-        await client.SendAsync(message);
+      // Check again after acquiring the lock so concurrent email requests don't all refresh.
+      if (!string.IsNullOrEmpty(_accessToken) &&
+          DateTimeOffset.UtcNow < _accessTokenExpiresAt) {
+        return _accessToken;
+      }
+
+      using var tokenRequest = new HttpRequestMessage(HttpMethod.Post, GoogleTokenEndpoint) {
+        Content = new FormUrlEncodedContent(new Dictionary<string, string> {
+          ["client_id"] = _clientId,
+          ["client_secret"] = _clientSecret,
+          ["refresh_token"] = _refreshToken,
+          ["grant_type"] = "refresh_token"
+        })
+      };
+
+      using HttpResponseMessage response = await HttpClient.SendAsync(tokenRequest);
+      string responseBody = await response.Content.ReadAsStringAsync();
+
+      if (!response.IsSuccessStatusCode) {
+        throw new InvalidOperationException(
+          $"Google OAuth token refresh failed with {(int)response.StatusCode} {response.ReasonPhrase}: {responseBody}");
+      }
+
+      using JsonDocument json = JsonDocument.Parse(responseBody);
+      if (!json.RootElement.TryGetProperty("access_token", out JsonElement accessTokenElement)) {
+        throw new InvalidOperationException("Google OAuth token response did not contain an access_token.");
+      }
+
+      string accessToken = accessTokenElement.GetString()
+        ?? throw new InvalidOperationException("Google OAuth access_token was null.");
+
+      int expiresIn = 3600;
+      if (json.RootElement.TryGetProperty("expires_in", out JsonElement expiresInElement) &&
+          expiresInElement.TryGetInt32(out int parsedExpiresIn)) {
+        expiresIn = parsedExpiresIn;
+      }
+
+      _accessToken = accessToken;
+      // Refresh one minute early to avoid expiring between the token check and Gmail request.
+      _accessTokenExpiresAt = DateTimeOffset.UtcNow.AddSeconds(Math.Max(1, expiresIn - 60));
+
+      return _accessToken;
     }
     finally {
-        await client.DisconnectAsync(true);
+      _tokenLock.Release();
     }
   }
-
 }
