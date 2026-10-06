@@ -9,8 +9,9 @@ var login_status: LOGIN_STATUS = LOGIN_STATUS.logged_out:
 signal login_status_changed(status: LOGIN_STATUS)
 signal sync_completed(is_success: bool, server_message: String)
 
-const BASE_URL: String = "http://127.0.0.1:5212/api"
-const PROD_URL: String = "godot-lemons-production.up.railway.app"
+var BASE_URL: String = ""
+const DEBUG_URL: String = "http://127.0.0.1:5212/api"
+const PROD_URL: String = "https://godot-lemons-production.up.railway.app/api"
 const SAVE_PATH: String = "user://session_auth.cfg"
 var session_token: String = ""
 var player_email: String = ""
@@ -56,8 +57,10 @@ func _instantiate_network_workers() -> void:
 	http_fetch.request_completed.connect(_on_fetch_complete)
 	http_sync.request_completed.connect(_on_sync_complete)
 
-func _ready() -> void:
+func _init() -> void:
+	BASE_URL = PROD_URL
 	_instantiate_network_workers()
+
 
 # Local Save Functionality
 func try_load_local_session() -> void:

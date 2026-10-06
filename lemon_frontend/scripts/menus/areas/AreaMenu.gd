@@ -42,7 +42,7 @@ func _on_visibility_changed() -> void:
 		_set_notice("")
 		_refresh()
 
-func _on_area_changed(_area_id: String) -> void:
+func _on_area_changed(_area_id: MapArea.AreaID) -> void:
 	_set_notice("")
 	_refresh()
 
