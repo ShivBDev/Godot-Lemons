@@ -72,7 +72,7 @@ func _on_menu_changed(menu: MENU):
 			if staffMenu != null:
 				staffMenu.visible = true
 
-func _on_area_changed(_area_id: String) -> void:
+func _on_area_changed(_area_id: MapArea.AreaID) -> void:
 	_refresh_start_button()
 
 func _connect_day_sim() -> void:
