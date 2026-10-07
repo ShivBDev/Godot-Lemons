@@ -167,6 +167,10 @@ func is_running() -> bool:
 func start_day() -> void:
 	if running:
 		return
+	# Manually save user setup, enable response requeue in case autosave was running
+	print("Starting day, saving...")
+	GameNet.sync_user_data(true)
+
 	running = true
 	# The pitch fee and the wages are paid up front, before the first customer
 	# walks up, so the day can never end with the till in the red.
@@ -566,6 +570,7 @@ func _end_day() -> void:
 	# worked in and weighed against the best day so far.
 	PlayerData.note_day_finished(revenue, cups_sold)
 	PlayerData.profile_updated.emit()
+	print("Day Finished, saving...")
 	GameNet.sync_user_data()
 	_show_results()
 	_refresh_status_bar()

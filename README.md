@@ -1,65 +1,119 @@
-# Secure Full-Stack Auth & State Sync Engine
+# 🍋 Lemons
 
-An architectural proof-of-concept demonstrating a secure, decoupled full-stack loop between an independent **Godot Engine game client** and a containerized **ASP.NET Core Web API** cluster backed by an isolated **PostgreSQL 18** database instance.
+An active tycoon game in the spirit of *Lemonade Tycoon* (2002): run a lemonade stand, manage your business, and grow your earnings. Lemons is built as a **Godot Engine** game client backed by a secure, containerized **ASP.NET Core** API and **PostgreSQL** database that handle accounts, sessions, and cloud saves.
+
+## 📍 Project Status
+
+| Component | Status |
+| --- | --- |
+| Backend API + database | **Live in production** on Railway |
+| Godot client | Runs in the Godot editor against the local or production backend |
+| iOS build | Planned: build and device testing still to do |
+| App Store release | Planned |
+
+## 🧩 How It Works
+
+The game client never touches the database directly. All account and save data flows through the API, which handles authentication, encryption, and persistence.
+
+```mermaid
+flowchart LR
+    Client["Godot game client<br/>(GDScript)"] -->|"HTTPS / REST"| API["ASP.NET Core Web API<br/>(.NET 10)"]
+    API --> DB[("PostgreSQL 18")]
+    API -->|"OTP emails<br/>Gmail API (OAuth 2.0)"| Gmail["Gmail API"]
+    Health["Health check publisher<br/>(background service)"] -->|"outage alerts"| Gmail
+    Health -.->|"monitors"| API
+```
+
+- **Sign in with email + OTP:** Players register and log in with a one-time passcode sent by email. There are no passwords to forget, steal, or reset.
+- **Automatic cloud saves:** The client saves your progress to the backend every 15 seconds.
+- **One backend, two environments:** The same backend runs locally in Docker and in production on Railway.
 
 ## 🚀 Architectural Notes
-* **Privacy-First Cryptography:** Includes a multi-layered cryptographic strategy to shield data records from database dumps and compliance leaks (Blind indexing, AES-256 with distinct IVs, and SHA-256 session signatures).
-* **OAuth 2.0 Email Delivery:** Uses a Google Workspace OAuth 2.0 refresh token to obtain short-lived access tokens and dispatch OTP/monitoring messages through the Gmail REST API over HTTPS, avoiding traditional SMTP port dependencies.
-* **Live Infrastructure Monitoring:** Integrates native ASP.NET Core Health Checks mapping diagnostic daemon route to `/health`. If underlying data channel or database socket is severed, node instantly signals structural health degradation.
-* **Autonomous Outage Incident Alerting:** Features a background `IHealthCheckPublisher` engine that tracks system stability every few seconds. If a critical service drops offline, the system immediately dispatches detailed crash information to the administration team's Google Workspace inbox through the Gmail REST API.
-* **Unified API Error Contract (RFC 7807):** API error payloads use standard `ProblemDetailsResponse` contract. Godot client uses a single, centralized parsing function to ingest and handle any server-side validation or security exception.
-* **Automated Client UI Lockout State Machine:** Implements centralized, async network tracker within the Godot client. While HTTP data streams are active, input controls are frozen to eliminate double-click bugs or client-side value spam.
-* **IP-Partitioned Rate Limiting:** Fixed-window gateway middleware protects the authentication endpoint from credential brute-forcing and automated OTP request spam.
-* **Autonomous Database Sweeping:** An asynchronous `.NET Hosted Service` background thread automatically purges abandoned OTP tokens and inactive sessions every 24 hours.
-* **Modern Container DevOps:** Configured for high-portability deployment leveraging multi-stage Docker builds and software-defined isolated sub-networks compliant with Postgres 18 data directory layouts, with the production stack deployed through Railway.
+
+- **Privacy-First Cryptography:** A multi-layered strategy shields data from database dumps and compliance leaks (blind indexing, AES-256 with distinct IVs, and SHA-256 hashing of credentials). See the cryptography section below.
+- **OAuth 2.0 Email Delivery:** A Google Workspace OAuth 2.0 refresh token is used to obtain short-lived access tokens and send OTP and monitoring messages through the Gmail REST API over HTTPS, avoiding SMTP port dependencies.
+- **Live Infrastructure Monitoring:** Native ASP.NET Core Health Checks expose a diagnostic route at `/health`. If the data channel or database socket is severed, the node signals health degradation.
+- **Autonomous Outage Alerting:** A background `IHealthCheckPublisher` tracks system stability every few seconds. If a critical service goes offline, it immediately emails detailed crash information to the administration team through the Gmail REST API.
+- **Unified API Error Contract (RFC 7807):** API errors use the standard `ProblemDetails` response. The Godot client uses a single centralized function to parse any server-side validation or security error.
+- **Client UI Lockout State Machine:** A centralized async network tracker in the Godot client freezes input controls while HTTP requests are active, eliminating double-click bugs and value spam.
+- **IP-Partitioned Rate Limiting:** Fixed-window gateway middleware protects the authentication endpoint from credential brute-forcing and automated OTP request spam.
+- **Autonomous Database Sweeping:** An asynchronous .NET Hosted Service automatically purges abandoned OTP tokens and inactive sessions every 24 hours.
+- **Container DevOps:** Multi-stage Docker builds and software-defined isolated sub-networks compatible with the Postgres 18 data directory layout. The production stack is deployed through Railway.
 
 ## 🛠️ Technology Stack
-* **Client Frontend:** Godot Engine (GDScript)
-* **Backend Gateway:** C# (.NET 10 Web API)
-* **Storage Layer:** PostgreSQL 18 (Container Volume mapped)
-* **Authentication Email:** Google Workspace Gmail API (OAuth 2.0, HTTPS / port 443)
-* **Deployment System:** Docker / Docker Compose / Railway
 
----
+| Layer | Technology |
+| --- | --- |
+| Game client | Godot Engine (GDScript) |
+| Backend API | C# (.NET 10 Web API) |
+| Database | PostgreSQL 18 (container volume) |
+| Authentication email | Google Workspace Gmail API (OAuth 2.0, HTTPS / port 443) |
+| Deployment | Docker / Docker Compose / Railway |
 
-## 🔒 Cryptographic Implementation Architecture
+## 🔒 Cryptographic Implementation
 
 ### 1. User Identity Obfuscation (Deterministic Hashing)
-To eliminate plain text storage of player email identities, the backend normalizes and passes emails through an `HMAC-SHA256` hashing processor leveraging a secure server-side pepper key. This acts as a cryptographic "Blind Index," enabling fast, direct table lookups while completely masking user email addresses.
+
+To avoid storing player emails in plain text, the backend normalizes each email and passes it through `HMAC-SHA256` with a secure server-side pepper key. This acts as a cryptographic "blind index," enabling fast direct table lookups while keeping email addresses masked.
 
 ### 2. PII Data Privacy (Reversible AES-256 Encryption)
-Sensitive non-numeric profile data—such as custom player profile names—are encrypted symmetrically before entering the PostgreSQL write loop using `AES-256` in Cipher Block Chaining (CBC) mode. A unique, random Initialization Vector (IV) is prefixed to each output block, ensuring identical data inputs yield completely different cipher strings across the database schema rows.
 
-### 3. Verification & Session Credentials (One-Way Signatures)
-Short-lived validation keys (including the randomly generated crypto 6-digit One-Time Passcodes and user session tokens) are encoded securely using `SHA-256`. The server never stores plain-text OTP or session tokens in the database; raw credentials exist only for the duration required by the active client request.
+Sensitive profile data, such as custom player profile names, is encrypted with `AES-256` in Cipher Block Chaining (CBC) mode before it is written to PostgreSQL. A unique random Initialization Vector (IV) is prefixed to each output block, so identical inputs produce different ciphertext across rows.
 
----
+### 3. Verification & Session Credentials (One-Way Hashing)
+
+Short-lived credentials, including randomly generated 6-digit one-time passcodes and user session tokens, are hashed with `SHA-256`. The server never stores plain-text OTPs or session tokens, and raw credentials exist only for the duration of the active client request.
+
+## 📁 Repository Layout
+
+```
+Godot-Lemons/
+├── Backend/                    # ASP.NET Core Web API (C#)
+├── lemon_frontend/             # Godot project (game client)
+├── docker-compose.example.yml  # Template for the local backend stack
+└── README.md
+```
 
 ## 📦 Local Installation & Deployment Guide
 
-Follow these steps to run the complete backend infrastructure cluster locally on your development machine:
+Follow these steps to run the full backend locally.
 
-### 1. Extract the Application
+### 1. Clone the repository
+
 ```bash
 git clone https://github.com/ShivBDev/Godot-Lemons.git
 cd Godot-Lemons
 ```
 
-### 2. Configure Environment Parameters
-Create a copy of the template composition manifest and name it `docker-compose.yml`:
+### 2. Configure environment parameters
+
+Copy the template composition file and name it `docker-compose.yml`:
+
 ```bash
 cp docker-compose.example.yml docker-compose.yml
 ```
-Open the new `docker-compose.yml` file and populate the required environment configurations, including the Google Workspace Gmail address and OAuth 2.0 client credentials/refresh token used by the backend email service. Keep the populated file outside source control.
 
-### 3. Launch the Application Containers
+Open `docker-compose.yml` and fill in the required settings, including the Google Workspace Gmail address and the OAuth 2.0 client credentials and refresh token used by the backend email service.
+
+### 3. Launch the containers
+
 ```bash
 docker compose up --build -d
 ```
-Verify that your environment status indicators are green and running stably:
+
+Verify that the containers are running and healthy:
+
 ```bash
 docker ps
 ```
 
-### 4. Interface with the Godot Client
-Open the `lemon_frontend/` project folder inside the Godot Editor. Boot up the main network scene interface. The system is now ready to process live email registration routing, securely dispatch OTP codes through the Gmail API over HTTPS, track background money totals, and execute automated saves every 15 seconds through `http://127.0.0.1:5212`! The same backend is configured for cloud deployment through Railway.
+### 4. Run the Godot client
+
+Open the `lemon_frontend/` folder in the Godot Editor and run the main network scene. The client talks to the local backend at `http://127.0.0.1:5212`: you can register with email, receive an OTP through the Gmail API, and play with automatic saves every 30 seconds.
+
+The same backend is configured for cloud deployment on Railway.
+
+## 🗺️ Roadmap
+
+- [ ] Build and test the client on iOS devices
+- [ ] Release on the App Store
