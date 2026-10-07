@@ -151,6 +151,8 @@ func _on_logout_pressed() -> void:
 	logoutModal.popup_centered()
 
 func _on_logout_confirmed() -> void:
+	# Save before logging out
+	GameNet.sync_user_data()
 	GameNet.logout_local_session()
 
 func _on_change_username_pressed() -> void:

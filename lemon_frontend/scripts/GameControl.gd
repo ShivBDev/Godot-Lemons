@@ -29,8 +29,10 @@ func _ready() -> void:
 	#Autosave
 	autosaveTimer.autostart = false
 	autosaveTimer.one_shot = false
-	autosaveTimer.wait_time = 5.0
-	autosaveTimer.timeout.connect(func(): GameNet.sync_user_data())
+	autosaveTimer.wait_time = 30.0
+	autosaveTimer.timeout.connect(func():
+		print("Autosaving...")
+		GameNet.sync_user_data())
 	if visible: autosaveTimer.start()
 	startDayButton.pressed.connect(_on_start_day_pressed)
 	# The day's up-front cost moves with the area and the staff roster, so the
@@ -137,6 +139,9 @@ func _on_start_day_pressed() -> void:
 		_start_block_notice = "stock" if PlayerData.can_afford_day_start() else "cost"
 		_refresh_start_button()
 		return
+	# Disable autosave, simulation saves before day starts
+	autosaveTimer.stop()
+
 	startDayButton.disabled = true
 	startDayButton.visible = false
 	if startDayCost != null and is_instance_valid(startDayCost):
@@ -147,6 +152,8 @@ func _on_start_day_pressed() -> void:
 	daySim.start_day()
 
 func _on_day_finished() -> void:
+	# restart autosave, simulation saves at day end and start
+	autosaveTimer.start()
 	daySimulator.visible = true
 	menus.visible = true
 	menuBar.visible = true
