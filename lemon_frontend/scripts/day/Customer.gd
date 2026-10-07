@@ -1,22 +1,45 @@
 extends Node3D
 class_name Customer
 
-enum State { SPAWN, WALK_TO_STAND, WAIT_IN_QUEUE, COUNTER, LEAVE }
+# One person in the day sim. The same model serves three jobs:
+#   - a customer: walks in, joins a lane, is served at the counter, walks off
+#   - a passer-by (PASSBY): walks a through-path and never comes to the stand
+#   - a puppet (PUPPET): driven by another script, e.g. the hired advertiser
+#
+# Movement is steered: DaySimulation._crowd_step() hands every walker a small
+# avoidance vector and a speed factor each frame, so people step round each
+# other and slow down behind someone instead of walking through them. People
+# standing in a lane or at the counter are on rails and only act as obstacles.
+
+enum State { SPAWN, WALK_TO_STAND, WAIT_IN_QUEUE, COUNTER, LEAVE, PASSBY, PUPPET }
 
 const APPROACH_Z: float = -2.0
-const LEAVE_Z: float = -11.0
-const BUBBLE_DURATION: float = 2.5
 
 # The model's face sits on its local -Z side, so a rotation of PI is what
-# points the face toward +Z. Customers walk from -Z up toward the stand at +Z,
-# so without that half turn they travel backwards with their face toward the
-# camera.
+# points the face toward +Z.
 const MODEL_FORWARD_YAW: float = PI
 const TURN_SPEED: float = 9.0
 
-# How close counts as "arrived" at a route waypoint. Snapping inside this
-# radius keeps a customer from orbiting a corner it can never quite hit.
+# How close counts as "arrived" at a waypoint. Steered walkers use the wider
+# radius: they are nudged off the exact line and would otherwise circle a
+# corner they can never quite touch.
 const WAYPOINT_EPSILON: float = 0.15
+const STEERED_EPSILON: float = 0.5
+# Farther than this from their lane slot, a queued customer is still walking up
+# to join and is steered round the people already standing in line. Closer, it
+# is shuffling along its own lane on rails.
+const JOIN_STEER_DIST: float = 0.9
+const COUNTER_EPSILON: float = 0.06
+# How far a customer must walk away from the spot they started leaving from
+# before their reaction badge appears. People sip as they stroll off, so the
+# badge belongs out on the pavement rather than over the counter.
+const REACTION_WALK_DIST: float = 1.5
+
+# Taste spread around the area's base recipe, per ingredient: most of the crowd
+# wants the base exactly, a third want one more or one less, and a rare few are
+# two off. A player who finds the base recipe is loved by nearly everyone.
+const IDEAL_EXACT_CHANCE: float = 0.6
+const IDEAL_ONE_OFF_CHANCE: float = 0.35
 
 # Outfit palettes. Shirt colour is rolled in HSV instead of being drawn from a
 # list, so the crowd stays varied no matter how many customers spawn.
@@ -55,8 +78,7 @@ const BRIEFCASE_COLORS: Array = [
 	Color(0.30, 0.20, 0.14), Color(0.16, 0.14, 0.16), Color(0.38, 0.27, 0.18),
 ]
 
-# Wardrobe shape choices. Colour alone used to carry the crowd; these give it
-# real silhouettes instead. Hats have seven outcomes (one of them bare-headed),
+# Wardrobe shape choices. Hats have seven outcomes (one of them bare-headed),
 # bottoms three cuts, and about half the crowd carries one accessory.
 enum Hat { NONE, CAP_FORWARD, CAP_BACKWARD, SUN, BUCKET, BEANIE, HEADBAND }
 enum Bottom { PANTS, SKIRT, SHORTS }
@@ -64,33 +86,46 @@ enum Extra { NONE, GLASSES, BACKPACK, APRON, BOW }
 
 var sim
 var state: State = State.SPAWN
+# Set before add_child() to make this a passer-by or a puppet.
+var puppet: bool = false
 
 var ideal_lemons: int = 4
 var ideal_sugar: int = 4
 var ideal_ice: int = 4
-# Weather shift applied to ideal_ice (hot days want more ice, cold days less).
+# Weather shift applied to ideal_ice (hot days want a little more ice).
 var ice_bias: int = 0
 var max_price: float = 1.25
 var line_tolerance: int = 3
 var patience: float = 15.0
-var queue_slot: float = APPROACH_Z
-var queue_slot_x: float = 0.0
-# Full slot the sim writes each frame. Walking uses this so a sideways
-# second line is not flattened onto the first.
+# Slot in the lane, written by the sim every frame.
 var queue_slot_pos: Vector3 = Vector3(0.0, 0.0, APPROACH_Z)
-# 0 is the keeper's line, 1 is the hired server's line.
+# Spot at the counter window, written by the sim when service begins.
+var counter_pos: Vector3 = Vector3(0.0, 0.0, APPROACH_Z)
+var at_counter: bool = false
+# Set by the sim while this customer has been called up to the window.
+var at_window: bool = false
+# 0 is the keeper's lane, 1 is the hired server's lane.
 var queue_lane: int = 0
 var reason: String = ""
 var walk_speed: float = 1.4
 
-var _walk_target_z: float = APPROACH_Z
-# Ordered route to walk before joining the queue, plus how far along it we are.
-# An empty list means the caller handed over no route, and spawn() falls back to
-# a single waypoint straight in front of the line.
+# Crowd steering, written by DaySimulation._crowd_step() each frame.
+var steer: Vector3 = Vector3.ZERO
+var speed_factor: float = 1.0
+# Unit direction of travel this frame, read back by the steering pass.
+var travel_dir: Vector3 = Vector3.ZERO
+
+# Arrival route (minus the final stand point), the leave route, or a
+# passer-by's through-path, with the index of the next point.
 var _waypoints: PackedVector3Array = PackedVector3Array()
 var _waypoint_index: int = 0
+var _leave_points: PackedVector3Array = PackedVector3Array()
+var _leave_index: int = 0
+# Where this customer's walk out began, and the badge waiting to appear once
+# they are clear of it.
+var _leave_start: Vector3 = Vector3.ZERO
+var _pending_reaction: String = ""
 var _bob_phase: float = 0.0
-var _bubble_timer: float = 0.0
 var _facing_yaw: float = MODEL_FORWARD_YAW
 
 @onready var visuals: Node3D = $Visuals
@@ -121,29 +156,31 @@ var _facing_yaw: float = MODEL_FORWARD_YAW
 @onready var hat_bucket_brim: MeshInstance3D = $Visuals/Hat/BucketBrim
 @onready var hat_beanie: MeshInstance3D = $Visuals/Hat/Beanie
 @onready var hat_headband: MeshInstance3D = $Visuals/Hat/Headband
-@onready var bubble: Label3D = $Bubble
-
-func setup(sim_ref) -> void:
-	sim = sim_ref
-	_walk_target_z = sim.get_line_end_z()
 
 # Called by DaySimulation BEFORE the customer enters the tree, so today's
-# weather is already known when _ready() rolls the recipe ideals. route_points
-# is the ordered waypoint list for the arrival route this customer was given.
+# weather is already known when _ready() rolls the recipe ideals. The route's
+# last point is the front of the line; it is dropped, because walking to the
+# front and then back down the line to a slot is what used to march arrivals
+# straight through the people already queueing. The sim picks a lane and the
+# customer walks to the back of it instead.
 func spawn(sim_ref, weather_ref, route_points: PackedVector3Array = PackedVector3Array()) -> void:
 	sim = sim_ref
-	if sim != null:
-		_walk_target_z = sim.get_line_end_z()
-	_waypoints = route_points
-	if _waypoints.is_empty():
-		# No route handed over: fall back to one leg ending at the back of the
-		# line, wherever the stand has been moved to.
-		var end_point: Vector3 = Vector3(position.x, 0.0, _walk_target_z)
-		if sim != null and is_instance_valid(sim):
-			end_point = sim.get_line_end_point()
-		_waypoints.append(end_point)
+	_waypoints = route_points.duplicate()
+	if _waypoints.size() > 1 and sim != null and is_instance_valid(sim):
+		var front: Vector3 = sim.queue_center()
+		var last: Vector3 = _waypoints[_waypoints.size() - 1]
+		if Vector2(last.x - front.x, last.z - front.z).length() < 1.2:
+			_waypoints.remove_at(_waypoints.size() - 1)
 	_waypoint_index = 0
 	ice_bias = _ice_bias_for(weather_ref)
+
+# A passer-by: walks the path from start_index onward, then the sim frees it.
+func spawn_passerby(sim_ref, path: PackedVector3Array, start_index: int = 0) -> void:
+	sim = sim_ref
+	puppet = false
+	_waypoints = path
+	_waypoint_index = clampi(start_index, 0, maxi(0, path.size() - 1))
+	state = State.PASSBY
 
 func _ice_bias_for(weather_ref) -> int:
 	if typeof(weather_ref) == TYPE_DICTIONARY:
@@ -151,22 +188,44 @@ func _ice_bias_for(weather_ref) -> int:
 	return 0
 
 func _ready() -> void:
-	ideal_lemons = randi_range(2, 7)
-	ideal_sugar = randi_range(1, 6)
-	# Hotter weather shifts the ideal ice up, colder weather shifts it down.
-	ideal_ice = maxi(0, randi_range(0, 8) + ice_bias)
+	_randomize_outfit()
+	walk_speed = randf_range(1.15, 1.55)
+	if puppet:
+		state = State.PUPPET
+		return
+	if state == State.PASSBY:
+		_face_toward_next(true)
+		return
+	_roll_ideals()
 	_apply_news_to_ideals()
 	# Price ceiling scales with the area, today's headline, and how well known
 	# the stand is here. The till still charges the recipe price.
 	max_price = randf_range(0.75, 2.5) * _area_price_mult() * _news_price_mult() * PlayerData.popularity_price()
 	line_tolerance = randi_range(1, 5) + PlayerData.popularity_line() + _news_line_bonus()
 	patience = randf_range(8.0, 25.0) * PlayerData.popularity_patience() * _news_patience_mult()
-	walk_speed = randf_range(1.1, 1.6)
-	_randomize_outfit()
-	# Spawn already facing the stand so nobody starts a step backwards.
-	_facing_yaw = MODEL_FORWARD_YAW
-	rotation.y = _facing_yaw
-	bubble.visible = false
+	_face_toward_next(true)
+
+# The area's crowd shares one base recipe; each customer is a tight roll
+# around it, then the weather nudges the ice and the headline nudges the rest.
+func _roll_ideals() -> void:
+	var area: MapArea = AreaCatalog.get_area(PlayerData.current_area)
+	var base_l: int = 4
+	var base_s: int = 4
+	var base_i: int = 4
+	if area != null:
+		base_l = area.base_lemons
+		base_s = area.base_sugar
+		base_i = area.base_ice
+	ideal_lemons = maxi(0, base_l + roll_offset())
+	ideal_sugar = maxi(0, base_s + roll_offset())
+	ideal_ice = maxi(0, base_i + roll_offset() + ice_bias)
+
+static func roll_offset() -> int:
+	var r: float = randf()
+	if r < IDEAL_EXACT_CHANCE:
+		return 0
+	var magnitude: int = 1 if r < IDEAL_EXACT_CHANCE + IDEAL_ONE_OFF_CHANCE else 2
+	return magnitude if randf() < 0.5 else -magnitude
 
 # --- Outfit ---------------------------------------------------------------
 
@@ -191,7 +250,10 @@ func _randomize_outfit() -> void:
 	_randomize_hat()
 	_randomize_extra()
 	# Then let the area dress whoever it wants to over the top. The
-	# neighbourhood leaves the mixed crowd above exactly as it was.
+	# neighbourhood leaves the mixed crowd above exactly as it was. A puppet is
+	# staff, so it keeps the plain outfit its owner gives it.
+	if puppet:
+		return
 	match PlayerData.area_attire():
 		MapArea.Attire.City:
 			_dress_city()
@@ -201,18 +263,14 @@ func _randomize_outfit() -> void:
 # --- Bottoms --------------------------------------------------------------
 
 func _randomize_bottom(skin: Color) -> void:
-	# Reset to the default silhouette before rolling, so a reused instance can
-	# never keep a previous customer's shape.
 	skirt.visible = false
 	pants_mesh.scale = Vector3.ONE
 	match _roll_bottom():
 		Bottom.SKIRT:
-			# Bare legs under a flared skirt: the leg block takes skin tone.
 			_tint(pants_mesh, skin)
 			_tint(skirt, Color.from_hsv(randf(), randf_range(0.3, 0.8), randf_range(0.55, 0.95)))
 			skirt.visible = true
 		Bottom.SHORTS:
-			# Shorter leg block, so more bare leg shows above the shoes.
 			_tint(pants_mesh, skin)
 			pants_mesh.scale = Vector3(1.0, 0.62, 1.0)
 		_:
@@ -229,8 +287,6 @@ func _roll_bottom() -> int:
 # --- Hat ------------------------------------------------------------------
 
 func _randomize_hat() -> void:
-	# Reset every silhouette, then light up exactly the one this customer wears.
-	# The whole Hat node stays hidden when the roll comes up bare-headed.
 	hat.visible = false
 	hat_brim.visible = false
 	hat_crown.visible = false
@@ -253,14 +309,12 @@ func _randomize_hat() -> void:
 			hat_crown.visible = true
 			hat_brim.scale = Vector3(0.72, 1.0, 0.72)
 		Hat.CAP_BACKWARD:
-			# Brim pushed round to the back of the head.
 			hat_brim.visible = true
 			hat_crown.visible = true
 			hat_brim.scale = Vector3(0.72, 1.0, 0.72)
 			hat_brim.position.z = 0.19
 			hat_brim.rotation.y = PI
 		Hat.SUN:
-			# Wide floppy brim sharing the cap crown.
 			hat_sun_brim.visible = true
 			hat_crown.visible = true
 		Hat.BUCKET:
@@ -310,7 +364,6 @@ func _randomize_extra() -> void:
 			_tint(backpack, Color.from_hsv(randf(), randf_range(0.4, 0.85), randf_range(0.4, 0.8)))
 			backpack.visible = true
 		Extra.APRON:
-			# Aprons read as work wear, so they stay near-white.
 			_tint(apron, Color.from_hsv(randf(), 0.12, randf_range(0.85, 0.99)))
 			apron.visible = true
 		Extra.BOW:
@@ -331,21 +384,15 @@ func _roll_extra() -> int:
 
 # --- Area wardrobe --------------------------------------------------------
 
-# The area's price multiplier, read off the running day so it matches the
-# traffic the sim is spawning with. Falls back to 1.0 outside a day.
 func _area_price_mult() -> float:
 	if sim != null and is_instance_valid(sim):
 		return maxf(0.1, sim.eff_price_mult)
 	return 1.0
 
-# Downtown: about half the crowd is on the way to or from an office, in a suit
-# with a tie and often a briefcase.
 func _dress_city() -> void:
 	if randf() > 0.5:
 		return
 	var jacket: Color = SUIT_COLORS[randi() % SUIT_COLORS.size()]
-	# Jacket and trousers match, and the arms become sleeves rather than bare
-	# skin, which is what makes the silhouette read as a suit.
 	_tint(body_mesh, jacket)
 	_tint(pants_mesh, jacket)
 	_tint(arm_left, jacket)
@@ -358,17 +405,15 @@ func _dress_city() -> void:
 	_tint(tie, TIE_COLORS[randi() % TIE_COLORS.size()])
 	tie.visible = true
 	if randf() < 0.7:
-		# Briefcase in hand instead of a backpack on the back.
 		backpack.visible = false
 		_tint(briefcase, BRIEFCASE_COLORS[randi() % BRIEFCASE_COLORS.size()])
 		briefcase.visible = true
 
-# Match day: most of the crowd backs one of the two kits drawn for today, so
-# the concourse reads as two blocks of colour instead of a random crowd.
 func _dress_stadium() -> void:
 	if randf() > 0.8:
 		return
-	var theme: Dictionary = AreaCatalog.get_team_themes()[randi() % 2]
+	var themes: Array[Dictionary] = AreaCatalog.get_team_theme()
+	var theme: Dictionary = themes[randi() % themes.size()]
 	var primary: Color = theme.get("primary", Color(0.8, 0.8, 0.8))
 	var secondary: Color = theme.get("secondary", Color(0.15, 0.15, 0.15))
 	_tint(body_mesh, primary)
@@ -377,11 +422,9 @@ func _dress_stadium() -> void:
 	_tint(arm_right, primary)
 	skirt.visible = false
 	pants_mesh.scale = Vector3.ONE
-	# Two-tone front panel, so the shirt reads as a jersey and not a plain tee.
 	_tint(jersey_panel, secondary)
 	jersey_panel.visible = true
 	if randf() < 0.55:
-		# Club cap: the existing cap silhouette in the team's colours.
 		hat.visible = true
 		hat_brim.visible = true
 		hat_crown.visible = true
@@ -398,84 +441,153 @@ func _tint(node: MeshInstance3D, color: Color) -> void:
 	mat.albedo_color = color
 	node.material_override = mat
 
+# Recolours the shirt and trousers, for staff that wear a uniform.
+func set_uniform(shirt: Color, trousers: Color) -> void:
+	_tint(body_mesh, shirt)
+	_tint(pants_mesh, trousers)
+	pants_mesh.scale = Vector3.ONE
+	skirt.visible = false
+
 # --- Movement -------------------------------------------------------------
 
 func _process(_delta: float) -> void:
-	# Movement, patience and all sim timers follow the sim's speed multiplier.
-	# Bubble text stays on real time so reject reasons remain readable at 5x.
 	var delta: float = _delta * _sim_time_scale()
-	if _bubble_timer > 0.0:
-		_bubble_timer -= _delta
-		if _bubble_timer <= 0.0:
-			bubble.visible = false
 	match state:
 		State.SPAWN:
 			state = State.WALK_TO_STAND
 		State.WALK_TO_STAND:
-			_bob(delta)
-			if _walk_route(delta):
-				# Set the state before notifying the sim: an on_customer_arrived
-				# rejection flips this customer straight to LEAVE.
+			_bob(delta, true)
+			if _walk_list(_waypoints, delta, true):
+				# Set the state before notifying the sim: an arrival rejection
+				# flips this customer straight to LEAVE.
 				state = State.WAIT_IN_QUEUE
 				if sim != null:
 					sim.on_customer_arrived(self)
 		State.WAIT_IN_QUEUE:
-			_bob(delta)
-			var to_slot := Vector3(queue_slot_pos.x - position.x, 0.0, queue_slot_pos.z - position.z)
-			var slot_dist: float = to_slot.length()
-			if slot_dist > 0.0005:
-				# Shuffling along the line: keep facing where we are going. The
-				# slot x closes any sideways offset left over from the route.
-				_face_travel(to_slot, delta)
-				var dir: Vector3 = to_slot / slot_dist
-				var step: float = minf(walk_speed * delta, slot_dist)
-				position.x += dir.x * step
-				position.z += dir.z * step
+			if at_window:
+				# Called up to the window: step onto the counter spot, then hold
+				# there facing the stand and wait to be served. The sim only
+				# calls the head of the line up once the window is clear, so
+				# nobody walks into the customer still being served.
+				if not at_counter:
+					_bob(delta, true)
+					if _step_toward(counter_pos, delta, false, COUNTER_EPSILON):
+						at_counter = true
+				else:
+					_bob(delta, false)
+					travel_dir = Vector3.ZERO
+					_face_travel(_counter_facing(), delta)
 			else:
-				# Settled in line: look at the stand.
-				_face_travel(_counter_facing(), delta)
+				# Still in line: walk to this customer's slot in the lane. While
+				# the slot is far away the walk is steered, so it goes round the
+				# people already standing there instead of through them.
+				var to_slot := Vector3(queue_slot_pos.x - position.x, 0.0, queue_slot_pos.z - position.z)
+				var slot_dist: float = to_slot.length()
+				if slot_dist > JOIN_STEER_DIST:
+					_bob(delta, true)
+					_step_toward(queue_slot_pos, delta, true, WAYPOINT_EPSILON)
+				elif slot_dist > 0.0005:
+					_bob(delta, true)
+					_step_toward(queue_slot_pos, delta, false, 0.0005)
+				else:
+					_bob(delta, false)
+					travel_dir = Vector3.ZERO
+					_face_travel(_counter_facing(), delta)
 			patience -= delta
-			if patience <= 0.0:
-				if sim != null:
-					sim.on_customer_gave_up(self)
+			if patience <= 0.0 and sim != null:
+				sim.on_customer_gave_up(self)
 		State.COUNTER:
-			_bob(delta)
-			_face_travel(_counter_facing(), delta)
+			if not at_counter:
+				_bob(delta, true)
+				if _step_toward(counter_pos, delta, false, COUNTER_EPSILON):
+					at_counter = true
+			else:
+				_bob(delta, false)
+				travel_dir = Vector3.ZERO
+				_face_travel(_counter_facing(), delta)
 		State.LEAVE:
-			_bob(delta)
-			_face_travel(Vector3(0.0, 0.0, -1.0), delta)
-			position.z = move_toward(position.z, LEAVE_Z, walk_speed * delta)
-			if position.z <= LEAVE_Z:
+			_bob(delta, true)
+			# Badges appear out here, once they are walking off: not while they
+			# are still standing at the stand.
+			_update_pending_reaction()
+			if _walk_list(_leave_points, delta, true):
 				if sim != null:
 					sim.on_customer_finished(self)
+				else:
+					queue_free()
+		State.PASSBY:
+			_bob(delta, true)
+			if _walk_list(_waypoints, delta, true):
+				if sim != null:
+					sim.on_passerby_done(self)
+				else:
+					queue_free()
+		State.PUPPET:
+			pass
 
-# Advances one step along the arrival route. Returns true once the last
-# waypoint is behind us, which is the moment this customer may ask for a place
-# in the line.
-func _walk_route(delta: float) -> bool:
-	if _waypoint_index >= _waypoints.size():
+# Walks the active list (arrival route, leave route or through-path). Returns
+# true once the last point is reached.
+func _walk_list(points: PackedVector3Array, delta: float, steered: bool) -> bool:
+	var index: int = _leave_index if state == State.LEAVE else _waypoint_index
+	if index >= points.size():
 		return true
-	var target: Vector3 = _waypoints[_waypoint_index]
-	var to_target := Vector3(target.x - position.x, 0.0, target.z - position.z)
-	var dist: float = to_target.length()
-	var step: float = walk_speed * delta
-	if dist > 0.0001:
-		_face_travel(to_target, delta)
-	if dist <= maxf(step, WAYPOINT_EPSILON):
-		# Close enough: snap onto the corner and take the next leg.
-		position.x = target.x
-		position.z = target.z
-		_waypoint_index += 1
-		return _waypoint_index >= _waypoints.size()
-	var dir: Vector3 = to_target / dist
+	var last: bool = index == points.size() - 1
+	var eps: float = WAYPOINT_EPSILON if (last or not steered) else STEERED_EPSILON
+	if _step_toward(points[index], delta, steered, eps):
+		index += 1
+	if state == State.LEAVE:
+		_leave_index = index
+	else:
+		_waypoint_index = index
+	return index >= points.size()
+
+# One step toward target. Steered walkers blend in the crowd-avoidance vector
+# and slow down behind whoever is in the way; on-rails walkers go straight.
+# Returns true when the target is reached.
+func _step_toward(target: Vector3, delta: float, steered: bool, epsilon: float) -> bool:
+	var to := Vector3(target.x - position.x, 0.0, target.z - position.z)
+	var dist: float = to.length()
+	var speed: float = walk_speed * (speed_factor if steered else 1.0)
+	var step: float = speed * delta
+	if dist <= maxf(epsilon, 0.0001) or (not steered and dist <= step):
+		if not steered:
+			position.x = target.x
+			position.z = target.z
+		return true
+	var dir: Vector3 = to / dist
+	if steered and steer.length_squared() > 0.000001:
+		var mixed: Vector3 = dir + steer
+		if mixed.length_squared() > 0.000001:
+			dir = mixed.normalized()
+	travel_dir = dir
+	_face_travel(dir, delta)
 	position.x += dir.x * step
 	position.z += dir.z * step
 	return false
 
+# True while this person picks a way through the crowd. Anyone standing in a
+# lane slot or at the counter holds position and is only an obstacle.
+func is_steered() -> bool:
+	match state:
+		State.WALK_TO_STAND, State.LEAVE, State.PASSBY:
+			return true
+		State.WAIT_IN_QUEUE:
+			return position.distance_to(queue_slot_pos) > JOIN_STEER_DIST
+	return false
+
+func _face_toward_next(instant: bool) -> void:
+	if _waypoint_index >= _waypoints.size():
+		return
+	var target: Vector3 = _waypoints[_waypoint_index]
+	var travel := Vector3(target.x - position.x, 0.0, target.z - position.z)
+	if travel.length_squared() < 0.0001:
+		return
+	_facing_yaw = atan2(-travel.x, -travel.z)
+	if instant:
+		rotation.y = _facing_yaw
+
 # Turns the model toward the direction it is travelling. The face sits on the
-# model's local -Z side, so the yaw for a travel direction d is
-# atan2(-d.x, -d.z): that gives PI for straight +Z travel and 0 for -Z, which
-# is the old MODEL_FORWARD_YAW behaviour plus a real turn around corners.
+# model's local -Z side, so the yaw for a travel direction d is atan2(-d.x, -d.z).
 func _face_travel(travel: Vector3, delta: float) -> void:
 	if absf(travel.x) < 0.0001 and absf(travel.z) < 0.0001:
 		return
@@ -483,9 +595,6 @@ func _face_travel(travel: Vector3, delta: float) -> void:
 	_facing_yaw = lerp_angle(_facing_yaw, target, clampf(delta * TURN_SPEED, 0.0, 1.0))
 	rotation.y = _facing_yaw
 
-# Direction to face while standing at the counter. The sim owns this because it
-# is derived from the Stand node's transform: turn the stand and the customers
-# turn with it instead of staring at where the counter used to be.
 func _counter_facing() -> Vector3:
 	if sim != null and is_instance_valid(sim):
 		return sim.get_queue_facing()
@@ -496,36 +605,92 @@ func _sim_time_scale() -> float:
 		return sim.time_scale
 	return 1.0
 
-func _bob(delta: float) -> void:
+func _bob(delta: float, walking: bool) -> void:
 	_bob_phase += delta * 7.0
-	if state == State.WAIT_IN_QUEUE or state == State.COUNTER:
+	if not walking:
 		visuals.position.y = sin(_bob_phase) * 0.012
 		visuals.rotation.z = 0.0
 	else:
 		visuals.position.y = absf(sin(_bob_phase)) * 0.045
 		visuals.rotation.z = sin(_bob_phase) * 0.045
 
+# --- Puppet ---------------------------------------------------------------
+# Lets another script walk this model with the crowd's own gait: the same bob,
+# the same turn speed, the same facing rule.
+
+func puppet_walk(delta: float, travel: Vector3) -> void:
+	_bob(delta, travel.length_squared() > 0.000001)
+	_face_travel(travel, delta)
+
 # --- Sim callbacks --------------------------------------------------------
 
-func show_bubble(text: String) -> void:
-	bubble.text = text
-	bubble.visible = true
-	_bubble_timer = BUBBLE_DURATION
+# Queues the badge instead of showing it on the spot. The sim pops it above
+# this customer once they have walked clear of the window (see
+# _update_pending_reaction): people drink as they stroll off, they do not pose
+# at the counter, and a badge over the counter is lost in the serving scrum.
+func show_reaction(kind: String) -> void:
+	if kind.is_empty():
+		return
+	_pending_reaction = kind
+
+# Fires the queued badge as soon as this customer is far enough past the spot
+# they started leaving from. Runs every frame of the walk out and does nothing
+# once the badge has gone off.
+func _update_pending_reaction() -> void:
+	if _pending_reaction.is_empty():
+		return
+	if position.distance_to(_leave_start) < REACTION_WALK_DIST:
+		return
+	var kind: String = _pending_reaction
+	_pending_reaction = ""
+	if sim != null and is_instance_valid(sim):
+		sim.spawn_reaction(self, kind)
+
+# The day is over and this person never got a cup: walk them off exactly like
+# anyone else, but without it being counted as a rejection. Used by the sim
+# when the clock runs out, so the line does not have to be watched out.
+func dismiss_out() -> void:
+	if state == State.LEAVE:
+		return
+	_pending_reaction = ""
+	_start_leave()
 
 func enter_queue() -> void:
 	state = State.WAIT_IN_QUEUE
 
-func begin_service() -> void:
+func begin_service(spot: Vector3) -> void:
+	counter_pos = spot
+	at_counter = false
 	state = State.COUNTER
 
-func buy(reaction: String = "Yum!") -> void:
-	show_bubble(reaction)
-	state = State.LEAVE
+# A served customer reacts with the cup's verdict (love / neutral / dislike),
+# the same score the popularity tally used.
+func buy(verdict: String) -> void:
+	show_reaction(verdict)
+	_start_leave()
 
 func reject(reason_text: String) -> void:
 	reason = reason_text
-	show_bubble(reason_text)
+	show_reaction(ReactionIcon.kind_for_reason(reason_text))
+	_start_leave()
+
+func _start_leave() -> void:
+	var from_line: bool = state == State.COUNTER or (state == State.WAIT_IN_QUEUE \
+		and position.distance_to(queue_slot_pos) <= JOIN_STEER_DIST)
 	state = State.LEAVE
+	at_counter = false
+	at_window = false
+	_leave_index = 0
+	# The walk out starts here, and the queued badge measures its distance.
+	_leave_start = Vector3(position.x, 0.0, position.z)
+	if sim != null and is_instance_valid(sim):
+		_leave_points = sim.leave_route_for(self, from_line)
+	if _leave_points.is_empty():
+		_leave_points = PackedVector3Array([position + Vector3(0.0, 0.0, -12.0)])
+
+# The approach this customer walked, for the sim to build a way back out.
+func arrival_route() -> PackedVector3Array:
+	return _waypoints
 
 func score_recipe() -> Dictionary:
 	var opinion: Dictionary = RecipeOpinion.score(
@@ -543,31 +708,6 @@ func evaluate_purchase() -> bool:
 		return false
 	return true
 
-# What this customer says about the cup they just paid for. Reads the same
-# RecipeOpinion score the popularity tally uses, so the bubble on screen and the
-# points behind it can never disagree.
-func taste_reaction(opinion: Dictionary = {}) -> String:
-	if opinion.is_empty():
-		opinion = score_recipe()
-	if str(opinion.get("verdict", "")) == RecipeOpinion.DISLIKE:
-		return _dislike_reason(opinion)
-	return "Yum!"
-
-func _dislike_reason(opinion: Dictionary) -> String:
-	var worst: String = str(opinion.get("worst", ""))
-	var delta: int = int(opinion.get("worst_delta", 0))
-	if worst == "lemons" and delta > 0:
-		return "Too sour!"
-	if worst == "sugar" and delta > 0:
-		return "Too sweet!"
-	if worst == "ice" and delta > 0:
-		return "Too cold!"
-	if worst == "ice" and delta < 0:
-		return "Not cold enough!"
-	if delta < 0:
-		return "Too weak!"
-	return "Not my taste!"
-
 func _apply_news_to_ideals() -> void:
 	var shift: Dictionary = NewsCatalog.recipe_shift(PlayerData.current_news())
 	if shift.is_empty():
@@ -580,7 +720,7 @@ func _apply_news_to_ideals() -> void:
 
 func _news_for_here() -> NewsItem:
 	var newsItem: NewsItem = NewsCatalog.get_item(PlayerData.current_news())
-	if not NewsCatalog.applies_to_area(newsItem.newsId, PlayerData.current_area):
+	if newsItem == null or not NewsCatalog.applies_to_area(newsItem.newsId, PlayerData.current_area):
 		return null
 	return newsItem
 

@@ -10,9 +10,10 @@ config_version=5
 
 [application]
 
-config/name="Lemon_Frontend"
+config/name="Lemons"
 run/main_scene="uid://d3pb86mio8bc4"
 config/features=PackedStringArray("4.7", "Mobile")
+config/icon="uid://cgxok2bn0i4l"
 
 [autoload]
 
@@ -26,6 +27,7 @@ AreaCatalog="*uid://btxpnraf6totu"
 window/size/viewport_width=720
 window/size/viewport_height=1280
 window/stretch/mode="canvas_items"
+window/handheld/orientation=1
 
 [dotnet]
 
@@ -43,6 +45,10 @@ folder_colors={
 
 theme/custom="res://assets/ui/theme.tres"
 
+[input_devices]
+
+pointing/emulate_touch_from_mouse=true
+
 [physics]
 
 3d/physics_engine="Jolt Physics"
@@ -51,3 +57,9 @@ theme/custom="res://assets/ui/theme.tres"
 
 rendering_device/driver.windows="d3d12"
 renderer/rendering_method="mobile"
+textures/vram_compression/import_etc2_astc=true
+environment/defaults/default_clear_color=Color(0.8039216, 0.88235295, 0.6627451, 1)
+
+[summer]
+
+version="0.7.0"

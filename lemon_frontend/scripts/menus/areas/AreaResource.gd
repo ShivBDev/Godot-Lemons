@@ -39,13 +39,30 @@ var id_str: String:
 @export var daily_fee: float = 0.0
 @export var attire: Attire = Attire.Suburban
 @export var routeID: Routes = Routes.Suburban
+# The taste this area's crowd shares. Every customer rolls a TIGHT spread
+# around these (see Customer.roll_ideal), so a player can settle on one base
+# recipe per area and only nudge it for the weather and the headline.
+@export var base_lemons: int = 4
+@export var base_sugar: int = 4
+@export var base_ice: int = 4
+# Matches on routeID. It used to match on itself, which read the empty backing
+# field and sent every area down the neighbourhood routes.
 var route : Array :
 	get:
-		match route:
+		match routeID:
 			Routes.Suburban: return ROUTES_SUBURBAN
 			Routes.City: return ROUTES_CITY
 			Routes.Stadium: return ROUTES_STADIUM
 			_: return ROUTES_SUBURBAN
+# Through-paths for the ambient crowd that just walks past. None of them cross
+# the stand or the strip in front of the counter; they are walked in either
+# direction.
+var passby_paths : Array :
+	get:
+		match routeID:
+			Routes.City: return PASSBY_CITY
+			Routes.Stadium: return PASSBY_STADIUM
+			_: return PASSBY_SUBURBAN
 
 # Stadium team themes. Two different ones are drawn for each stadium day and
 # worn by the crowd, so the colours on the jerseys change every day you work
@@ -143,3 +160,40 @@ const ROUTE_HOME_END: Array = [
 ]
 
 const ROUTES_STADIUM: Array = [ROUTE_GATE, ROUTE_CONCOURSE, ROUTE_TAILGATE, ROUTE_CORNER_LOT, ROUTE_HOME_END]
+
+# --- Passer-by paths --------------------------------------------------------
+# Walked end to end (either way round) by people who are not coming to the
+# stand. The queue runs from (0.3, -3.5) toward -X with its two lanes at
+# z = -2.7 and z = -4.3, so the paths stay on the outer edge of the pavement
+# (x = -3.2) or out on the cross streets, where the camera sees most ground.
+
+# Neighbourhood: the near sidewalk, both cross-street sidewalks, and a corner
+# turn off the near sidewalk onto the cross street.
+const PASSBY_SUBURBAN: Array = [
+	[Vector3(-3.2, 0.0, -55.0), Vector3(-3.2, 0.0, 60.0)],
+	[Vector3(62.0, 0.0, 6.4), Vector3(-3.2, 0.0, 6.4), Vector3(-3.2, 0.0, 60.0)],
+	[Vector3(62.0, 0.0, 13.6), Vector3(-40.0, 0.0, 13.6)],
+	[Vector3(62.0, 0.0, 6.0), Vector3(-30.0, 0.0, 6.0)],
+	[Vector3(-3.4, 0.0, -55.0), Vector3(-3.4, 0.0, 6.8), Vector3(62.0, 0.0, 6.8)],
+]
+
+# Downtown: the near pavement, the plaza, and the z = 10 corridor between the
+# hero block and block B.
+const PASSBY_CITY: Array = [
+	[Vector3(-3.2, 0.0, -55.0), Vector3(-3.2, 0.0, 74.0)],
+	[Vector3(56.0, 0.0, 10.0), Vector3(-24.0, 0.0, 10.0)],
+	[Vector3(56.0, 0.0, 10.6), Vector3(-3.4, 0.0, 10.6), Vector3(-3.4, 0.0, -55.0)],
+	[Vector3(-6.5, 0.0, -45.0), Vector3(-6.5, 0.0, 45.0)],
+	[Vector3(-24.0, 0.0, 9.4), Vector3(-3.0, 0.0, 9.4), Vector3(-3.0, 0.0, 74.0)],
+]
+
+# Stadium: across the open field, and along the field side of the wall,
+# stepping round the dugout at z 5 to 9.
+const PASSBY_STADIUM: Array = [
+	[Vector3(-3.4, 0.0, -48.0), Vector3(-3.4, 0.0, 48.0)],
+	[Vector3(5.9, 0.0, -40.0), Vector3(5.9, 0.0, 3.6), Vector3(3.6, 0.0, 4.6),
+		Vector3(3.6, 0.0, 9.6), Vector3(5.9, 0.0, 10.8), Vector3(5.9, 0.0, 40.0)],
+	[Vector3(-26.0, 0.0, 12.0), Vector3(5.6, 0.0, 12.0), Vector3(5.9, 0.0, 40.0)],
+	[Vector3(-26.0, 0.0, 16.5), Vector3(-3.6, 0.0, 16.5), Vector3(-3.6, 0.0, -48.0)],
+	[Vector3(-8.0, 0.0, 44.0), Vector3(-8.0, 0.0, -44.0)],
+]

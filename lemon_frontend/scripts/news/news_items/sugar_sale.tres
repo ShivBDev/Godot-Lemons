@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1_u0yf3")
 newsId = "sugar_sale"
-text = "A wholesaler is dumping sugar. Sugar packs are cheaper tomorrow."
+text = "A wholesaler is dumping sugar. Sugar packs are cheaper today."
 effects = 7
 value = 0.75
 data = "sugar_stock"

@@ -5,6 +5,6 @@
 [resource]
 script = ExtResource("1_1sgs8")
 newsId = "clear_skies"
-text = "Clear skies are locked in. Tomorrow stays dry even if the odds said otherwise."
+text = "Clear skies are locked in. Today stays dry even if the odds said otherwise."
 effects = 5
 data = null

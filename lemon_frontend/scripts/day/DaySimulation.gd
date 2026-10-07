@@ -19,9 +19,38 @@ signal day_finished
 
 const CustomerScene: PackedScene = preload("res://scenes/simulation_scenes/Customer.tscn")
 const QUEUE_SPACING: float = 0.9
-# How far apart the two window lines sit, left and right of the counter.
+# How far apart the two window lines sit, left and right of the counter: one in
+# front of the keeper, one in front of the hired server.
 const QUEUE_LANE_GAP: float = 1.6
-const LEAVE_Z: float = -11.0
+# How far a finished customer steps out sideways before walking off, so the
+# way out never runs back down a lane.
+const LANE_EXIT_STEP: float = 1.1
+# How much closer to the counter the window spot sits than the head of the
+# lane, so the customer being served and the next in line never share a spot.
+const COUNTER_OFFSET: float = 0.55
+# The next customer waits for the one just served to get this far from the
+# window before stepping up, so the two never stand in one spot.
+const COUNTER_CLEARANCE: float = 0.95
+# Points of an arrival route closer than this to the front of the line are
+# dropped when the route is walked back out: they sit beside the lanes.
+const EXIT_SKIP_RADIUS: float = 3.0
+
+# --- Crowd steering ------------------------------------------------------
+# Everyone keeps a little personal space. Walkers are pushed away from anyone
+# inside PERSONAL_SPACE, side-step whoever is ahead of them, and slow down to
+# follow or yield; nobody is ever let closer than MIN_GAP centre to centre.
+const PERSONAL_SPACE: float = 1.0
+const MIN_GAP: float = 0.62
+const STEER_LIMIT: float = 1.6
+
+# --- Ambient crowd -------------------------------------------------------
+# Passers-by walk the area's through-paths and never come to the stand. Their
+# rate and head count scale with the area's own traffic, not with the day's
+# demand, so the place looks lived in even when nobody wants lemonade.
+const PASSBY_MIN_INTERVAL: float = 1.4
+const PASSBY_MAX_INTERVAL: float = 3.4
+const PASSBY_BASE_CAP: int = 8
+const PASSBY_PREWARM: int = 7
 
 # How far in front of the Stand node's origin the first customer stands. The
 # counter sits 1.45 m down the stand's local -Z and the awning posts sit at
@@ -40,6 +69,53 @@ const WEATHER_ICONS: Dictionary = {
 	"rain": preload("res://assets/ui/icons/rain.png"),
 	"cloudy": preload("res://assets/ui/icons/cloudy.png"),
 }
+
+# Reaction art, shared with the badges that pop above customers' heads so the
+# results card and the world can never disagree about what a face means. Each
+# reject entry is [tally key, icon path, row label]; the keys are the
+# RecipeOpinion.SKIP_* buckets, so a row, its icon and its count all come from
+# the one tally and cannot drift apart.
+const REJECT_ICONS: Array = [
+	["wait", "res://assets/ui/icons/react_clock.svg", "Waited Too Long"],
+	["queue", "res://assets/ui/icons/react_crowd.svg", "Line Too Long"],
+	["price", "res://assets/ui/icons/react_price.svg", "Cost Too Much"],
+	["stock", "res://assets/ui/icons/react_soldout.svg", "Sold Out"],
+]
+# [tally key, icon path, label]. The counts are read from the day tally.
+const TASTE_ICONS: Array = [
+	["loved", "res://assets/ui/icons/face_loved.svg", "Loved"],
+	["neutral", "res://assets/ui/icons/face_neutral.svg", "Neutral"],
+	["disliked", "res://assets/ui/icons/face_disliked.svg", "Disliked"],
+]
+# Results-card metrics. The card is one vertical list built in code, so a stale
+# saved scene still gets the full layout instead of a mix of old and new.
+const RESULT_ICON_SIZE: int = 26
+const RESULT_FONT: int = 19
+const RESULT_FONT_BIG: int = 23
+# The area line at the head of the card, a size up from the body text.
+const RESULT_HEADER_FONT: int = 30
+# Fixed width for a reject reason's name, so every count lines up under the one
+# above it however long the reason is.
+const RESULT_REASON_WIDTH: int = 214
+# Card frame. The card is a fixed width and CENTRED, and its height is fitted to
+# whatever it is showing each day. Both matter: a fixed offset from a top-left
+# anchor once pushed the card off the top of the screen, and a fixed tall height
+# left a slab of dead space under the rows.
+const RESULT_CARD_WIDTH: float = 620.0
+const RESULT_CARD_MARGIN: float = 26.0
+# Rows are HAND-PLACED at these heights rather than measured from their labels.
+# A wrapping Label reports its minimum size from whatever width it has right
+# now, so measuring the column before the card had been laid out read a 47
+# character line as about 47 lines tall and stretched the card over the screen.
+const RESULT_ROW_H: float = 34.0
+const RESULT_ROW_H_TALL: float = 92.0
+const RESULT_HEADER_H: float = 38.0
+const RESULT_CARD_TOP_PAD: float = 26.0
+const RESULT_CARD_BOTTOM_PAD: float = 78.0
+const RESULT_TEXT_COLOR: Color = Color(0.16, 0.11, 0.06)
+const RESULT_MUTED_COLOR: Color = Color(0.42, 0.34, 0.22)
+const RESULT_LOSS_COLOR: Color = Color(0.72, 0.28, 0.16)
+const RESULT_PROFIT_COLOR: Color = Color(0.15, 0.45, 0.20)
 
 # Arrival routes live in AreaCatalog now, one set per area, so the crowd walks
 # in from the right streets wherever the stand is set up. Every route in every
@@ -105,6 +181,17 @@ var serve_target_b = null
 var serve_remaining_b: float = 0.0
 var queue_b: Array = []
 var _queue_front_b: Vector3 = Vector3(0.9, 0.0, APPROACH_Z)
+var _queue_center: Vector3 = Vector3(0.0, 0.0, APPROACH_Z)
+# Unit vector from lane A toward lane B, across the front of the counter.
+var _lane_side: Vector3 = Vector3(1.0, 0.0, 0.0)
+# The customer who last left each window, so the next one waits for them.
+var _lane_leaver: Array = [null, null]
+
+# Everyone walking about who no longer matters to the day: passers-by, and
+# customers on their way out. Kept apart from `customers` so the day can end
+# while the last buyer is still walking off up the street.
+var walkers: Array = []
+var _passby_timer: float = 0.0
 
 @onready var stand: Node3D = get_node_or_null("Stand")
 # The current area's scenery is instanced under this node and swapped for a
@@ -130,12 +217,19 @@ var loaded_level_scene: String = ""
 @onready var results_cups: Label = $HUD/ResultsPanel/ResultsCups
 @onready var results_served: Label = $HUD/ResultsPanel/ResultsServed
 @onready var results_rejected: Label = $HUD/ResultsPanel/ResultsRejected
-# Optional: a stale scene without this row still runs, it just reports no losses.
+# The results card lists everything itself, in one column built at boot. The
+# old hand-placed text rows are retired (hidden) but stay declared so a saved
+# scene that still carries them loads and can be switched off.
 @onready var results_spoilage: Label = get_node_or_null("HUD/ResultsPanel/ResultsSpoilage")
-# Optional too: names the area worked and what its operating fee came to.
 @onready var results_area: Label = get_node_or_null("HUD/ResultsPanel/ResultsArea")
 @onready var results_opinions: Label = get_node_or_null("HUD/ResultsPanel/ResultsOpinions")
 @onready var results_popularity: Label = get_node_or_null("HUD/ResultsPanel/ResultsPopularity")
+# The card and the column every results row is added to, both built by
+# _prepare_results_panel().
+var _results_card: Panel = null
+# A bare holder the rows are hand-placed inside, not a container: nothing about
+# the card's layout is measured from its children.
+var _results_body: Control = null
 @onready var news_banner: Label = get_node_or_null("HUD/NewsBanner")
 @onready var crew: Node3D = get_node_or_null("Stand/Crew")
 # The player's name, painted on the stand sign on the line above the LEMONADE
@@ -144,7 +238,12 @@ var loaded_level_scene: String = ""
 
 func _ready() -> void:
 	results_panel.visible = false
-	$HUD/ResultsPanel/FinishDayButton.pressed.connect(_on_finish_day_pressed)
+	# Wired BEFORE the card is built, because building it moves the button into
+	# the card's own column and this path stops resolving afterwards.
+	var finish_button: Button = get_node_or_null("HUD/ResultsPanel/FinishDayButton")
+	if finish_button != null:
+		finish_button.pressed.connect(_on_finish_day_pressed)
+	_prepare_results_panel()
 	var speed_button: Button = get_node_or_null("HUD/SpeedButton")
 	if speed_button != null:
 		speed_button.pressed.connect(_on_speed_button_pressed)
@@ -191,6 +290,7 @@ func start_day() -> void:
 	serve_target_b = null
 	serve_remaining_b = 0.0
 	queue_b.clear()
+	_lane_leaver = [null, null]
 	PlayerData.reset_opinions()
 	PlayerData.ensure_news()
 	fast_forward = false
@@ -220,7 +320,11 @@ func start_day() -> void:
 	_refresh_status_bar()
 
 func _process(_delta: float) -> void:
+	# The ambient crowd walks whether or not a day is running, so the street
+	# looks lived in while the player shops too.
+	_ambient_step(_delta * time_scale)
 	if not running:
+		_crowd_step()
 		return
 	var delta: float = _delta * time_scale
 	day_remaining -= delta
@@ -253,19 +357,34 @@ func _process(_delta: float) -> void:
 			brewing = false
 			brew_remaining = 0.0
 			cups_left = eff_pitcher_capacity
+	# Service time only runs once the customer has actually stepped up to the
+	# window, so nobody is served from halfway down the pavement.
 	if serve_target != null:
-		serve_remaining -= delta
-		if serve_remaining <= 0.0:
-			_finish_service()
+		if not is_instance_valid(serve_target):
+			serve_target = null
+		elif serve_target.at_counter:
+			serve_remaining -= delta
+			if serve_remaining <= 0.0:
+				_finish_service()
 	if serve_target_b != null:
-		serve_remaining_b -= delta
-		if serve_remaining_b <= 0.0:
-			_finish_service_b()
+		if not is_instance_valid(serve_target_b):
+			serve_target_b = null
+		elif serve_target_b.at_counter:
+			serve_remaining_b -= delta
+			if serve_remaining_b <= 0.0:
+				_finish_service_b()
 	_update_queue_slots()
 	_process_queue_front()
+	_crowd_step()
 	update_hud()
-	if day_remaining <= 0.0 and customers.is_empty() and serve_target == null and serve_target_b == null:
-		_end_day()
+	# The bell has rung. Waiting for the last customers to finish strolling off
+	# meant the results card turned up long after the clock ran out, so the day
+	# now closes the moment the timer does: whoever is mid-service is served at
+	# once, and the rest of the line is sent home without it counting against
+	# them. The walkers keep drifting off behind the results card and are
+	# cleared away when the next day starts.
+	if day_remaining <= 0.0:
+		_close_day()
 
 # --- Area scenery ---------------------------------------------------------
 
@@ -291,6 +410,9 @@ func _refresh_level() -> void:
 		child.queue_free()
 	level_holder.add_child(packed.instantiate())
 	loaded_level_scene = scene_path
+	# New streets, new crowd: the old passers-by were walking the last area's
+	# paths and would cut straight through the new scenery.
+	_reset_passersby()
 
 # Moving the stand lands immediately, even mid-shop: the scenery swaps under the
 # HUD so the player can see where they just set up. The day's numbers and the
@@ -320,10 +442,12 @@ func _refresh_queue_anchor() -> void:
 		side = Vector3(1.0, 0.0, 0.0)
 	else:
 		side = side.normalized()
+	_lane_side = side
 	var center: Vector3 = stand.global_position + facing * QUEUE_FRONT_OFFSET
 	center.y = 0.0
-	# Two starts, side by side in front of the counter. One line still uses
-	# the left start; a hired server opens the right start beside it.
+	_queue_center = center
+	# Two starts, side by side in front of the counter. Lane A is left of the
+	# counter, lane B right; a hired server opens the right-hand one.
 	_queue_front = center - side * (QUEUE_LANE_GAP * 0.5)
 	_queue_front_b = center + side * (QUEUE_LANE_GAP * 0.5)
 
@@ -331,6 +455,13 @@ func _refresh_queue_anchor() -> void:
 # straight back at the stand, whichever way it was turned.
 func get_queue_facing() -> Vector3:
 	return -_queue_dir
+
+# The point on the pavement the two lines open from, midway between the lanes.
+func queue_center() -> Vector3:
+	return _queue_center
+
+func queue_lane_gap() -> float:
+	return QUEUE_LANE_GAP
 
 # Back of the line, where the next arrival stops before the queue takes over.
 func get_line_end_point() -> Vector3:
@@ -345,12 +476,14 @@ func get_line_end_point_b() -> Vector3:
 func get_line_end_z() -> float:
 	return get_line_end_point().z
 
-# Whether one cup could actually be handed over right now: the ice the recipe
-# puts in a cup, plus either a cup already poured or a batch that can still be
-# brewed. Ice is charged per cup, so a dry tray is a hard stop even with cups
-# ready to pour.
+# Whether one cup could actually be handed over right now: a cup on the rack,
+# the ice the recipe puts in it, and either a cup already poured or a batch that
+# can still be brewed. Any one of the three missing is a hard stop, so a dry
+# tray or an empty cup shelf turns people away exactly like an empty jug.
 func _can_serve_a_cup() -> bool:
 	if PlayerData.ice_stock < PlayerData.recipe_ice:
+		return false
+	if PlayerData.cup_stock < 1:
 		return false
 	if cups_left > 0:
 		return true
@@ -361,6 +494,9 @@ func on_customer_arrived(c) -> void:
 	if not _can_serve_a_cup():
 		_reject_customer(c, "Out of stock!")
 		return
+	# With two windows open the customer joins the shorter line and is told
+	# which lane it is; with one window, the keeper's lane. Both lanes are
+	# real queue arrays, so the two lines stand side by side and never merge.
 	var use_b: bool = _server_hired() and _line_length(queue_b, serve_target_b) < _line_length(queue, serve_target)
 	var line: Array = queue_b if use_b else queue
 	var serving = serve_target_b if use_b else serve_target
@@ -369,8 +505,8 @@ func on_customer_arrived(c) -> void:
 		_reject_customer(c, "Line too long!")
 		return
 	line.append(c)
-	c.enter_queue()
 	c.queue_lane = 1 if use_b else 0
+	c.enter_queue()
 
 func on_customer_gave_up(c) -> void:
 	queue.erase(c)
@@ -380,11 +516,21 @@ func on_customer_gave_up(c) -> void:
 func _line_length(line: Array, serving) -> int:
 	return line.size() + (1 if serving != null else 0)
 
+# A customer who has reached the end of their leave route. They are already
+# out of the queue by then; this only frees the model.
 func on_customer_finished(c) -> void:
+	walkers.erase(c)
 	customers.erase(c)
 	queue.erase(c)
 	queue_b.erase(c)
-	c.queue_free()
+	if is_instance_valid(c):
+		c.queue_free()
+
+# A passer-by finished their through-path.
+func on_passerby_done(c) -> void:
+	walkers.erase(c)
+	if is_instance_valid(c):
+		c.queue_free()
 
 func _spawn_customer() -> void:
 	PlayerData.note_customer_arrival()
@@ -397,10 +543,117 @@ func _spawn_customer() -> void:
 	# from the edge of the block rather than appearing in front of the stand.
 	c.position = route[0]
 	# Weather is handed over before the customer enters the tree, because
-	# _ready() rolls ideal_ice with the bias baked in.
+	# _ready() rolls the ideals with the weather bias baked in.
 	c.spawn(self, PlayerData.today_weather(), route)
 	add_child(c)
 	customers.append(c)
+
+# --- Ambient crowd -------------------------------------------------------
+# People who are not customers: they walk a through-path end to end and are
+# freed. They make the block look lived in, and because the steering pass knows
+# about them they also part around the queue instead of cutting through it.
+
+func _reset_passersby() -> void:
+	for w in walkers:
+		if is_instance_valid(w):
+			w.queue_free()
+	walkers.clear()
+	_passby_timer = 0.0
+	for i in PASSBY_PREWARM:
+		_spawn_passerby(true)
+
+func _ambient_step(delta: float) -> void:
+	# Seeded once so the streets are already busy the moment the scene opens,
+	# rather than filling up over the first few seconds.
+	_passby_timer -= delta
+	if _passby_timer <= 0.0:
+		_spawn_passerby(false)
+		_passby_timer = randf_range(PASSBY_MIN_INTERVAL, PASSBY_MAX_INTERVAL)
+
+func _spawn_passerby(spread_out: bool) -> void:
+	var paths: Array = PlayerData.area_passby_paths()
+	if paths.is_empty():
+		return
+	var path: PackedVector3Array = PackedVector3Array(paths[randi() % paths.size()])
+	if path.size() < 2:
+		return
+	# A prewarmed walker starts partway along so the first wave is spread over
+	# the whole street instead of stepping off the same corner together.
+	if spread_out and randf() < 0.6:
+		var start: int = randi_range(1, path.size() - 1)
+		_spawn_walker(path, start)
+		return
+	# Alternate the direction so paths are used both ways.
+	if randf() < 0.5:
+		var reversed_path := PackedVector3Array(path)
+		reversed_path.reverse()
+		_spawn_walker(reversed_path, 0)
+	else:
+		_spawn_walker(path, 0)
+
+func _spawn_walker(path: PackedVector3Array, start_index: int) -> void:
+	var p = CustomerScene.instantiate()
+	p.position = path[start_index]
+	p.spawn_passerby(self, path, start_index)
+	add_child(p)
+	walkers.append(p)
+
+# --- Crowd steering ------------------------------------------------------
+# One pass each frame gives every walker a push away from whoever is too close
+# and a speed factor that drops to zero behind someone ahead. Queued people and
+# counter people are on rails, so they only ever act as obstacles.
+
+func _crowd_step() -> void:
+	var movers: Array = []
+	for c in customers:
+		if is_instance_valid(c) and c.is_steered():
+			movers.append(c)
+	for w in walkers:
+		if is_instance_valid(w):
+			movers.append(w)
+	# Anyone standing still matters as an obstacle: queued people, people at
+	# the counter, and any walker that is not currently moving.
+	var solids: Array = []
+	for c in customers:
+		if is_instance_valid(c) and not c.is_steered():
+			solids.append(c)
+	for w in walkers:
+		if is_instance_valid(w) and not w.is_steered():
+			solids.append(w)
+	for m in movers:
+		var push := Vector3.ZERO
+		var slow: float = 1.0
+		for o in solids:
+			var d: Vector3 = m.position - o.position
+			d.y = 0.0
+			var dist: float = d.length()
+			if dist < 0.0001:
+				# Exactly overlapped: shove apart on a stable axis so the two
+				# never stay pinned on the same spot.
+				push += Vector3(1.0, 0.0, 0.0)
+				continue
+			if dist < PERSONAL_SPACE:
+				var away: Vector3 = d / dist
+				var strength: float = (PERSONAL_SPACE - dist) / PERSONAL_SPACE
+				push += away * strength
+				# Nearer than MIN_GAP is more than a nudge: yield to a stop.
+				if dist < MIN_GAP:
+					slow = minf(slow, clampf(dist / MIN_GAP, 0.0, 1.0))
+		for o in movers:
+			if o == m:
+				continue
+			var d: Vector3 = m.position - o.position
+			d.y = 0.0
+			var dist: float = d.length()
+			if dist >= 0.0001 and dist < PERSONAL_SPACE:
+				var away: Vector3 = d / dist
+				var strength: float = (PERSONAL_SPACE - dist) / PERSONAL_SPACE
+				push += away * strength * 0.6
+		# Fade out if too many pushes stack up, so nobody snaps around.
+		if push.length() > STEER_LIMIT:
+			push = push.normalized() * STEER_LIMIT
+		m.steer = push
+		m.speed_factor = slow
 
 # A batch eats lemons and sugar. Ice is deliberately NOT here: the recipe's
 # ice count is what one CUP holds, and it is spent when that cup is sold, so a
@@ -426,6 +679,50 @@ func _try_start_brewing() -> void:
 	brewing = true
 	brew_remaining = eff_brew_time
 
+# --- Reactions ------------------------------------------------------------
+
+# Pops a badge above a customer's head. It is parented to the sim and runs on
+# real time, so it survives fast forward and the customer being freed mid-float.
+func spawn_reaction(c, kind: String) -> void:
+	if c == null or not is_instance_valid(c) or kind.is_empty():
+		return
+	var badge = ReactionIcon.make(kind)
+	if badge == null:
+		return
+	add_child(badge)
+	# Hand over the person, not a fixed spot: the badge rides above their head
+	# as they walk off, which is where the sip actually happens.
+	badge.follow(c)
+
+# --- Leaving --------------------------------------------------------------
+
+# The way out for a customer. Someone who was standing in a lane steps out
+# sideways first, clear of the line, and then retraces the route they came in
+# on, so the way out never crosses the people still queueing. Anyone turned
+# away out on the pavement just carries on past the stand.
+func leave_route_for(c, from_line: bool) -> PackedVector3Array:
+	var route := PackedVector3Array()
+	if c == null or not is_instance_valid(c):
+		return route
+	var here: Vector3 = Vector3(c.position.x, 0.0, c.position.z)
+	if from_line:
+		# Step out to the outer edge of the queue, away from the other lane.
+		var outward: Vector3 = _lane_side if c.queue_lane == 0 else -_lane_side
+		route.append(here + outward * LANE_EXIT_STEP)
+	var arrival: PackedVector3Array = c.arrival_route()
+	for i in range(arrival.size() - 1, -1, -1):
+		var p: Vector3 = arrival[i]
+		if here.distance_to(p) < EXIT_SKIP_RADIUS:
+			continue
+		if not route.is_empty() and route[route.size() - 1].distance_to(p) < 0.05:
+			continue
+		route.append(p)
+	if route.size() < 2:
+		# Nothing usable to retrace: head away from the stand, and the sim frees
+		# them once they are out of shot.
+		route.append(here - _queue_dir * 14.0)
+	return route
+
 func _reject_customer(c, reason: String) -> void:
 	rejected_count += 1
 	if reject_reasons.has(reason):
@@ -435,17 +732,62 @@ func _reject_customer(c, reason: String) -> void:
 	PlayerData.note_customer_skip(reason)
 	c.reject(reason)
 
+# Writes each lane's queue slots, then decides who, if anyone, is standing at
+# each window this frame.
 func _update_queue_slots() -> void:
 	_write_slots(queue, _queue_front)
 	_write_slots(queue_b, _queue_front_b)
+	_age_lane_leavers()
+	for lane_line in [queue, queue_b]:
+		for x in lane_line:
+			if is_instance_valid(x):
+				x.at_window = false
+	_assign_window(queue, serve_target, _queue_front, 0)
+	_assign_window(queue_b, serve_target_b, _queue_front_b, 1)
 
 func _write_slots(line: Array, front: Vector3) -> void:
 	for i in line.size():
+		if not is_instance_valid(line[i]):
+			continue
 		var slot: Vector3 = front + _queue_dir * (float(i) * QUEUE_SPACING)
 		slot.y = 0.0
 		line[i].queue_slot_pos = slot
-		line[i].queue_slot = slot.z
-		line[i].queue_slot_x = slot.x
+
+# Whoever the window belongs to: the customer being served, or, with the window
+# free, the head of the line. The head only steps up once the last customer has
+# walked COUNTER_CLEARANCE away, which is what stops the two sharing a spot.
+func _assign_window(line: Array, serving, window_pos: Vector3, lane: int) -> void:
+	if serving != null and is_instance_valid(serving):
+		_place_at_window(serving, window_pos)
+		return
+	var leaver = _lane_leaver[lane]
+	if leaver != null and is_instance_valid(leaver) \
+			and leaver.position.distance_to(window_pos) < COUNTER_CLEARANCE:
+		return
+	if line.is_empty():
+		return
+	var head = line[0]
+	if not is_instance_valid(head):
+		return
+	_place_at_window(head, window_pos)
+
+func _place_at_window(walker, window_pos: Vector3) -> void:
+	if walker.counter_pos.distance_to(window_pos) > 0.0001:
+		walker.counter_pos = window_pos
+		walker.at_counter = false
+	walker.at_window = true
+
+# Drops each lane's leaver once it has stepped clear, so the next customer is
+# allowed to take the window.
+func _age_lane_leavers() -> void:
+	for i in 2:
+		var leaver = _lane_leaver[i]
+		if leaver == null or not is_instance_valid(leaver):
+			_lane_leaver[i] = null
+			continue
+		var win: Vector3 = _queue_front_b if i == 1 else _queue_front
+		if leaver.position.distance_to(win) >= COUNTER_CLEARANCE:
+			_lane_leaver[i] = null
 
 func _process_queue_front() -> void:
 	_serve_from(queue, false)
@@ -462,6 +804,7 @@ func _serve_from(line: Array, second: bool) -> void:
 	if brewing:
 		return
 	if cups_left <= 0:
+		# An empty jug is only fatal when another batch cannot be brewed.
 		if not _can_brew():
 			var waiting = line[0]
 			line.pop_front()
@@ -469,34 +812,42 @@ func _serve_from(line: Array, second: bool) -> void:
 		return
 	var front = line[0]
 	line.pop_front()
+	var window: Vector3 = _queue_front_b if second else _queue_front
 	if second:
 		serve_target_b = front
 		serve_remaining_b = eff_serve_time
 	else:
 		serve_target = front
 		serve_remaining = eff_serve_time
-	front.begin_service()
+	front.begin_service(window)
 
 func _finish_service() -> void:
-	var c = serve_target
-	serve_target = null
-	serve_remaining = 0.0
-	if c == null or not is_instance_valid(c):
-		return
-	_resolve_sale(c)
+	_end_service(serve_target, 0)
 
 func _finish_service_b() -> void:
-	var c = serve_target_b
-	serve_target_b = null
-	serve_remaining_b = 0.0
-	_resolve_sale(c)
+	_end_service(serve_target_b, 1)
 
-func _resolve_sale(c) -> void:
+func _end_service(c, lane: int) -> void:
+	if lane == 1:
+		serve_target_b = null
+		serve_remaining_b = 0.0
+	else:
+		serve_target = null
+		serve_remaining = 0.0
 	if c == null or not is_instance_valid(c):
 		return
-	# Ice is a per-cup cost: the recipe's ice count is what one cup holds, so a
-	# tray that cannot fill the cup turns the customer away like an empty rack.
-	if PlayerData.ice_stock < PlayerData.recipe_ice:
+	# Remember who just left this window: the next customer waits for them to
+	# step clear before taking the spot.
+	_lane_leaver[lane] = c
+	_resolve_sale(c, lane)
+
+func _resolve_sale(c, lane: int) -> void:
+	if c == null or not is_instance_valid(c):
+		return
+	# Every cup needs ice and a cup of its own. Running out of either turns the
+	# customer away exactly like an empty rack, and the cup is only struck off
+	# the shelf once the sale is actually made.
+	if PlayerData.ice_stock < PlayerData.recipe_ice or PlayerData.cup_stock < 1:
 		_reject_customer(c, "Out of stock!")
 		return
 	if c.evaluate_purchase():
@@ -509,13 +860,13 @@ func _resolve_sale(c) -> void:
 		PlayerData.consume_stock("ice_stock", PlayerData.recipe_ice)
 		PlayerData.note_sale(PlayerData.sale_price)
 		# The cup is scored once, and that one score drives both the popularity
-		# tally and what the customer says about it, so the bubble on screen and
-		# the points behind it can never disagree. Nobody tastes before they
-		# buy, so a recipe that misses the ideal costs popularity here instead
-		# of costing the sale.
+		# tally and the reaction above the customer's head, so the badge on
+		# screen and the points behind it can never disagree. Nobody tastes
+		# before they buy, so a recipe that misses the ideal costs popularity
+		# here instead of costing the sale.
 		var opinion: Dictionary = c.score_recipe()
 		_record_opinion(opinion)
-		c.buy(c.taste_reaction(opinion))
+		c.buy(str(opinion.get("verdict", RecipeOpinion.NEUTRAL)))
 		if cups_left <= 0:
 			_try_start_brewing()
 	else:
@@ -549,6 +900,22 @@ func _flush_ice_maker() -> void:
 	ice_made = 0.0
 	PlayerData.add_stock("ice_stock", whole)
 
+# Closes the day out promptly. Anyone mid-service is paid out at once, and
+# everyone still standing in a line is sent home through the ordinary leave
+# walk without it counting as a rejection, so the results card appears the
+# moment the clock runs out instead of waiting on half the street to disperse.
+func _close_day() -> void:
+	if not running:
+		return
+	if serve_target != null:
+		_finish_service()
+	if serve_target_b != null:
+		_finish_service_b()
+	for c in customers.duplicate():
+		if is_instance_valid(c):
+			c.dismiss_out()
+	_end_day()
+
 func _end_day() -> void:
 	running = false
 	spawning = false
@@ -575,29 +942,248 @@ func _end_day() -> void:
 	_show_results()
 	_refresh_status_bar()
 
+# The day's books, top to bottom: where the stand was and what it cost up
+# front, what it took, what it really made, what the night ate, how many people
+# were served or turned away (and why, as icon rows), and how the crowd felt
+# about the recipe. The prose the old card buried this under lives on the Stats
+# panel instead.
 func _show_results() -> void:
-	results_revenue.text = "Revenue: $%.2f" % revenue
-	results_cups.text = "Cups Sold: %d" % cups_sold
-	results_served.text = "Customers Served: %d" % served_count
-	results_rejected.text = "Customers Rejected: %d" % rejected_count
-	# What the night cost, so melting and spoiling are visible on the summary
-	# instead of silently shaving the stock down.
-	if results_spoilage != null:
-		results_spoilage.text = "Losses: %d ice melted, %d lemons spoiled" % [
-			PlayerData.last_ice_melted, PlayerData.last_lemons_spoiled]
-	# Which area was worked and what the pitch cost, so the fee is never a
-	# silent deduction from the money total.
-	if results_area != null:
-		results_area.text = "%s - paid up front: $%.2f fee, $%.2f wages" % [
-			AreaCatalog.get_area(PlayerData.current_area).name, PlayerData.last_area_fee, PlayerData.last_staff_wage]
-	if results_opinions != null:
-		var lines: PackedStringArray = RecipeOpinion.summary_lines(PlayerData.opinion_totals)
-		results_opinions.text = "\n".join(lines)
-	if results_popularity != null:
-		results_popularity.text = "Popularity %d (%d/%d pts) - %d loved, %d neutral today" % [
-			PlayerData.popularity_level(PlayerData.current_area), PlayerData.popularity_points(PlayerData.current_area),
-			PlayerData.popularity_goal(PlayerData.current_area), loved_count, neutral_count]
+	_clear_results_body()
+	if _results_body == null:
+		results_panel.visible = true
+		return
+	# Profit is what the day actually made once the fee and the wages taken at
+	# start_day() are off it, so the headline figure is the honest one.
+	var profit: float = revenue - PlayerData.last_area_fee - PlayerData.last_staff_wage
+	# Rows are placed one after another at a known height and the card's height
+	# is the running total of them. Nothing here measures a label.
+	var y: float = RESULT_CARD_TOP_PAD
+	_add_result_row(y, _result_line(AreaCatalog.get_area(PlayerData.current_area).name, RESULT_TEXT_COLOR, RESULT_HEADER_FONT), RESULT_HEADER_H)
+	y += RESULT_HEADER_H
+	_add_result_row(y, _result_line("Upfront Cost: Area Fee ($%.2f), Staff ($%.2f)" % [
+		PlayerData.last_area_fee, PlayerData.last_staff_wage], RESULT_MUTED_COLOR, RESULT_FONT))
+	y += RESULT_ROW_H
+	_add_result_row(y, _result_line("Revenue: $%.2f" % revenue, RESULT_TEXT_COLOR, RESULT_FONT))
+	y += RESULT_ROW_H
+	_add_result_row(y, _result_line("Profit: $%.2f" % profit, RESULT_PROFIT_COLOR, RESULT_FONT_BIG))
+	y += RESULT_ROW_H
+	_add_result_row(y, _result_line("Losses: %d ice melted, %d lemons spoiled" % [
+		PlayerData.last_ice_melted, PlayerData.last_lemons_spoiled], RESULT_LOSS_COLOR, RESULT_FONT))
+	y += RESULT_ROW_H
+	_add_result_row(y, _served_row())
+	y += RESULT_ROW_H
+	# One row per reason a customer walked away, read from the same SKIP_*
+	# buckets the tally counts, so a row's icon, label and number can never
+	# disagree. A reason nobody hit still shows, at zero.
+	var skips: Dictionary = PlayerData.opinion_totals.get("skips", {})
+	for entry in REJECT_ICONS:
+		_add_result_row(y, _reject_row(str(entry[2]), str(entry[1]), int(skips.get(str(entry[0]), 0))))
+		y += RESULT_ROW_H
+	_add_result_row(y, _result_line("Recipe:", RESULT_TEXT_COLOR, RESULT_FONT))
+	y += RESULT_ROW_H
+	_add_result_row(y, _taste_row(), RESULT_ROW_H_TALL)
+	y += RESULT_ROW_H_TALL
+	_fit_results_card(y + RESULT_CARD_BOTTOM_PAD)
 	results_panel.visible = true
+
+# Adds one element to the card at an absolute y, inset equally from both sides,
+# with an explicit rect. No container lays these out and nothing is measured,
+# which is what keeps the card's height honest.
+func _add_result_row(top: float, content: Control, height: float = RESULT_ROW_H) -> void:
+	if _results_body == null or content == null:
+		return
+	content.anchor_left = 0.0
+	content.anchor_right = 1.0
+	content.anchor_top = 0.0
+	content.anchor_bottom = 0.0
+	content.offset_left = RESULT_CARD_MARGIN
+	content.offset_right = -RESULT_CARD_MARGIN
+	content.offset_top = top
+	content.offset_bottom = top + height
+	_results_body.add_child(content)
+
+# Centres the card on a height that was worked out from the rows themselves.
+func _fit_results_card(height: float) -> void:
+	if _results_card == null:
+		return
+	_results_card.offset_top = -height * 0.5
+	_results_card.offset_bottom = height * 0.5
+
+# Clears the previous day's rows out of the column. The Finish Day button lives
+# in the same column so it always sits under the last row, and it is tagged so
+# this pass leaves it alone.
+func _clear_results_body() -> void:
+	if _results_body == null or not is_instance_valid(_results_body):
+		return
+	for child in _results_body.get_children():
+		if child.has_meta("card_keeper"):
+			continue
+		_results_body.remove_child(child)
+		child.queue_free()
+
+# A plain, single-line label in the card. It never wraps and never expands: a
+# wrapping Label reports its minimum size from whatever width it currently has,
+# so a squeezed one collapses into a one-character-wide ribbon of text.
+func _result_line(text: String, color: Color, size: int) -> Label:
+	var label := Label.new()
+	label.text = text
+	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	label.add_theme_font_size_override("font_size", size)
+	label.add_theme_color_override("font_color", color)
+	return label
+
+# "Customers Served: 20      Customers Rejected: 2" on one row: the two totals
+# belong together, and a second full row would waste the width. Neither label
+# expands or wraps, so the pair can never be squeezed into a vertical column.
+func _served_row() -> HBoxContainer:
+	var row := HBoxContainer.new()
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_theme_constant_override("separation", 24)
+	var served: Label = _result_line("Customers Served: %d" % served_count, RESULT_TEXT_COLOR, RESULT_FONT)
+	served.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(served)
+	row.add_child(_result_line("Customers Rejected: %d" % rejected_count, RESULT_TEXT_COLOR, RESULT_FONT))
+	return row
+
+# "Waited Too Long [clock] : 1". The reason name sits in a fixed-width column so
+# every count lines up under the one above it.
+func _reject_row(name: String, icon_path: String, count: int) -> HBoxContainer:
+	var row := HBoxContainer.new()
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_theme_constant_override("separation", 8)
+	# The name sits in a fixed-width column so every count below it lines up.
+	var name_label: Label = _result_line(name, RESULT_TEXT_COLOR, RESULT_FONT)
+	name_label.custom_minimum_size = Vector2(RESULT_REASON_WIDTH, 0)
+	row.add_child(name_label)
+	var icon: TextureRect = _icon(icon_path, RESULT_ICON_SIZE)
+	if icon != null:
+		row.add_child(icon)
+	row.add_child(_result_line(": %d" % count, RESULT_TEXT_COLOR, RESULT_FONT))
+	return row
+
+# Recipe verdicts as three columns: the count and the face on top, the word
+# underneath. The same faces the badges over customers' heads use.
+func _taste_row() -> HBoxContainer:
+	var row := HBoxContainer.new()
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_theme_constant_override("separation", 0)
+	var totals: Dictionary = PlayerData.opinion_totals
+	for entry in TASTE_ICONS:
+		var column := VBoxContainer.new()
+		column.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		column.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		column.alignment = BoxContainer.ALIGNMENT_CENTER
+		column.add_theme_constant_override("separation", 2)
+		var top := HBoxContainer.new()
+		top.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		top.alignment = BoxContainer.ALIGNMENT_CENTER
+		top.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		top.add_theme_constant_override("separation", 6)
+		top.add_child(_result_line("%d" % int(totals.get(str(entry[0]), 0)), RESULT_TEXT_COLOR, RESULT_FONT_BIG))
+		var icon: TextureRect = _icon(str(entry[1]), RESULT_ICON_SIZE)
+		if icon != null:
+			top.add_child(icon)
+		column.add_child(top)
+		var caption: Label = _result_line(str(entry[2]), RESULT_MUTED_COLOR, RESULT_FONT)
+		caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		caption.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		column.add_child(caption)
+		row.add_child(column)
+	return row
+
+# A square icon for a card row, aspect kept, or null if the art is missing.
+func _icon(path: String, size: int) -> TextureRect:
+	var texture: Texture2D = _reaction_texture(path)
+	if texture == null:
+		return null
+	var icon := TextureRect.new()
+	icon.texture = texture
+	icon.custom_minimum_size = Vector2(size, size)
+	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	return icon
+
+# Loads and caches one of the reaction icons for the results rows.
+var _result_icon_cache: Dictionary = {}
+
+func _reaction_texture(path: String) -> Texture2D:
+	if _result_icon_cache.has(path):
+		return _result_icon_cache[path]
+	var tex: Texture2D = null
+	if ResourceLoader.exists(path):
+		tex = load(path)
+	_result_icon_cache[path] = tex
+	return tex
+
+# The card builds one vertical list of its own and retires the old hand-placed
+# text rows, so a stale saved scene still gets the full layout instead of a mix
+# of the two. The column sits inside the card's Panel, inset to clear the title
+# at the top and the Finish Day button at the bottom.
+func _prepare_results_panel() -> void:
+	# The card is drawn from scratch in _show_results(), so the scene's old title
+	# and text rows are retired here instead of sitting above the new layout.
+	var title: Label = get_node_or_null("HUD/ResultsPanel/TitleLabel")
+	if title != null:
+		title.visible = false
+	for stale in [results_revenue, results_cups, results_served, results_rejected,
+			results_spoilage, results_area, results_opinions, results_popularity]:
+		if stale != null and is_instance_valid(stale):
+			stale.visible = false
+	# The whole overlay is taken over from code, so nothing about the layout
+	# depends on what the saved scene happens to say: full-screen dim, one
+	# centred card, one column of rows.
+	results_panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	var backdrop: ColorRect = get_node_or_null("HUD/ResultsPanel/Backdrop")
+	if backdrop != null:
+		backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		backdrop.color = Color(0, 0, 0, 0.55)
+	_results_card = get_node_or_null("HUD/ResultsPanel/Panel")
+	if _results_card == null:
+		return
+	# Centre the card. Anchors are set rather than trusted, because the scene's
+	# Panel uses a top-left layout mode, and its offsets then place the card
+	# ABOVE the top of the screen instead of in the middle of it.
+	_results_card.anchor_left = 0.5
+	_results_card.anchor_top = 0.5
+	_results_card.anchor_right = 0.5
+	_results_card.anchor_bottom = 0.5
+	_results_card.offset_left = -RESULT_CARD_WIDTH * 0.5
+	_results_card.offset_right = RESULT_CARD_WIDTH * 0.5
+	# A placeholder height until the first day ends and _fit_results_card() sets
+	# the real one.
+	_results_card.offset_top = -RESULT_ROW_H * 2.0
+	_results_card.offset_bottom = RESULT_ROW_H * 2.0
+	# Drop a body left over from an earlier load, so the card can never end up
+	# with two sets of rows stacked on top of each other.
+	var stale_body: Node = _results_card.get_node_or_null("Rows")
+	if stale_body != null:
+		_results_card.remove_child(stale_body)
+		stale_body.queue_free()
+	# A bare holder: every row is placed inside it at an absolute y, so nothing
+	# here needs a container to lay out, and nothing is ever measured.
+	_results_body = Control.new()
+	_results_body.name = "Rows"
+	_results_body.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_results_body.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_results_card.add_child(_results_body)
+	# The button is pinned to the card's own bottom edge, below the last row.
+	var finish: Button = get_node_or_null("HUD/ResultsPanel/FinishDayButton")
+	if finish != null:
+		var old_parent: Node = finish.get_parent()
+		if old_parent != null and old_parent != _results_card:
+			old_parent.remove_child(finish)
+			_results_card.add_child(finish)
+		finish.set_meta("card_keeper", true)
+		finish.anchor_left = 0.5
+		finish.anchor_right = 0.5
+		finish.anchor_top = 1.0
+		finish.anchor_bottom = 1.0
+		finish.offset_left = -110.0
+		finish.offset_right = 110.0
+		finish.offset_top = -66.0
+		finish.offset_bottom = -16.0
 
 func _on_finish_day_pressed() -> void:
 	results_panel.visible = false

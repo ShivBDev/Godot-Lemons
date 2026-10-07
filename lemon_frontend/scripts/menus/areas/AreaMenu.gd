@@ -134,6 +134,7 @@ func _build_row(area: MapArea) -> PanelContainer:
 	var panel := PanelContainer.new()
 	panel.name = "Area_" + area.id_str
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	panel.mouse_filter = Control.MOUSE_FILTER_PASS
 
 	var pad := MarginContainer.new()
 	for side in ["margin_left", "margin_right", "margin_top", "margin_bottom"]:
@@ -220,6 +221,7 @@ func _build_row(area: MapArea) -> PanelContainer:
 	move.pressed.connect(_on_move_pressed.bind(area.id))
 	column.add_child(move)
 
+	panel.propagate_call("set_mouse_filter", [Control.MOUSE_FILTER_PASS])
 	_rows.append({
 		"id": area.id_str,
 		"button": move,

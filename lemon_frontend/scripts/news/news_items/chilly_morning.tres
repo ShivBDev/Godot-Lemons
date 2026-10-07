@@ -8,6 +8,7 @@ newsId = "chilly_morning"
 text = "A chilly morning is forecast. The crowd will want less ice in the cup."
 effects = 6
 value = 1.0
+weather_push = -1
 data = {
 "ice": -3
 }

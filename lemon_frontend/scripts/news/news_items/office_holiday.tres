@@ -5,6 +5,6 @@
 [resource]
 script = ExtResource("1_q8vah")
 newsId = "office_holiday"
-text = "Downtown offices are closed tomorrow. The avenue will be quiet."
+text = "Downtown offices are closed today. The avenue will be quiet."
 value = 0.7
 data = "city"

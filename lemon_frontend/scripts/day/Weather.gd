@@ -90,16 +90,31 @@ static func demand_for(weather: Dictionary) -> float:
 	var w: Dictionary = sanitize(weather)
 	return demand_multiplier(int(w["temp"]), bool(w["raining"]))
 
-# Hot days push customers toward more ice, cold days toward less.
-# Rain costs one more chunk of ice demand.
+# Hot days push customers toward a little more ice, cold days a little less.
+# Deliberately small: about -2 at the usual low, +2 at the usual high, and up
+# to 3 either way on a headline day outside that band. Rain takes one more off.
+# The area's base recipe stays the anchor; the weather is a nudge.
 static func ice_bias(temp: int, raining: bool) -> int:
-	var t: float = clampf(float(temp), COLD_TEMP, HOT_TEMP)
-	var ratio: float = (t - COLD_TEMP) / (HOT_TEMP - COLD_TEMP)
-	var bias: float = lerpf(-4.0, 5.0, clampf(ratio, 0.0, 1.0))
+	var bias: float = (float(temp) - 80.0) / 12.5
 	if raining:
 		bias -= 1.0
-	return int(round(clampf(bias, -5.0, 5.0)))
+	return int(round(clampf(bias, -3.0, 3.0)))
 
+# Loose, so a heat wave's pushed temperature really does ask for more ice.
 static func ice_bias_for(weather: Dictionary) -> int:
-	var w: Dictionary = sanitize(weather)
+	var w: Dictionary = sanitize_loose(weather)
 	return ice_bias(int(w["temp"]), bool(w["raining"]))
+
+# --- Headline weather ------------------------------------------------------
+# A hot headline ALWAYS lands above the usual high and a cold one ALWAYS below
+# the usual low, whatever the forecast rolled. Within the loose 30-120 band.
+const HEADLINE_HOT_MIN: int = TEMP_MAX + 3
+const HEADLINE_HOT_MAX: int = TEMP_MAX + 12
+const HEADLINE_COLD_MIN: int = TEMP_MIN - 15
+const HEADLINE_COLD_MAX: int = TEMP_MIN - 3
+
+static func headline_hot_temp() -> int:
+	return randi_range(HEADLINE_HOT_MIN, HEADLINE_HOT_MAX)
+
+static func headline_cold_temp() -> int:
+	return randi_range(HEADLINE_COLD_MIN, HEADLINE_COLD_MAX)

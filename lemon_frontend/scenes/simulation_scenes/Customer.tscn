@@ -260,11 +260,3 @@ position = Vector3(0, 0.68, -0.25)
 mesh = SubResource("Mesh_jerseyPanel")
 material_override = SubResource("Mat_body")
 
-[node name="Bubble" type="Label3D" parent="."]
-visible = false
-position = Vector3(0, 1.85, 0)
-billboard = 1
-font_size = 48
-pixel_size = 0.006
-outline_size = 14
-outline_modulate = Color(0, 0, 0, 1)
