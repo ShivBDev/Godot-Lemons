@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1_wj4ne")
 newsId = "cold_snap"
-text = "A cold snap is due overnight. Tomorrow drops well below the usual range."
+text = "A cold snap came in overnight. Today drops well below the usual range."
 effects = 4
 value = -18.0
 data = null

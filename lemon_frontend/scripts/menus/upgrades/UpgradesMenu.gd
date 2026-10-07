@@ -179,6 +179,7 @@ func _build_row(def: Dictionary) -> HBoxContainer:
 	buy.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	buy.add_theme_font_size_override("font_size", 18)
 	buy.pressed.connect(_on_buy_pressed.bind(id))
+	buy.mouse_filter = Control.MOUSE_FILTER_PASS
 	row.add_child(buy)
 	_rowButtons[id] = buy
 

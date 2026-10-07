@@ -20,7 +20,12 @@ var http_login: HTTPRequest
 var http_verify: HTTPRequest
 var http_fetch: HTTPRequest
 var http_sync: HTTPRequest
+const HTTP_TIMEOUT: float = 20.0
 var force_immediate_sync_refire: bool = false
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_APPLICATION_PAUSED or what == NOTIFICATION_APPLICATION_FOCUS_OUT:
+		sync_user_data()
 
 #Utils
 func _gameNetPrint(msg : String):
@@ -45,9 +50,13 @@ func _parse_server_error(body: PackedByteArray) -> String:
 	return "Network communication failure."
 func _instantiate_network_workers() -> void:
 	http_login = HTTPRequest.new()
+	http_login.timeout = HTTP_TIMEOUT
 	http_verify = HTTPRequest.new()
+	http_verify.timeout = HTTP_TIMEOUT
 	http_fetch = HTTPRequest.new()
+	http_fetch.timeout = HTTP_TIMEOUT
 	http_sync = HTTPRequest.new()
+	http_sync.timeout = HTTP_TIMEOUT
 	add_child(http_login)
 	add_child(http_verify)
 	add_child(http_fetch)
@@ -97,9 +106,13 @@ func _on_fetch_complete(_result, _response_code, _headers, _body) -> void:
 		var json = JSON.parse_string(_body.get_string_from_utf8())
 		PlayerData.update_from_server_payload(json["profile"])
 		login_status = LOGIN_STATUS.logged_in
+		return
 	elif _response_code == 401 or _response_code == 404:
 		_gameNetPrint("Login Failed: %d" % _response_code)
 		_clear_local_session()
+		login_status = LOGIN_STATUS.logged_out
+	else:
+		_gameNetPrint("Login Failed: %d" % _response_code)
 		login_status = LOGIN_STATUS.logged_out
 # Networking Save Sync
 func sync_user_data(forceRefire: bool = false) -> void:

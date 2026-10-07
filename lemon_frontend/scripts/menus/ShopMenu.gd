@@ -415,7 +415,7 @@ func _take_free_pack(field: String, quantity: int) -> void:
 # rescue pack can never be handed to a player who could simply have paid.
 func _can_afford_pitcher_materials() -> bool:
 	var cost: float = 0.0
-	for field in Inventory.PITCHER_FIELDS:
+	for field in PlayerData.pitcher_fields():
 		var key: String = str(field)
 		var need: int = PlayerData.pitcher_need(key)
 		if need <= 0 or PlayerData.stock_of(key) >= need:

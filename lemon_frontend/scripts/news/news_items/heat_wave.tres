@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1_ywj5r")
 newsId = "heat_wave"
-text = "A heat wave is rolling in. Tomorrow will run well past the usual high."
+text = "A heat wave is rolling in. Today will run well past the usual high."
 effects = 4
 value = 18.0
 data = null

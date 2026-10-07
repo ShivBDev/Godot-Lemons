@@ -251,16 +251,34 @@ func pitcher_stocks() -> Dictionary:
 		"lemon_stock": stock_of("lemon_stock"),
 		"sugar_stock": sugar_stock,
 		"ice_stock": ice_stock,
+		"cup_stock": cup_stock,
 	}
 
-# How much of each pitcher ingredient is missing, keyed by stock field. Empty
-# means the stand can brew.
-func pitcher_shortfall() -> Dictionary:
-	return Inventory.pitcher_shortfall(pitcher_stocks(), recipe_lemons, recipe_sugar, recipe_ice)
+# Cups are part of the floor: every cup sold uses one, and nothing can be sold
+# without one. Inventory.PITCHER_FIELDS covers the three ingredients; the cup is
+# added here so every caller (Start Day lock, shortfall text, Shop rescue packs)
+# reads the same list.
+const CUPS_PER_SALE: int = 1
 
-# What one pitcher needs of one field. Zero for anything a pitcher does not use
-# (cups), which is how the Shop knows a row has no rescue pack.
+func pitcher_fields() -> Array:
+	var fields: Array = Inventory.PITCHER_FIELDS.duplicate()
+	if not fields.has("cup_stock"):
+		fields.append("cup_stock")
+	return fields
+
+# How much of each pitcher ingredient is missing, keyed by stock field. Empty
+# means the stand can open.
+func pitcher_shortfall() -> Dictionary:
+	var short: Dictionary = Inventory.pitcher_shortfall(pitcher_stocks(), recipe_lemons, recipe_sugar, recipe_ice)
+	if cup_stock < CUPS_PER_SALE:
+		short["cup_stock"] = CUPS_PER_SALE - cup_stock
+	return short
+
+# What one pitcher needs of one field: a batch of lemons and sugar, one cup's
+# ice, and one cup to pour it into.
 func pitcher_need(field: String) -> int:
+	if field == "cup_stock":
+		return CUPS_PER_SALE
 	return Inventory.pitcher_amount(field, recipe_lemons, recipe_sugar, recipe_ice)
 
 func can_brew_pitcher() -> bool:
@@ -270,7 +288,7 @@ func can_brew_pitcher() -> bool:
 func pitcher_shortfall_text() -> String:
 	var short: Dictionary = pitcher_shortfall()
 	var parts: Array = []
-	for field in Inventory.PITCHER_FIELDS:
+	for field in pitcher_fields():
 		var key: String = str(field)
 		if short.has(key):
 			parts.append("%d %s" % [int(short[key]), Inventory.field_label(key)])
@@ -426,6 +444,11 @@ func area_attire() -> MapArea.Attire:
 
 func area_routes() -> Array:
 	return AreaCatalog.get_area(current_area).route
+
+# Through-paths the ambient crowd walks: people crossing the block who are
+# never coming to the stand.
+func area_passby_paths() -> Array:
+	return AreaCatalog.get_area(current_area).passby_paths
 
 # --- Popularity ----------------------------------------------------------
 
@@ -629,8 +652,20 @@ func _fold_news_weather(news: String, target: Dictionary) -> bool:
 	if news.is_empty():
 		return false
 	var newsItem: NewsItem = NewsCatalog.get_item(news)
+	if newsItem == null:
+		return false
+	# A hot or cold headline is a promise about the temperature, so it is SET
+	# outside the usual band rather than added to whatever the forecast rolled:
+	# +18 on top of a 60F roll was only 78F, which is not a heat wave.
+	var push: int = newsItem.weather_push
 	if newsItem.effects == NewsItem.EffectTarget.temp:
-		target["temp"] = int(target.get("temp", 75)) + int(round(newsItem.value))
+		push = 1 if newsItem.value >= 0.0 else -1
+	if push > 0:
+		target["temp"] = Weather.headline_hot_temp()
+		target["raining"] = false
+		return true
+	if push < 0:
+		target["temp"] = Weather.headline_cold_temp()
 		return true
 	if newsItem.effects == NewsItem.EffectTarget.rain:
 		target["raining"] = newsItem.value >= 0.5

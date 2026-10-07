@@ -8,4 +8,7 @@ icon = "uid://vbnfv1sb5kws"
 name = "The Neighborhood"
 blurb = "The quiet residential block. Free to work, steady foot traffic, and the locals know what a cup is worth."
 level = "res://scenes/simulation_scenes/neighborhood.tscn"
+base_lemons = 5
+base_sugar = 4
+base_ice = 4
 metadata/_custom_type_script = "uid://cd82w8n1vw4sk"

@@ -5,9 +5,10 @@
 [resource]
 script = ExtResource("1_j5idk")
 newsId = "scorcher"
-text = "Forecasters are calling tomorrow a scorcher. People will want ice."
+text = "Forecasters are calling today a scorcher. People will want ice."
 effects = 6
 value = 1.0
+weather_push = 1
 data = {
 "ice": 3
 }

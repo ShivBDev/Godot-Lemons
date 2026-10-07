@@ -3,7 +3,7 @@
 [ext_resource type="Script" uid="uid://b04d6ph40w84t" path="res://scripts/day/DaySimulation.gd" id="1_script"]
 [ext_resource type="Texture2D" uid="uid://cgxok2bn0i4l" path="res://assets/ui/icons/lemon.png" id="4_qh4xx"]
 [ext_resource type="Texture2D" uid="uid://l243q2p2ctsw" path="res://assets/ui/icons/sugar.png" id="5_3grbq"]
-[ext_resource type="PackedScene" path="res://scenes/simulation_scenes/neighborhood.tscn" id="5_ef33t"]
+[ext_resource type="PackedScene" uid="uid://cjqoaam5pcmwf" path="res://scenes/simulation_scenes/neighborhood.tscn" id="5_ef33t"]
 [ext_resource type="Texture2D" uid="uid://c1i486y6kgv51" path="res://assets/ui/icons/ice.png" id="6_g2exv"]
 [ext_resource type="Texture2D" uid="uid://cou8oetj2yqoa" path="res://assets/ui/icons/cup.png" id="7_nhasu"]
 [ext_resource type="StyleBox" path="res://assets/ui/style_bar.tres" id="8_bar"]
@@ -475,19 +475,22 @@ grow_vertical = 2
 
 [node name="Backdrop" type="ColorRect" parent="HUD/ResultsPanel" unique_id=2046628905]
 layout_mode = 0
-offset_right = 660.0
-offset_bottom = 860.0
-color = Color(0, 0, 0, 0.7)
+offset_left = -330.0
+offset_top = -430.0
+offset_right = 330.0
+offset_bottom = 430.0
+color = Color(0, 0, 0, 0.55)
 
 [node name="Panel" type="Panel" parent="HUD/ResultsPanel" unique_id=1967840164]
 layout_mode = 0
 offset_left = 24.0
-offset_top = 16.0
+offset_top = -330.0
 offset_right = 636.0
-offset_bottom = 844.0
+offset_bottom = 330.0
 theme_override_styles/panel = ExtResource("8_card")
 
 [node name="TitleLabel" type="Label" parent="HUD/ResultsPanel" unique_id=810255806]
+visible = false
 layout_mode = 0
 offset_left = 40.0
 offset_top = 28.0
@@ -541,10 +544,10 @@ text = "Customers Rejected: 0"
 
 [node name="FinishDayButton" type="Button" parent="HUD/ResultsPanel" unique_id=242765334]
 layout_mode = 0
-offset_left = 180.0
-offset_top = 748.0
-offset_right = 480.0
-offset_bottom = 816.0
+offset_left = 170.0
+offset_top = 232.0
+offset_right = 490.0
+offset_bottom = 286.0
 theme_override_font_sizes/font_size = 28
 text = "Finish Day"
 

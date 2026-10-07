@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1_jhshf")
 newsId = "citrus_shortage"
-text = "A citrus shortage is hitting the market. Lemons cost more tomorrow."
+text = "A citrus shortage is hitting the market. Lemons cost more today."
 effects = 7
 value = 1.4
 data = "lemon_stock"

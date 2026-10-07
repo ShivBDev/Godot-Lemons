@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1_gpmvb")
 newsId = "surprise_storm"
-text = "A surprise storm is on the radar. Rain tomorrow, no matter the season."
+text = "A surprise storm is on the radar. Rain today, no matter the season."
 effects = 5
 value = 1.0
 data = null
