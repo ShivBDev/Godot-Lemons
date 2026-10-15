@@ -24,7 +24,8 @@ const HTTP_TIMEOUT: float = 20.0
 var force_immediate_sync_refire: bool = false
 
 func _notification(what: int) -> void:
-	if what == NOTIFICATION_APPLICATION_PAUSED or what == NOTIFICATION_APPLICATION_FOCUS_OUT:
+	if login_status == LOGIN_STATUS.logged_in and \
+	(what == NOTIFICATION_APPLICATION_PAUSED or what == NOTIFICATION_APPLICATION_FOCUS_OUT):
 		sync_user_data()
 
 #Utils
