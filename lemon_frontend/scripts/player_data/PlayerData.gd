@@ -511,12 +511,11 @@ func _read_popularity(raw: Variant) -> Dictionary:
 	var stored: Dictionary = raw
 	var clean: Dictionary = {}
 	for key in stored.keys():
-		var id: MapArea.AreaID = MapArea.Str2ID(str(key))
 		var entry: Variant = stored[key]
 		if typeof(entry) != TYPE_DICTIONARY:
 			continue
 		var stored_points: int = int(entry.get("points", entry.get("perfects", 0)))
-		clean[id] = {
+		clean[str(key)] = {
 			"level": clampi(int(entry.get("level", 0)), 0, Popularity.MAX_RANK),
 			"points": maxi(0, stored_points),
 		}
