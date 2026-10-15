@@ -1,0 +1,69 @@
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
+
+config_version=5
+
+[application]
+
+config/name="Lemons"
+run/main_scene="uid://d3pb86mio8bc4"
+config/features=PackedStringArray("4.7", "Mobile")
+config/icon="uid://cgxok2bn0i4l"
+
+[autoload]
+
+GameNet="*uid://bpfm4b6y6y1ej"
+PlayerData="*uid://3cpctkrvy6me"
+NewsCatalog="*uid://dutjxglldwtmr"
+AreaCatalog="*uid://btxpnraf6totu"
+AdManager="*uid://c1difuipeff3t"
+
+[display]
+
+window/size/viewport_width=720
+window/size/viewport_height=1280
+window/stretch/mode="canvas_items"
+window/handheld/orientation=1
+
+[dotnet]
+
+project/assembly_name="Lemon_Frontend"
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/admob/plugin.cfg")
+
+[file_customization]
+
+folder_colors={
+"res://assets/": "red",
+"res://scenes/": "green",
+"res://scripts/": "blue"
+}
+
+[gui]
+
+theme/custom="res://assets/ui/theme.tres"
+
+[input_devices]
+
+pointing/emulate_touch_from_mouse=true
+
+[physics]
+
+3d/physics_engine="Jolt Physics"
+
+[rendering]
+
+rendering_device/driver.windows="d3d12"
+renderer/rendering_method="mobile"
+environment/defaults/default_clear_color=Color(0.8039216, 0.88235295, 0.6627451, 1)
+
+[summer]
+
+version="0.7.3"

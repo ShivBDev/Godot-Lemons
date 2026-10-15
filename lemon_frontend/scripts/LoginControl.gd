@@ -1,16 +1,16 @@
 extends Node
 
 # Game Panels
-@onready var loginPanel : Control = $LoginPanel
-@onready var otpPanel : Control = $OtpPanel
-@onready var gamePanel : Control = $GamePanel
+@onready var loginPanel : Control = $GameView/LoginPanel
+@onready var otpPanel : Control = $GameView/OtpPanel
+@onready var gamePanel : Control = $GameView/GamePanel
 # Fields
-@onready var emailField : LineEdit = $LoginPanel/EmailField
-@onready var otpField : LineEdit = $OtpPanel/OtpField
+@onready var emailField : LineEdit = $GameView/LoginPanel/EmailField
+@onready var otpField : LineEdit = $GameView/OtpPanel/OtpField
 # Buttons
-@onready var loginButton : Button = $LoginPanel/LoginButton
-@onready var otpSubmitButton : Button = $OtpPanel/OtpSubmitButton
-@onready var backToLoginButton : Button = $OtpPanel/BackToLoginButton
+@onready var loginButton : Button = $GameView/LoginPanel/LoginButton
+@onready var otpSubmitButton : Button = $GameView/OtpPanel/OtpSubmitButton
+@onready var backToLoginButton : Button = $GameView/OtpPanel/BackToLoginButton
 
 # For locking fields and buttons while http pipelines active
 func _ui_lockout(locked : bool):
