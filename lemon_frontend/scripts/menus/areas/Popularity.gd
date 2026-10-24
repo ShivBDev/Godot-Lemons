@@ -8,16 +8,15 @@ class_name Popularity
 # about 5000. Rank 10 is the ceiling: +50 percent foot traffic, line
 # patience, and price ceiling.
 
-const MAX_RANK: int = 10
+const MAX_RANK: int = 99
 const BONUS_PER_RANK: float = 0.05
 const POINTS_LOVE: int = 3
 const POINTS_NEUTRAL: int = 1
 const POINTS_DISLIKE: int = 0
-# Sum of 1..10 is 55. These bases make a full climb land near the targets.
 const BASE_POINTS: Dictionary = {
-	MapArea.AreaID.Neighborhood: 18,
-	MapArea.AreaID.City: 45,
-	MapArea.AreaID.Stadium: 91,
+	MapArea.AreaID.Neighborhood: 25,
+	MapArea.AreaID.City: 59,
+	MapArea.AreaID.Stadium: 99,
 }
 
 static func rank_of(ranks: Variant, area_id: MapArea.AreaID) -> int:
@@ -38,8 +37,7 @@ static func progress_of(progress: Variant, area_id: MapArea.AreaID) -> int:
 		return 0
 	return maxi(0, int(stored[area_str]))
 
-# Neighbourhood 18, 36, 54... (990 to max). Downtown 45, 90... (2475).
-# Stadium 91, 182... (5005).
+# Close enough to: Sum[i=1..99] { base * i }
 static func points_needed(area_id: MapArea.AreaID, rank: int) -> int:
 	var base: int = int(BASE_POINTS.get(area_id, 18))
 	return base * (clampi(rank, 0, MAX_RANK - 1) + 1)

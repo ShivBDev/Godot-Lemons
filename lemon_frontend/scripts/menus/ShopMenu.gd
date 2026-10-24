@@ -32,25 +32,25 @@ const ITEMS: Array = [
 		"name": "Lemons",
 		"field": "lemon_stock",
 		"icon": "res://assets/ui/icons/lemon.png",
-		"packs": [[12, 6.50], [24, 11.50], [48, 21.50]],
+		"packs": [[12, 8.50], [24, 16.50], [48, 31.50]],
 	},
 	{
 		"name": "Sugar",
 		"field": "sugar_stock",
 		"icon": "res://assets/ui/icons/sugar.png",
-		"packs": [[12, 5.50], [20, 8.50], [50, 19.50]],
+		"packs": [[12, 9.50], [24, 17.50], [60, 32.50]],
 	},
 	{
 		"name": "Ice",
 		"field": "ice_stock",
 		"icon": "res://assets/ui/icons/ice.png",
-		"packs": [[50, 3.00], [200, 5.00], [500, 9.50]],
+		"packs": [[50, 5.00], [200, 17.00], [500, 35.00]],
 	},
 	{
 		"name": "Cups",
 		"field": "cup_stock",
 		"icon": "res://assets/ui/icons/cup.png",
-		"packs": [[75, 3.00], [250, 7.50], [500, 12.50]],
+		"packs": [[75, 7.00], [250, 18.50], [500, 34.50]],
 	},
 ]
 

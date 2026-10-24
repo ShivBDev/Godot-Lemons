@@ -6,6 +6,6 @@
 script = ExtResource("2_6acro")
 icon = "uid://d2r2mku88iyja"
 name = "Server"
-wage = 18.0
+wage = 60.0
 blurb = "Works the second window. Two customers can be served at once, in two lines."
 metadata/_custom_type_script = "uid://d2aoq6cnpabxb"

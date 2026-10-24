@@ -37,7 +37,7 @@ const BASE_CUP_CAPACITY: int = 300
 # chest shaves the loss down per level.
 const ICE_KEEP_FLOOR: int = 10
 const ICE_MELT_RATE: float = 0.20
-const ICE_PER_DAY_BASE: float = 28.0
+const ICE_PER_DAY_BASE: float = 24.0
 
 # --- Lemons --------------------------------------------------------------
 # A crate bought today is good for LEMON_SHELF_LIFE_DAYS days. The walk-in
