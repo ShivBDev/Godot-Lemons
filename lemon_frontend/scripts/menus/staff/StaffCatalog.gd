@@ -4,7 +4,7 @@ class_name StaffCatalog
 # Day hires. One entry per worker. The menu toggles them; DaySimulation reads
 # the flags at the start of the day and charges the wage at the end of it.
 
-const AD_TRAFFIC: float = 1.15
+const AD_TRAFFIC: float = 1.85
 
 const _all_workers : Array[StaffMember] = [
 	preload("uid://bw5uyesc5o3v3"), # Server
