@@ -32,7 +32,7 @@ const MIX_ROWS: Array = [
 
 const PRICE_ROWS: Array = [
 	{"field": "recipe_ice", "name": "Ice Cubes", "min": 0.0, "max": 20.0, "step": 1.0, "money": false, "icon": "res://assets/ui/icons/ice.png"},
-	{"field": "sale_price", "name": "Price per Cup", "min": 0.10, "max": 5.00, "step": 0.10, "money": true},
+	{"field": "sale_price", "name": "Price per Cup", "min": 2.50, "max": 15.00, "step": 0.25, "money": true},
 ]
 
 var _money_label: Label

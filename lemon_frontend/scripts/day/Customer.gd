@@ -94,7 +94,7 @@ var ideal_sugar: int = 4
 var ideal_ice: int = 4
 # Weather shift applied to ideal_ice (hot days want a little more ice).
 var ice_bias: int = 0
-var max_price: float = 1.25
+var max_price: float = 5.25
 var line_tolerance: int = 3
 var patience: float = 15.0
 # Slot in the lane, written by the sim every frame.
@@ -200,7 +200,7 @@ func _ready() -> void:
 	_apply_news_to_ideals()
 	# Price ceiling scales with the area, today's headline, and how well known
 	# the stand is here. The till still charges the recipe price.
-	max_price = randf_range(0.75, 2.5) * _area_price_mult() * _news_price_mult() * PlayerData.popularity_price()
+	max_price = randf_range(4.00, 5.50) * _area_price_mult() * _news_price_mult() * PlayerData.popularity_price()
 	line_tolerance = randi_range(1, 5) + PlayerData.popularity_line() + _news_line_bonus()
 	patience = randf_range(8.0, 25.0) * PlayerData.popularity_patience() * _news_patience_mult()
 	_face_toward_next(true)

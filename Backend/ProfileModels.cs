@@ -40,7 +40,7 @@ public class PlayerProfileObj {
   public int recipeLemons { get; set; } = 1;
   public int recipeSugar { get; set; } = 1;
   public int recipeIce { get; set; } = 0;
-  public float salePrice { get; set; } = 0.50f;
+  public float salePrice { get; set; } = 3.50f;
   // Game State Data
   [Column(TypeName = "jsonb")] public JsonDocument weather { get; set; } = JsonDocument.Parse("{}");
   [Column(TypeName = "jsonb")] public JsonDocument forecast { get; set; } = JsonDocument.Parse("{}");
