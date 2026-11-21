@@ -149,10 +149,12 @@ func _on_start_day_pressed() -> void:
 	menus.visible = false
 	menuBar.visible = false
 	daySimulator.visible = true
+	AdManager.show_lower_banner()
 	daySim.start_day()
 
 func _on_day_finished() -> void:
 	# restart autosave, simulation saves at day end and start
+	AdManager.hide_lower_banner()
 	autosaveTimer.start()
 	daySimulator.visible = true
 	menus.visible = true

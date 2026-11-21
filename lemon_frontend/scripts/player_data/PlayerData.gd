@@ -457,9 +457,7 @@ func popularity_level(area_id: MapArea.AreaID) -> int:
 
 func popularity_points(area_id: MapArea.AreaID) -> int:
 	var entry: Dictionary = _popularity_entry(area_id)
-	if entry.has("points"):
-		return int(entry.get("points", 0))
-	return int(entry.get("perfects", 0))
+	return int(entry.get("points", 0))
 
 func popularity_perfects(area_id: MapArea.AreaID) -> int:
 	return popularity_points(area_id)
@@ -502,7 +500,7 @@ func _popularity_entry(area_id: MapArea.AreaID) -> Dictionary:
 	var id: String = MapArea.ID2Str(area_id)
 	var raw: Variant = popularity.get(id, {})
 	if typeof(raw) != TYPE_DICTIONARY:
-		return {"level": 0, "perfects": 0}
+		return {"level": 0, "points": 0}
 	return raw
 
 func _read_popularity(raw: Variant) -> Dictionary:

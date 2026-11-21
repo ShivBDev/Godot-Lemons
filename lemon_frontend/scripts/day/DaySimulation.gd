@@ -8,14 +8,14 @@ signal day_finished
 @export var brew_time: float = 8.0
 @export var pitcher_capacity: int = 10
 @export var spawn_min_interval: float = 4.0
-@export var spawn_max_interval: float = 9.0
+@export var spawn_max_interval: float = 8.0
 @export var spawn_stop_buffer: float = 25.0
 @export var fast_forward_scale: float = 5.0
 
 # Absolute floor for the upgrade-adjusted spawn interval. "advertising" and hot
 # weather shorten the gap toward this, never below it.
-@export var min_spawn_interval: float = 1.0
-@export var max_spawn_interval: float = 4.0
+@export var min_spawn_interval: float = 0.1
+@export var max_spawn_interval: float = 7.0
 
 const CustomerScene: PackedScene = preload("res://scenes/simulation_scenes/Customer.tscn")
 const QUEUE_SPACING: float = 0.9
@@ -940,7 +940,6 @@ func _end_day() -> void:
 	print("Day Finished, saving...")
 	GameNet.sync_user_data()
 	_show_results()
-	AdManager.show_lower_banner()
 	_refresh_status_bar()
 
 # The day's books, top to bottom: where the stand was and what it cost up
@@ -1187,7 +1186,6 @@ func _prepare_results_panel() -> void:
 		finish.offset_bottom = -16.0
 
 func _on_finish_day_pressed() -> void:
-	AdManager.hide_lower_banner()
 	results_panel.visible = false
 	day_finished.emit()
 

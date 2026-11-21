@@ -377,9 +377,9 @@ text = "Today 75F"
 
 [node name="ForecastIcon" type="TextureRect" parent="HUD/StatusBar" unique_id=763302449]
 layout_mode = 0
-offset_left = 330.0
+offset_left = 511.0
 offset_top = 48.0
-offset_right = 356.0
+offset_right = 537.0
 offset_bottom = 74.0
 mouse_filter = 2
 texture = ExtResource("8_bggbl")
@@ -388,13 +388,14 @@ stretch_mode = 5
 
 [node name="ForecastLabel" type="Label" parent="HUD/StatusBar" unique_id=324718727]
 layout_mode = 0
-offset_left = 362.0
+offset_left = 530.0
 offset_top = 47.0
 offset_right = 682.0
 offset_bottom = 77.0
 theme_override_colors/font_color = Color(0.729, 0.769, 0.639, 1)
 theme_override_font_sizes/font_size = 18
 text = "Tomorrow 75F"
+horizontal_alignment = 1
 
 [node name="TopBar" type="Panel" parent="HUD" unique_id=1817992142]
 offset_left = 10.0
@@ -593,7 +594,6 @@ theme_override_font_sizes/font_size = 16
 text = "Popularity"
 
 [node name="NewsBanner" type="Label" parent="HUD" unique_id=346751202]
-visible = false
 offset_left = 10.0
 offset_top = 100.0
 offset_right = 710.0
