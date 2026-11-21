@@ -40,6 +40,9 @@ font_color = Color(0, 0, 0, 1)
 [sub_resource type="LabelSettings" id="LabelSettings_qk17a"]
 font_size = 20
 
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_vqvwu"]
+load_path = "res://.godot/imported/trashcan.png-ac5774bbdb481e275c1a874eee36f4b7.ctex"
+
 [node name="LoginControl" type="Control" unique_id=974650387]
 layout_mode = 3
 anchors_preset = 15
@@ -201,13 +204,14 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_top = -39.0
 grow_horizontal = 2
 grow_vertical = 2
 stretch = true
 
 [node name="SubViewport" type="SubViewport" parent="GameView/GamePanel/DaySimulator" unique_id=319335689]
 handle_input_locally = false
-size = Vector2i(720, 1176)
+size = Vector2i(720, 1215)
 render_target_update_mode = 4
 
 [node name="DaySimulation" parent="GameView/GamePanel/DaySimulator/SubViewport" unique_id=1723501023 instance=ExtResource("7_daySim")]
@@ -254,7 +258,6 @@ offset_bottom = 450.0
 theme_override_styles/panel = ExtResource("7_card")
 
 [node name="SettingsMenu" type="Control" parent="GameView/GamePanel/Menus" unique_id=821759036]
-visible = false
 anchors_preset = 0
 offset_right = 700.0
 offset_bottom = 450.0
@@ -324,6 +327,46 @@ layout_mode = 2
 max_length = 20
 script = ExtResource("2_vqvwu")
 
+[node name="DeleteAccountButton" type="Button" parent="GameView/GamePanel/Menus/SettingsMenu" unique_id=2028340678]
+modulate = Color(0.95686275, 0, 0, 1)
+layout_mode = 0
+offset_left = 628.00006
+offset_top = 17.999998
+offset_right = 1172.0001
+offset_bottom = 548.0
+scale = Vector2(0.1, 0.1)
+icon = SubResource("CompressedTexture2D_vqvwu")
+icon_alignment = 1
+expand_icon = true
+
+[node name="DeleteAccountModal" type="ConfirmationDialog" parent="GameView/GamePanel/Menus/SettingsMenu" unique_id=1594588230]
+oversampling_override = 1.0
+size = Vector2i(298, 225)
+
+[node name="Layout" type="VBoxContainer" parent="GameView/GamePanel/Menus/SettingsMenu/DeleteAccountModal" unique_id=1808690726]
+offset_left = 14.0
+offset_top = 12.0
+offset_right = 284.0
+offset_bottom = 157.0
+
+[node name="Label" type="Label" parent="GameView/GamePanel/Menus/SettingsMenu/DeleteAccountModal/Layout" unique_id=184821176]
+layout_mode = 2
+text = "Delete Account?
+Type \"DeleteMe\" to Confirm"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Spacer" type="Control" parent="GameView/GamePanel/Menus/SettingsMenu/DeleteAccountModal/Layout" unique_id=2145562793]
+custom_minimum_size = Vector2(0, 15)
+layout_mode = 2
+
+[node name="ConfirmationField" type="LineEdit" parent="GameView/GamePanel/Menus/SettingsMenu/DeleteAccountModal/Layout" unique_id=1817489183]
+layout_mode = 2
+
+[node name="Spacer2" type="Control" parent="GameView/GamePanel/Menus/SettingsMenu/DeleteAccountModal/Layout" unique_id=252760354]
+custom_minimum_size = Vector2(0, 15)
+layout_mode = 2
+
 [node name="ShopMenu" type="Control" parent="GameView/GamePanel/Menus" unique_id=893313510]
 visible = false
 anchors_preset = 0
@@ -363,13 +406,13 @@ script = ExtResource("10_staff")
 layout_mode = 1
 anchors_preset = 10
 anchor_right = 1.0
-offset_top = -40.0
+offset_top = 72.0
+offset_bottom = 112.0
 grow_horizontal = 2
 theme_override_styles/panel = ExtResource("8_bar")
 script = ExtResource("11_news")
 
 [node name="MenuBarBG" type="Panel" parent="GameView/GamePanel" unique_id=771002001]
-visible = false
 layout_mode = 1
 anchors_preset = 12
 anchor_top = 1.0

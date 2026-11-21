@@ -33,12 +33,17 @@ var _statsLabel: Label
 @onready var changeUsernameButton: Button = $ChangeNameButton
 @onready var changeUsernameModal: ConfirmationDialog = $ChangeUsernameModal
 @onready var newUsernameField: LineEdit = $ChangeUsernameModal/Layout/UsernameField
+@onready var deleteAccountButton: Button = $DeleteAccountButton
+@onready var deleteAccountModal: ConfirmationDialog = $DeleteAccountModal
+@onready var deleteAccountConfirmationField: LineEdit = $DeleteAccountModal/Layout/ConfirmationField
 
 func _ready() -> void:
 	logoutButton.pressed.connect(_on_logout_pressed)
 	logoutModal.confirmed.connect(_on_logout_confirmed)
 	changeUsernameButton.pressed.connect(_on_change_username_pressed)
 	changeUsernameModal.confirmed.connect(_on_new_username_submitted)
+	deleteAccountButton.pressed.connect(_on_delete_account_pressed)
+	deleteAccountModal.confirmed.connect(_on_delete_account_confirmed)
 	_build_stats_panel()
 	_add_button_icon(logoutButton, _load_texture(LOGOUT_ICON_PATH))
 	_add_button_icon(changeUsernameButton, _load_texture(RENAME_ICON_PATH))
@@ -169,3 +174,12 @@ func _on_new_username_submitted() -> void:
 	PlayerData.username = requestedUsername
 	GameNet.sync_user_data(true)
 	PlayerData.profile_updated.emit()
+
+func _on_delete_account_pressed() -> void:
+	deleteAccountModal.popup_centered()
+
+func _on_delete_account_confirmed() -> void:
+	var confirmationText : String = deleteAccountConfirmationField.text.strip_edges()
+	if confirmationText != "DeleteMe":
+		return
+	GameNet.delete_player_account()

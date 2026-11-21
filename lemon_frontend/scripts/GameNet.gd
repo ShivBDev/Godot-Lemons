@@ -94,6 +94,13 @@ func logout_local_session() -> void:
 	logout_worker.request(BASE_URL + "/player/logout", ["Authorization: " + session_token], HTTPClient.METHOD_POST)
 	_clear_local_session()
 	login_status = LOGIN_STATUS.logged_out
+func delete_player_account() -> void:
+	_gameNetPrint("Deleting Player Account...")
+	var delete_worker = HTTPRequest.new()
+	add_child(delete_worker)
+	delete_worker.request(BASE_URL + "/player/delete-account", ["Authorization: " + session_token], HTTPClient.METHOD_DELETE)
+	_clear_local_session()
+	login_status = LOGIN_STATUS.logged_out
 
 # Networking Save Fetch
 func _fetch_save_data() -> void:

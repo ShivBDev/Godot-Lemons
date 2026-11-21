@@ -160,4 +160,24 @@ public class PlayerController : ControllerBase {
     }
     return Ok(new { message = "Logged out successfully." });
   }
+
+  [HttpDelete("delete-account")]
+  public async Task<IActionResult> DeleteAccount([FromHeader(Name = "Authorization")] string token) {
+    string tokenHash = _securityUtils.ComputeSha256(token);
+    var session = await _context.PlayerSessions.FirstOrDefaultAsync(s => s.tokenHash == tokenHash);
+    if (session == null) {
+      return Unauthorized(new ProblemDetailsResponse("Unauthorized", 401, "Invalid session."));
+    }
+
+    var player = await _context.Players.FirstOrDefaultAsync(p => p.emailHash == session.emailHash);
+    if (player == null) {
+      return NotFound(new ProblemDetailsResponse("Not Found", 404, "Player profile not found."));
+    }
+
+    _context.Players.Remove(player);
+    _context.PlayerSessions.Remove(session);
+    await _context.SaveChangesAsync();
+
+    return Ok(new { message = "Account deleted successfully." });
+  }
 }
