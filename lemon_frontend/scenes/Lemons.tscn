@@ -1325,101 +1325,191 @@ script = ExtResource("3_egube")
 [node name="RecipeMenu" type="Button" parent="GameView/GamePanel/MenuBar" unique_id=1010492662]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 14
-text = "Recipe"
 
-[node name="Icon" type="TextureRect" parent="GameView/GamePanel/MenuBar/RecipeMenu" unique_id=771002011]
-layout_mode = 0
-offset_left = 3.0
-offset_top = 21.0
-offset_right = 31.0
-offset_bottom = 51.0
+[node name="TabLayout" type="VBoxContainer" parent="GameView/GamePanel/MenuBar/RecipeMenu" unique_id=910000001]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+alignment = 1
+theme_override_constants/separation = 2
+
+[node name="Icon" type="TextureRect" parent="GameView/GamePanel/MenuBar/RecipeMenu/TabLayout" unique_id=771002011]
+custom_minimum_size = Vector2(26, 26)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
 mouse_filter = 2
 texture = ExtResource("14_y4gtc")
 expand_mode = 1
 stretch_mode = 5
 
+[node name="Word" type="Label" parent="GameView/GamePanel/MenuBar/RecipeMenu/TabLayout" unique_id=910000002]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "Recipe"
+horizontal_alignment = 1
+mouse_filter = 2
+
 [node name="ShopMenu" type="Button" parent="GameView/GamePanel/MenuBar" unique_id=559755763]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 14
-text = "Shop"
 
-[node name="Icon" type="TextureRect" parent="GameView/GamePanel/MenuBar/ShopMenu" unique_id=771002012]
-layout_mode = 0
-offset_left = 3.0
-offset_top = 21.0
-offset_right = 31.0
-offset_bottom = 51.0
+[node name="TabLayout" type="VBoxContainer" parent="GameView/GamePanel/MenuBar/ShopMenu" unique_id=910000003]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+alignment = 1
+theme_override_constants/separation = 2
+
+[node name="Icon" type="TextureRect" parent="GameView/GamePanel/MenuBar/ShopMenu/TabLayout" unique_id=771002012]
+custom_minimum_size = Vector2(26, 26)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
 mouse_filter = 2
 texture = ExtResource("15_axek6")
 expand_mode = 1
 stretch_mode = 5
 
+[node name="Word" type="Label" parent="GameView/GamePanel/MenuBar/ShopMenu/TabLayout" unique_id=910000004]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "Shop"
+horizontal_alignment = 1
+mouse_filter = 2
+
 [node name="Upgrades" type="Button" parent="GameView/GamePanel/MenuBar" unique_id=1907334513]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 14
-text = "Upgrades"
 
-[node name="Icon" type="TextureRect" parent="GameView/GamePanel/MenuBar/Upgrades" unique_id=771002013]
-layout_mode = 0
-offset_left = 3.0
-offset_top = 21.0
-offset_right = 31.0
-offset_bottom = 51.0
+[node name="TabLayout" type="VBoxContainer" parent="GameView/GamePanel/MenuBar/Upgrades" unique_id=910000005]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+alignment = 1
+theme_override_constants/separation = 2
+
+[node name="Icon" type="TextureRect" parent="GameView/GamePanel/MenuBar/Upgrades/TabLayout" unique_id=771002013]
+custom_minimum_size = Vector2(26, 26)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
 mouse_filter = 2
 texture = ExtResource("16_aknww")
 expand_mode = 1
 stretch_mode = 5
 
+[node name="Word" type="Label" parent="GameView/GamePanel/MenuBar/Upgrades/TabLayout" unique_id=910000006]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "Upgrades"
+horizontal_alignment = 1
+mouse_filter = 2
+
 [node name="Staff" type="Button" parent="GameView/GamePanel/MenuBar" unique_id=2105221643]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 14
-text = "Staff"
 
-[node name="Icon" type="TextureRect" parent="GameView/GamePanel/MenuBar/Staff" unique_id=1593383430]
-layout_mode = 0
-offset_left = 3.0
-offset_top = 21.0
-offset_right = 31.0
-offset_bottom = 51.0
+[node name="TabLayout" type="VBoxContainer" parent="GameView/GamePanel/MenuBar/Staff" unique_id=910000007]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+alignment = 1
+theme_override_constants/separation = 2
+
+[node name="Icon" type="TextureRect" parent="GameView/GamePanel/MenuBar/Staff/TabLayout" unique_id=1593383430]
+custom_minimum_size = Vector2(26, 26)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
 mouse_filter = 2
 texture = ExtResource("17_yhgdi")
 expand_mode = 1
 stretch_mode = 5
 
+[node name="Word" type="Label" parent="GameView/GamePanel/MenuBar/Staff/TabLayout" unique_id=910000008]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "Staff"
+horizontal_alignment = 1
+mouse_filter = 2
+
 [node name="Areas" type="Button" parent="GameView/GamePanel/MenuBar" unique_id=771002015]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 14
-text = "Areas"
 
-[node name="Icon" type="TextureRect" parent="GameView/GamePanel/MenuBar/Areas" unique_id=771002016]
-layout_mode = 0
-offset_left = 3.0
-offset_top = 21.0
-offset_right = 31.0
-offset_bottom = 51.0
+[node name="TabLayout" type="VBoxContainer" parent="GameView/GamePanel/MenuBar/Areas" unique_id=910000009]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+alignment = 1
+theme_override_constants/separation = 2
+
+[node name="Icon" type="TextureRect" parent="GameView/GamePanel/MenuBar/Areas/TabLayout" unique_id=771002016]
+custom_minimum_size = Vector2(26, 26)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
 mouse_filter = 2
 texture = ExtResource("18_b1rpu")
 expand_mode = 1
 stretch_mode = 5
 
+[node name="Word" type="Label" parent="GameView/GamePanel/MenuBar/Areas/TabLayout" unique_id=910000010]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "Areas"
+horizontal_alignment = 1
+mouse_filter = 2
+
 [node name="Settings" type="Button" parent="GameView/GamePanel/MenuBar" unique_id=1688769654]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 14
-text = "Settings"
 
-[node name="Icon" type="TextureRect" parent="GameView/GamePanel/MenuBar/Settings" unique_id=771002014]
-layout_mode = 0
-offset_left = 3.0
-offset_top = 21.0
-offset_right = 31.0
-offset_bottom = 51.0
+[node name="TabLayout" type="VBoxContainer" parent="GameView/GamePanel/MenuBar/Settings" unique_id=910000011]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+alignment = 1
+theme_override_constants/separation = 2
+
+[node name="Icon" type="TextureRect" parent="GameView/GamePanel/MenuBar/Settings/TabLayout" unique_id=771002014]
+custom_minimum_size = Vector2(26, 26)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
 mouse_filter = 2
 texture = ExtResource("19_m5vgt")
 expand_mode = 1
 stretch_mode = 5
+
+[node name="Word" type="Label" parent="GameView/GamePanel/MenuBar/Settings/TabLayout" unique_id=910000012]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "Settings"
+horizontal_alignment = 1
+mouse_filter = 2
