@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://ctnn0hqkx67k7"
+path="res://.godot/imported/Apple Cider.mp3-43dda1b63d750d645bfee2b90761c7d1.mp3str"
+
+[deps]
+
+source_file="res://library/sounds/game-music/Apple Cider.mp3"
+dest_files=["res://.godot/imported/Apple Cider.mp3-43dda1b63d750d645bfee2b90761c7d1.mp3str"]
+
+[params]
+
+loop=true
+loop_offset=19.21
+bpm=0.0
+beat_count=0
+bar_beats=4

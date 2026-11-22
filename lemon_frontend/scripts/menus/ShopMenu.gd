@@ -2,31 +2,12 @@ extends Control
 
 # Shop menu.
 #
-# Rows are built in code so every ingredient shares one column grid: name and
-# stock on the left, three pack buttons on the right. This mirrors the Upgrades
-# menu, which keeps the two lists visually consistent.
-#
-# The scene node only supplies the 700x500 panel; everything inside is built
-# here, and any hand-laid-out rows left in the scene are cleared first.
+# The rows live in the scene: one row per ingredient with its icon, stock
+# readout, note and three pack buttons. This script only fills them from
+# PlayerData, so adding a pack is a number in the table below.
 
-const ROW_SEPARATION: int = 8
-const ROW_HEIGHT: int = 68
-const PACK_BUTTON_SIZE: Vector2 = Vector2(104, 40)
-const PACK_GAP: int = 10
-const NAME_FONT: int = 20
-const STOCK_FONT: int = 16
-const PACK_FONT: int = 14
-const HINT_FONT: int = 15
-const NOTE_FONT: int = 14
-const NOTICE_FONT: int = 15
-
-const RowIcon = preload("res://assets/ui/row_icon.gd")
-# Ingredient glyphs sit in a 68px row, so they can afford to be chunkier than
-# the upgrade rows' default.
-const ROW_ICON_SIZE: int = 40
-
-# One entry per shop row. "field" is the PlayerData stock variable, and each
-# pack is [quantity, price].
+# One entry per shop row. "field" is the PlayerData stock variable and also the
+# scene row's name, and each pack is [quantity, price].
 const ITEMS: Array = [
 	{
 		"name": "Lemons",
@@ -54,8 +35,10 @@ const ITEMS: Array = [
 	},
 ]
 
-var _money_label: Label
-var _notice: Label
+@onready var _money_label: Label = $Layout/Column/Header/Money
+@onready var _notice: Label = $Layout/Column/Notice
+@onready var _rows_box: VBoxContainer = $Layout/Column/Scroll/Rows
+
 # [{field: String, stock: Label, note: Label, packs: [{button, qty, base}]}]
 var _rows: Array = []
 # One free rescue pack per ingredient per day: while the till cannot buy its way
@@ -65,8 +48,7 @@ var _rows: Array = []
 var _free_used: Dictionary = {}
 
 func _ready() -> void:
-	_clear_placeholder_children()
-	_build_ui()
+	_build_rows()
 	if not PlayerData.profile_updated.is_connected(_refresh):
 		PlayerData.profile_updated.connect(_refresh)
 	# A headline that re-prices the packs must redraw the rows the moment it
@@ -85,160 +67,27 @@ func _on_visibility_changed() -> void:
 		_set_notice("")
 		_refresh()
 
-# The scene ships the original hand-laid-out rows as placeholders. Drop them so
-# the generated grid is the only thing on screen.
-func _clear_placeholder_children() -> void:
-	for child in get_children():
-		remove_child(child)
-		child.queue_free()
-
-# --- UI construction -----------------------------------------------------
-
-func _build_ui() -> void:
-	var margin := MarginContainer.new()
-	margin.name = "Layout"
-	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	for side in ["margin_left", "margin_right", "margin_top", "margin_bottom"]:
-		margin.add_theme_constant_override(side, 20)
-	add_child(margin)
-
-	var column := VBoxContainer.new()
-	column.name = "Column"
-	column.add_theme_constant_override("separation", 6)
-	margin.add_child(column)
-
-	column.add_child(_build_header())
-
-	# Word wrap is load bearing here, not decoration: an unwrapped Label reports
-	# its whole text as its minimum width, which stretches the row grid wider
-	# than the 700px panel and pushes the pack buttons off the right edge.
-	var hint := Label.new()
-	hint.name = "Hint"
-	hint.text = "The stand only holds so much of each ingredient. Ice melts overnight and lemons keep for a week, so buy storage and cooler upgrades in the Upgrades tab."
-	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	hint.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	hint.add_theme_font_size_override("font_size", HINT_FONT)
-	hint.add_theme_color_override("font_color", Color(0.29, 0.22, 0.13))
-	column.add_child(hint)
-
-	# Says why a purchase was turned down, or how much of a pack actually fit.
-	# Empty most of the time, so it costs no room when nothing is wrong.
-	_notice = Label.new()
-	_notice.name = "Notice"
-	_notice.text = ""
-	_notice.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_notice.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_notice.add_theme_font_size_override("font_size", NOTICE_FONT)
-	_notice.add_theme_color_override("font_color", Color(0.55, 0.16, 0.10))
-	column.add_child(_notice)
-
-	column.add_child(HSeparator.new())
-
-	var scroll := ScrollContainer.new()
-	scroll.name = "Scroll"
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	column.add_child(scroll)
-
-	var rows := VBoxContainer.new()
-	rows.name = "Rows"
-	rows.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	rows.add_theme_constant_override("separation", ROW_SEPARATION)
-	scroll.add_child(rows)
-
+# Binds the scene's rows to the pack table. The first pack built is the smallest
+# one, and is the only one the rescue rule can hand over free.
+func _build_rows() -> void:
 	for item in ITEMS:
-		rows.add_child(_build_row(item))
-
-func _build_header() -> HBoxContainer:
-	var header := HBoxContainer.new()
-	header.name = "Header"
-
-	var title := Label.new()
-	title.name = "Title"
-	title.text = "Shop"
-	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	title.add_theme_font_size_override("font_size", 24)
-	title.add_theme_color_override("font_color", Color(0.16, 0.11, 0.06))
-	header.add_child(title)
-
-	_money_label = Label.new()
-	_money_label.name = "Money"
-	_money_label.text = "Money: $0.00"
-	_money_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	_money_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_money_label.add_theme_font_size_override("font_size", 20)
-	_money_label.add_theme_color_override("font_color", Color(0.16, 0.11, 0.06))
-	header.add_child(_money_label)
-
-	return header
-
-func _build_row(item: Dictionary) -> HBoxContainer:
-	var field: String = str(item.get("field", ""))
-
-	var row := HBoxContainer.new()
-	row.name = str(item.get("name", "Item"))
-	row.custom_minimum_size = Vector2(0, ROW_HEIGHT)
-	row.add_theme_constant_override("separation", PACK_GAP)
-
-	var icon := RowIcon.make(str(item.get("icon", "")), ROW_ICON_SIZE)
-	if icon != null:
-		row.add_child(icon)
-
-	var info := VBoxContainer.new()
-	info.name = "Info"
-	info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	info.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	info.add_theme_constant_override("separation", 0)
-	row.add_child(info)
-
-	var row_name := Label.new()
-	row_name.name = "Name"
-	row_name.text = str(item.get("name", ""))
-	row_name.add_theme_font_size_override("font_size", NAME_FONT)
-	row_name.add_theme_color_override("font_color", Color(0.16, 0.11, 0.06))
-	info.add_child(row_name)
-
-	var stock := Label.new()
-	stock.name = "Stock"
-	stock.text = "In stock: 0"
-	stock.add_theme_font_size_override("font_size", STOCK_FONT)
-	stock.add_theme_color_override("font_color", Color(0.36, 0.28, 0.17))
-	info.add_child(stock)
-
-	# Side effects live here: how long the fruit keeps, what tonight will melt.
-	var note := Label.new()
-	note.name = "Note"
-	note.text = ""
-	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	note.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	note.add_theme_font_size_override("font_size", NOTE_FONT)
-	note.add_theme_color_override("font_color", Color(0.45, 0.33, 0.19))
-	info.add_child(note)
-
-	var packs: Array = []
-	for pack in item.get("packs", []):
-		var qty: int = int(pack[0])
-		# The catalog price is the BASE price. What the button shows and what
-		# the till is charged are both worked out from it live, so a headline
-		# that changes the sale can never leave a stale price behind.
-		var base: float = float(pack[1])
-		var buy := Button.new()
-		buy.name = "Buy%d" % qty
-		buy.custom_minimum_size = PACK_BUTTON_SIZE
-		buy.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		buy.add_theme_font_size_override("font_size", PACK_FONT)
-		buy.text = "Buy %d\n$%.2f" % [qty, _sale_price(field, base)]
-		# Packs are listed smallest first, so the first one built is the pack the
-		# rescue rule can hand over free. Whether it IS free is decided live in
-		# _refresh(); this only marks which pack is eligible.
-		var can_be_free: bool = packs.is_empty()
-		buy.pressed.connect(_buy_item.bind(field, qty, base, can_be_free))
-		row.add_child(buy)
-		packs.append({"button": buy, "qty": qty, "base": base})
-
-	_rows.append({"field": field, "stock": stock, "note": note, "packs": packs})
-
-	return row
+		var field: String = str(item.get("field", ""))
+		var row: Control = _rows_box.get_node(str(item.get("name", "")))
+		var packs: Array = []
+		var buttons: Array = [row.get_node("Buy1"), row.get_node("Buy2"), row.get_node("Buy3")]
+		var defs: Array = item.get("packs", [])
+		for i in defs.size():
+			var qty: int = int(defs[i][0])
+			var base: float = float(defs[i][1])
+			var buy: Button = buttons[i]
+			buy.pressed.connect(_buy_item.bind(field, qty, base, i == 0))
+			packs.append({"button": buy, "qty": qty, "base": base})
+		_rows.append({
+			"field": field,
+			"stock": row.get_node("Info/Stock"),
+			"note": row.get_node("Info/Note"),
+			"packs": packs,
+		})
 
 # --- State -> UI ---------------------------------------------------------
 

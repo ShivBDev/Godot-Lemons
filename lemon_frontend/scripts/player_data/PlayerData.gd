@@ -161,9 +161,17 @@ func serialize_for_sync() -> Dictionary:
 # so a fresh profile still has today's weather and a next-day forecast.
 func ensure_weather_rolled() -> void:
 	if weather.is_empty():
-		weather = Weather.default_weather()
+		weather = Weather.roll_for_day(day_count)
 	if forecast.is_empty():
-		forecast = Weather.roll()
+		forecast = Weather.roll_for_day(day_count + 1)
+
+# Which season the calendar is in. Derived from day_count, not stored, so the
+# save format is unchanged.
+func season() -> Weather.Season:
+	return Weather.season_for_day(day_count)
+
+func season_name() -> String:
+	return Weather.season_name(season())
 
 # Read loose, not clamped: tomorrow's headline can push the temperature past
 # the normal 55-105 roll, and the value the sim and the HUD act on has to be
@@ -187,7 +195,7 @@ func forecast_label() -> String:
 # announced for instead of being clamped back into the usual range.
 func advance_weather() -> void:
 	weather = Weather.sanitize_loose(forecast)
-	forecast = Weather.roll()
+	forecast = Weather.roll_for_day(day_count + 1)
 	weather_changed.emit()
 
 # --- Upgrades ------------------------------------------------------------
@@ -204,6 +212,10 @@ func upgrade_cost(id: String) -> float:
 
 func can_buy_upgrade(id: String) -> bool:
 	if not UpgradeCatalog.has_def(id):
+		return false
+	# Supplies are gated on the stand's reputation in the city; every other
+	# group (The Stand, Storage) is open immediately.
+	if not UpgradeCatalog.upgrade_unlocked(id, popularity_level(UpgradeCatalog.SUPPLIES_UNLOCK_AREA)):
 		return false
 	if UpgradeCatalog.is_maxed(id, get_upgrade_level(id)):
 		return false

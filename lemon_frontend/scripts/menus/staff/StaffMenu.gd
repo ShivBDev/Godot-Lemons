@@ -20,7 +20,6 @@ var _notice: Label
 var _rows: Array = []
 
 func _ready() -> void:
-	_clear_placeholder_children()
 	_build_ui()
 	if not PlayerData.profile_updated.is_connected(_refresh):
 		PlayerData.profile_updated.connect(_refresh)
@@ -32,69 +31,12 @@ func _on_visibility_changed() -> void:
 		_set_notice("")
 		_refresh()
 
-func _clear_placeholder_children() -> void:
-	for child in get_children():
-		remove_child(child)
-		child.queue_free()
-
 func _build_ui() -> void:
-	var margin := MarginContainer.new()
-	margin.name = "Layout"
-	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	for side in ["margin_left", "margin_right", "margin_top", "margin_bottom"]:
-		margin.add_theme_constant_override(side, 20)
-	add_child(margin)
-
-	var column := VBoxContainer.new()
-	column.name = "Column"
-	column.add_theme_constant_override("separation", 6)
-	margin.add_child(column)
-	column.add_child(_build_header())
-
-	var hint := Label.new()
-	hint.name = "Hint"
-	hint.text = "Hire help for the next day. Wages come out of the till up front, the moment the day starts, and only for the people you left switched on. The server opens a second line. The advertiser walks the pavement and brings more people past."
-	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	hint.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	hint.add_theme_font_size_override("font_size", HINT_FONT)
-	hint.add_theme_color_override("font_color", BODY_COLOR)
-	column.add_child(hint)
-
-	_notice = Label.new()
-	_notice.name = "Notice"
-	_notice.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_notice.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_notice.add_theme_font_size_override("font_size", NOTICE_FONT)
-	_notice.add_theme_color_override("font_color", WARN_COLOR)
-	column.add_child(_notice)
-	column.add_child(HSeparator.new())
-
-	var scroll := ScrollContainer.new()
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	column.add_child(scroll)
-
-	var rows := VBoxContainer.new()
-	rows.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	rows.add_theme_constant_override("separation", ROW_SEPARATION)
-	scroll.add_child(rows)
+	_money_label = $Layout/Column/Header/Money
+	_notice = $Layout/Column/Notice
+	var rows: VBoxContainer = $Layout/Column/Scroll/Rows
 	for staffMember in StaffCatalog.all():
 		rows.add_child(_build_row(staffMember))
-
-func _build_header() -> HBoxContainer:
-	var header := HBoxContainer.new()
-	var title := Label.new()
-	title.text = "Staff"
-	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	title.add_theme_font_size_override("font_size", 24)
-	title.add_theme_color_override("font_color", TITLE_COLOR)
-	header.add_child(title)
-	_money_label = Label.new()
-	_money_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	_money_label.add_theme_font_size_override("font_size", 20)
-	_money_label.add_theme_color_override("font_color", TITLE_COLOR)
-	header.add_child(_money_label)
-	return header
 
 func _build_row(staffMember: StaffMember) -> HBoxContainer:
 	var id: StaffMember.STAFF_ID = staffMember.id

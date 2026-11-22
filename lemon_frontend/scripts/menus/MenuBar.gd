@@ -15,6 +15,12 @@ const TAB_FONT: int = 14
 
 func _ready() -> void:
 	_layout_tabs()
+	# These buttons open a whole menu, so the audio manager gives them the
+	# softer menu-switch sound instead of the ordinary click.
+	for button in [recipeMenuButton, shopMenuButton, settingsMenuButton,
+			upgradesMenuButton, areasMenuButton, staffMenuButton]:
+		if button != null:
+			button.set_meta("audio_switch", true)
 	# TEMP DIAGNOSTIC - remove once the recipe tab issue is settled.
 	recipeMenuButton.pressed.connect(func():
 		print("[menu] tab pressed: recipe")

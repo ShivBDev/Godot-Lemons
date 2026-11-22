@@ -38,70 +38,9 @@ func _on_visibility_changed() -> void:
 # --- UI construction -----------------------------------------------------
 
 func _build_ui() -> void:
-	var margin := MarginContainer.new()
-	margin.name = "Layout"
-	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	for side in ["margin_left", "margin_right", "margin_top", "margin_bottom"]:
-		margin.add_theme_constant_override(side, 14)
-	add_child(margin)
-
-	var column := VBoxContainer.new()
-	column.name = "Column"
-	column.add_theme_constant_override("separation", 8)
-	margin.add_child(column)
-
-	column.add_child(_build_header())
-
-	# Wrapped for the same reason as the shop hint: an unwrapped line sets the
-	# panel's minimum width and would push the buy buttons off the edge.
-	var hint := Label.new()
-	hint.name = "Hint"
-	hint.text = "Buy an upgrade to raise its level. Most apply from the next day; storage and cooler upgrades apply straight away."
-	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	hint.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	hint.add_theme_font_size_override("font_size", 18)
-	hint.add_theme_color_override("font_color", Color(0.12, 0.18, 0.12))
-	column.add_child(hint)
-
-	column.add_child(HSeparator.new())
-
-	var scroll := ScrollContainer.new()
-	scroll.name = "Scroll"
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	column.add_child(scroll)
-
-	_rowsBox = VBoxContainer.new()
-	_rowsBox.name = "Rows"
-	_rowsBox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_rowsBox.add_theme_constant_override("separation", ROW_SEPARATION)
-	scroll.add_child(_rowsBox)
-
+	_moneyLabel = $Layout/Column/Header/Money
+	_rowsBox = $Layout/Column/Scroll/Rows
 	_build_rows()
-
-func _build_header() -> HBoxContainer:
-	var header := HBoxContainer.new()
-	header.name = "Header"
-	header.add_theme_constant_override("separation", 12)
-
-	var title := Label.new()
-	title.name = "Title"
-	title.text = "Upgrades"
-	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	title.add_theme_font_size_override("font_size", 28)
-	title.add_theme_color_override("font_color", Color(0, 0, 0))
-	header.add_child(title)
-
-	_moneyLabel = Label.new()
-	_moneyLabel.name = "Money"
-	_moneyLabel.text = "Money: $0.00"
-	_moneyLabel.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	_moneyLabel.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_moneyLabel.add_theme_font_size_override("font_size", 24)
-	_moneyLabel.add_theme_color_override("font_color", Color(0, 0, 0))
-	header.add_child(_moneyLabel)
-
-	return header
 
 func _build_rows() -> void:
 	var first_in_group: bool = true
@@ -202,6 +141,12 @@ func _refresh_row(id: String) -> void:
 	var level: int = PlayerData.get_upgrade_level(id)
 	var maxLevel: int = UpgradeCatalog.max_level_of(id)
 	levelLabel.text = "Level %d / %d" % [level, maxLevel]
+	var city_rank: int = PlayerData.popularity_level(UpgradeCatalog.SUPPLIES_UNLOCK_AREA)
+	if not UpgradeCatalog.upgrade_unlocked(id, city_rank):
+		levelLabel.text = UpgradeCatalog.unlock_text(id)
+		buy.text = "Locked"
+		buy.disabled = true
+		return
 	if maxLevel > 0 and level >= maxLevel:
 		buy.text = "MAX"
 		buy.disabled = true

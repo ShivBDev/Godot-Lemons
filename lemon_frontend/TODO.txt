@@ -1,0 +1,12 @@
+[Done] - Weather -> weather doesn't change simulation visual, add rain / modulating daylight to match weather patterns
+[Done] - Delete Button -> Delete Account Button in Settings (Required for App Store)
+[Done] - Seasons -> Every 30 game days switch seasons summer->fall->winter->spring and add weather effects
+- Progress -> Lock certain upgrades and new areas behind popularity progression, rebalance popularity buffs
+-- Areas [Done]
+-- Upgrades [Done]
+-- Rebalance Popularity [Done]
+-- Rebalance Upgrades
+[Done] - Music and Sound Effects -> Background Sounds and Menu SFX
+[Done] - Expanded Settings -> Settings should include sound settings, maybe submenus
+[Done] - Move UI Layouts from Code to Nodes (menus, settings, ticker)
+- Code Cleanup

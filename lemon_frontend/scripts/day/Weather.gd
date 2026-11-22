@@ -5,6 +5,9 @@ class_name Weather
 # This is a stateless helper: PlayerData owns the saved weather values and
 # DaySimulation decides when a day rolls over.
 
+enum Season { Summer, Fall, Winter, Spring }
+
+const DAYS_PER_SEASON: int = 30
 const TEMP_MIN: int = 55
 const TEMP_MAX: int = 105
 const RAIN_CHANCE: float = 0.28
@@ -14,12 +17,53 @@ const COLD_TEMP: float = 55.0
 const DEMAND_AT_COLD: float = 0.6
 const DEMAND_AT_HOT: float = 1.4
 
-# Rolls a fresh day of weather.
-static func roll() -> Dictionary:
+# The calendar repeats summer -> fall -> winter -> spring every 120 days. It
+# is derived from the day number, so an old save needs no new field to know
+# which season it is in.
+static func season_for_day(day: int) -> Season:
+	var index: int = (maxi(1, day) - 1) / DAYS_PER_SEASON
+	return index % 4
+
+static func season_name(season: Season) -> String:
+	return ["Summer", "Fall", "Winter", "Spring"][season]
+
+# How often a day brings precipitation. Winter is 60 percent wetter than the
+# base rate, spring 40 percent. Summer and fall keep the original odds.
+static func rain_chance_for(season: Season) -> float:
+	match season:
+		Season.Winter:
+			return minf(1.0, RAIN_CHANCE * 1.6)
+		Season.Spring:
+			return minf(1.0, RAIN_CHANCE * 1.4)
+	return RAIN_CHANCE
+
+# Seasonal temperature bands. Summer keeps the measured 55-105 range the game
+# has always used; the other seasons are cooler, which is what makes winter
+# precipitation read as snow rather than rain.
+static func temp_range_for(season: Season) -> Vector2i:
+	match season:
+		Season.Fall:
+			return Vector2i(45, 85)
+		Season.Winter:
+			# 30F is the loose clamp's floor, so a winter roll never snaps on
+			# the way back out of the save.
+			return Vector2i(30, 55)
+		Season.Spring:
+			return Vector2i(50, 90)
+	return Vector2i(TEMP_MIN, TEMP_MAX)
+
+# Rolls a fresh day of weather for the given game day.
+static func roll_for_day(day: int) -> Dictionary:
+	var season: Season = season_for_day(day)
+	var band: Vector2i = temp_range_for(season)
 	return {
-		"temp": randi_range(TEMP_MIN, TEMP_MAX),
-		"raining": randf() < RAIN_CHANCE,
+		"temp": randi_range(band.x, band.y),
+		"raining": randf() < rain_chance_for(season),
 	}
+
+# Kept for callers that do not care which day it is (today, in summer).
+static func roll() -> Dictionary:
+	return roll_for_day(1)
 
 # Fallback used when a save has no weather stored yet.
 static func default_weather() -> Dictionary:

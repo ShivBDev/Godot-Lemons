@@ -22,6 +22,7 @@ PlayerData="*uid://3cpctkrvy6me"
 NewsCatalog="*uid://dutjxglldwtmr"
 AreaCatalog="*uid://btxpnraf6totu"
 AdManager="*uid://c1difuipeff3t"
+AudioManager="*res://scripts/AudioManager.gd"
 
 [display]
 
@@ -66,4 +67,4 @@ environment/defaults/default_clear_color=Color(0.8039216, 0.88235295, 0.6627451,
 
 [summer]
 
-version="0.7.3"
+version="0.8.8"

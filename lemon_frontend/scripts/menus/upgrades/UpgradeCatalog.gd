@@ -222,6 +222,24 @@ static func is_maxed(id: String, level: int) -> bool:
 		return true
 	return level >= int(def.get("max_level", 0))
 
+# Supplies are reputation-gated: a stand has to be known in the city before
+# the wholesaler will sell it the counter-measures. Stand and Storage upgrades
+# stay open from day one.
+const SUPPLIES_UNLOCK_AREA: MapArea.AreaID = MapArea.AreaID.City
+const SUPPLIES_UNLOCK_RANK: int = 5
+
+static func unlock_rank(id: String) -> int:
+	var def: Dictionary = get_def(id)
+	if str(def.get("group", "")) == "Supplies":
+		return SUPPLIES_UNLOCK_RANK
+	return 0
+
+static func upgrade_unlocked(id: String, city_rank: int) -> bool:
+	return city_rank >= unlock_rank(id)
+
+static func unlock_text(id: String) -> String:
+	return "Locked: reach City popularity rank %d" % unlock_rank(id)
+
 # Reads a level out of a saved {id: level} dictionary without ever erroring.
 static func level_of(levels: Variant, id: String) -> int:
 	if typeof(levels) != TYPE_DICTIONARY:

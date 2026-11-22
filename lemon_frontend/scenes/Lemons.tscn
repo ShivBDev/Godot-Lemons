@@ -10,10 +10,17 @@
 [ext_resource type="Script" uid="uid://do4pb4e4vex7y" path="res://scripts/menus/ShopMenu.gd" id="5_12p6v"]
 [ext_resource type="StyleBox" path="res://assets/ui/style_card.tres" id="7_card"]
 [ext_resource type="PackedScene" uid="uid://b874jqp5hyprr" path="res://scenes/DaySimulation.tscn" id="7_daySim"]
+[ext_resource type="StyleBox" path="res://assets/ui/style_inset.tres" id="7_fu122"]
 [ext_resource type="StyleBox" path="res://assets/ui/style_bar.tres" id="8_bar"]
+[ext_resource type="Texture2D" uid="uid://cyviq0t5uc0x" path="res://assets/ui/icons/rename.svg" id="8_y4imy"]
+[ext_resource type="Texture2D" uid="uid://bwlokuyn7d6ls" path="res://assets/ui/icons/logout.svg" id="9_ngp1r"]
 [ext_resource type="Script" uid="uid://o5odkeavgscb" path="res://scripts/menus/upgrades/UpgradesMenu.gd" id="9_upgrade"]
 [ext_resource type="Script" uid="uid://b0w4sargx7ewq" path="res://scripts/menus/staff/StaffMenu.gd" id="10_staff"]
 [ext_resource type="Script" uid="uid://dsgjn5ubcnyl2" path="res://scripts/news/NewsTicker.gd" id="11_news"]
+[ext_resource type="Texture2D" uid="uid://cgxok2bn0i4l" path="res://assets/ui/icons/lemon.png" id="11_quqse"]
+[ext_resource type="Texture2D" uid="uid://l243q2p2ctsw" path="res://assets/ui/icons/sugar.png" id="12_tnwbb"]
+[ext_resource type="Texture2D" uid="uid://c1i486y6kgv51" path="res://assets/ui/icons/ice.png" id="13_hgufp"]
+[ext_resource type="Texture2D" uid="uid://cou8oetj2yqoa" path="res://assets/ui/icons/cup.png" id="14_1fu58"]
 [ext_resource type="Texture2D" uid="uid://d7268jfoo4sf" path="res://assets/ui/icons/recipe.png" id="14_y4gtc"]
 [ext_resource type="Texture2D" uid="uid://bu3kgrbo5qi82" path="res://assets/ui/icons/shop.png" id="15_axek6"]
 [ext_resource type="Texture2D" uid="uid://fxteijow3l2d" path="res://assets/ui/icons/upgrades.png" id="16_aknww"]
@@ -39,9 +46,6 @@ font_color = Color(0, 0, 0, 1)
 
 [sub_resource type="LabelSettings" id="LabelSettings_qk17a"]
 font_size = 20
-
-[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_vqvwu"]
-load_path = "res://.godot/imported/trashcan.png-ac5774bbdb481e275c1a874eee36f4b7.ctex"
 
 [node name="LoginControl" type="Control" unique_id=974650387]
 layout_mode = 3
@@ -272,15 +276,6 @@ offset_bottom = 72.0
 text = "Settings"
 label_settings = SubResource("LabelSettings_swyiq")
 
-[node name="LogoutButton" type="Button" parent="GameView/GamePanel/Menus/SettingsMenu" unique_id=820284982]
-custom_minimum_size = Vector2(360, 56)
-layout_mode = 0
-offset_left = 170.0
-offset_top = 352.0
-offset_right = 530.0
-offset_bottom = 408.0
-text = "Log Out"
-
 [node name="LogoutConfirmation" type="ConfirmationDialog" parent="GameView/GamePanel/Menus/SettingsMenu" unique_id=1950567349]
 oversampling_override = 1.0
 initial_position = 1
@@ -296,15 +291,6 @@ text = "Logout?"
 label_settings = SubResource("LabelSettings_qk17a")
 horizontal_alignment = 1
 vertical_alignment = 1
-
-[node name="ChangeNameButton" type="Button" parent="GameView/GamePanel/Menus/SettingsMenu" unique_id=461061608]
-custom_minimum_size = Vector2(360, 56)
-layout_mode = 0
-offset_left = 170.0
-offset_top = 282.0
-offset_right = 530.0
-offset_bottom = 338.0
-text = "Change Username"
 
 [node name="ChangeUsernameModal" type="ConfirmationDialog" parent="GameView/GamePanel/Menus/SettingsMenu" unique_id=2088707939]
 oversampling_override = 1.0
@@ -326,18 +312,6 @@ horizontal_alignment = 1
 layout_mode = 2
 max_length = 20
 script = ExtResource("2_vqvwu")
-
-[node name="DeleteAccountButton" type="Button" parent="GameView/GamePanel/Menus/SettingsMenu" unique_id=2028340678]
-modulate = Color(0.95686275, 0, 0, 1)
-layout_mode = 0
-offset_left = 628.00006
-offset_top = 17.999998
-offset_right = 1172.0001
-offset_bottom = 548.0
-scale = Vector2(0.1, 0.1)
-icon = SubResource("CompressedTexture2D_vqvwu")
-icon_alignment = 1
-expand_icon = true
 
 [node name="DeleteAccountModal" type="ConfirmationDialog" parent="GameView/GamePanel/Menus/SettingsMenu" unique_id=1594588230]
 oversampling_override = 1.0
@@ -367,12 +341,508 @@ layout_mode = 2
 custom_minimum_size = Vector2(0, 15)
 layout_mode = 2
 
+[node name="MainPage" type="Control" parent="GameView/GamePanel/Menus/SettingsMenu" unique_id=1141991196]
+anchors_preset = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="StatsPanel" type="PanelContainer" parent="GameView/GamePanel/Menus/SettingsMenu/MainPage" unique_id=286918064]
+layout_mode = 0
+offset_left = 24.0
+offset_top = 76.0
+offset_right = 676.0
+offset_bottom = 272.0
+mouse_filter = 2
+theme_override_styles/panel = ExtResource("7_fu122")
+
+[node name="Margin" type="MarginContainer" parent="GameView/GamePanel/Menus/SettingsMenu/MainPage/StatsPanel" unique_id=1694625407]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/margin_left = 14
+theme_override_constants/margin_top = 14
+theme_override_constants/margin_right = 14
+theme_override_constants/margin_bottom = 14
+
+[node name="Column" type="VBoxContainer" parent="GameView/GamePanel/Menus/SettingsMenu/MainPage/StatsPanel/Margin" unique_id=2042680882]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 4
+
+[node name="Heading" type="Label" parent="GameView/GamePanel/Menus/SettingsMenu/MainPage/StatsPanel/Margin/Column" unique_id=605735282]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.45, 0.33, 0.19, 1)
+theme_override_font_sizes/font_size = 20
+text = "Career"
+
+[node name="Stats" type="Label" parent="GameView/GamePanel/Menus/SettingsMenu/MainPage/StatsPanel/Margin/Column" unique_id=855047341]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.15, 0.25, 0.15, 1)
+theme_override_font_sizes/font_size = 17
+
+[node name="AudioButton" type="Button" parent="GameView/GamePanel/Menus/SettingsMenu/MainPage" unique_id=999077472]
+layout_mode = 0
+offset_left = 170.0
+offset_top = 292.0
+offset_right = 530.0
+offset_bottom = 346.0
+text = "Audio"
+
+[node name="AccountButton" type="Button" parent="GameView/GamePanel/Menus/SettingsMenu/MainPage" unique_id=1390977380]
+layout_mode = 0
+offset_left = 170.0
+offset_top = 360.0
+offset_right = 530.0
+offset_bottom = 414.0
+text = "Account"
+
+[node name="AudioPage" type="Control" parent="GameView/GamePanel/Menus/SettingsMenu" unique_id=2064012876]
+visible = false
+anchors_preset = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="Title" type="Label" parent="GameView/GamePanel/Menus/SettingsMenu/AudioPage" unique_id=501503585]
+layout_mode = 0
+offset_left = 24.0
+offset_top = 18.0
+offset_right = 424.0
+offset_bottom = 62.0
+theme_override_font_sizes/font_size = 30
+text = "Audio"
+
+[node name="MuteCheck" type="CheckButton" parent="GameView/GamePanel/Menus/SettingsMenu/AudioPage" unique_id=616752398]
+layout_mode = 0
+offset_left = 48.0
+offset_top = 78.0
+offset_right = 448.0
+offset_bottom = 124.0
+text = "Mute all sound"
+
+[node name="MusicLabel" type="Label" parent="GameView/GamePanel/Menus/SettingsMenu/AudioPage" unique_id=1094445396]
+layout_mode = 0
+offset_left = 48.0
+offset_top = 146.0
+offset_right = 198.0
+offset_bottom = 180.0
+text = "Music"
+
+[node name="MusicSlider" type="HSlider" parent="GameView/GamePanel/Menus/SettingsMenu/AudioPage" unique_id=642341491]
+layout_mode = 0
+offset_left = 190.0
+offset_top = 150.0
+offset_right = 530.0
+offset_bottom = 176.0
+
+[node name="MusicValue" type="Label" parent="GameView/GamePanel/Menus/SettingsMenu/AudioPage" unique_id=113808932]
+layout_mode = 0
+offset_left = 546.0
+offset_top = 146.0
+offset_right = 646.0
+offset_bottom = 180.0
+text = "55%"
+
+[node name="SfxLabel" type="Label" parent="GameView/GamePanel/Menus/SettingsMenu/AudioPage" unique_id=1290543926]
+layout_mode = 0
+offset_left = 48.0
+offset_top = 206.0
+offset_right = 198.0
+offset_bottom = 240.0
+text = "Sound effects"
+
+[node name="SfxSlider" type="HSlider" parent="GameView/GamePanel/Menus/SettingsMenu/AudioPage" unique_id=1109927007]
+layout_mode = 0
+offset_left = 190.0
+offset_top = 210.0
+offset_right = 530.0
+offset_bottom = 236.0
+
+[node name="SfxValue" type="Label" parent="GameView/GamePanel/Menus/SettingsMenu/AudioPage" unique_id=1040845076]
+layout_mode = 0
+offset_left = 546.0
+offset_top = 206.0
+offset_right = 646.0
+offset_bottom = 240.0
+text = "80%"
+
+[node name="BackButton" type="Button" parent="GameView/GamePanel/Menus/SettingsMenu/AudioPage" unique_id=786098196]
+layout_mode = 0
+offset_left = 250.0
+offset_top = 366.0
+offset_right = 450.0
+offset_bottom = 420.0
+text = "Back"
+
+[node name="AccountPage" type="Control" parent="GameView/GamePanel/Menus/SettingsMenu" unique_id=789349222]
+visible = false
+anchors_preset = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="Title" type="Label" parent="GameView/GamePanel/Menus/SettingsMenu/AccountPage" unique_id=1992652207]
+layout_mode = 0
+offset_left = 24.0
+offset_top = 18.0
+offset_right = 424.0
+offset_bottom = 62.0
+theme_override_font_sizes/font_size = 30
+text = "Account"
+
+[node name="ChangeNameButton" type="Button" parent="GameView/GamePanel/Menus/SettingsMenu/AccountPage" unique_id=461061608]
+custom_minimum_size = Vector2(360, 56)
+layout_mode = 0
+offset_left = 170.0
+offset_top = 92.0
+offset_right = 530.0
+offset_bottom = 148.0
+
+[node name="ButtonLayout" type="HBoxContainer" parent="GameView/GamePanel/Menus/SettingsMenu/AccountPage/ChangeNameButton" unique_id=1959602228]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+theme_override_constants/separation = 10
+alignment = 1
+
+[node name="Icon" type="TextureRect" parent="GameView/GamePanel/Menus/SettingsMenu/AccountPage/ChangeNameButton/ButtonLayout" unique_id=1834348844]
+custom_minimum_size = Vector2(28, 28)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+texture = ExtResource("8_y4imy")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Word" type="Label" parent="GameView/GamePanel/Menus/SettingsMenu/AccountPage/ChangeNameButton/ButtonLayout" unique_id=1053091194]
+layout_mode = 2
+text = "Change Username"
+vertical_alignment = 1
+
+[node name="LogoutButton" type="Button" parent="GameView/GamePanel/Menus/SettingsMenu/AccountPage" unique_id=820284982]
+custom_minimum_size = Vector2(360, 56)
+layout_mode = 0
+offset_left = 170.0
+offset_top = 168.0
+offset_right = 530.0
+offset_bottom = 224.0
+
+[node name="ButtonLayout" type="HBoxContainer" parent="GameView/GamePanel/Menus/SettingsMenu/AccountPage/LogoutButton" unique_id=78265562]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+theme_override_constants/separation = 10
+alignment = 1
+
+[node name="Icon" type="TextureRect" parent="GameView/GamePanel/Menus/SettingsMenu/AccountPage/LogoutButton/ButtonLayout" unique_id=1329359962]
+custom_minimum_size = Vector2(28, 28)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+texture = ExtResource("9_ngp1r")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Word" type="Label" parent="GameView/GamePanel/Menus/SettingsMenu/AccountPage/LogoutButton/ButtonLayout" unique_id=1627612862]
+layout_mode = 2
+text = "Log Out"
+vertical_alignment = 1
+
+[node name="DeleteAccountButton" type="Button" parent="GameView/GamePanel/Menus/SettingsMenu/AccountPage" unique_id=2028340678]
+layout_mode = 0
+offset_left = 170.0
+offset_top = 244.0
+offset_right = 530.0
+offset_bottom = 300.0
+theme_override_colors/font_color = Color(0.72, 0.18, 0.12, 1)
+text = "Delete Account"
+icon_alignment = 1
+expand_icon = true
+
+[node name="BackButton" type="Button" parent="GameView/GamePanel/Menus/SettingsMenu/AccountPage" unique_id=683633313]
+layout_mode = 0
+offset_left = 250.0
+offset_top = 366.0
+offset_right = 450.0
+offset_bottom = 420.0
+text = "Back"
+
 [node name="ShopMenu" type="Control" parent="GameView/GamePanel/Menus" unique_id=893313510]
 visible = false
 anchors_preset = 0
 offset_right = 700.0
 offset_bottom = 450.0
 script = ExtResource("5_12p6v")
+
+[node name="Layout" type="MarginContainer" parent="GameView/GamePanel/Menus/ShopMenu" unique_id=653468866]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
+
+[node name="Column" type="VBoxContainer" parent="GameView/GamePanel/Menus/ShopMenu/Layout" unique_id=366594942]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Header" type="HBoxContainer" parent="GameView/GamePanel/Menus/ShopMenu/Layout/Column" unique_id=784787055]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="GameView/GamePanel/Menus/ShopMenu/Layout/Column/Header" unique_id=296905737]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.16, 0.11, 0.06, 1)
+theme_override_font_sizes/font_size = 24
+text = "Shop"
+
+[node name="Money" type="Label" parent="GameView/GamePanel/Menus/ShopMenu/Layout/Column/Header" unique_id=1825760643]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.16, 0.11, 0.06, 1)
+theme_override_font_sizes/font_size = 20
+text = "Money: $0.00"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="Hint" type="Label" parent="GameView/GamePanel/Menus/ShopMenu/Layout/Column" unique_id=873136598]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.29, 0.22, 0.13, 1)
+theme_override_font_sizes/font_size = 15
+text = "The stand only holds so much of each ingredient. Ice melts overnight and lemons keep for a week, so buy storage and cooler upgrades in the Upgrades tab."
+autowrap_mode = 3
+
+[node name="Notice" type="Label" parent="GameView/GamePanel/Menus/ShopMenu/Layout/Column" unique_id=572718735]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.55, 0.16, 0.1, 1)
+theme_override_font_sizes/font_size = 15
+autowrap_mode = 3
+
+[node name="Separator" type="HSeparator" parent="GameView/GamePanel/Menus/ShopMenu/Layout/Column" unique_id=742043235]
+layout_mode = 2
+
+[node name="Scroll" type="ScrollContainer" parent="GameView/GamePanel/Menus/ShopMenu/Layout/Column" unique_id=178305034]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="Rows" type="VBoxContainer" parent="GameView/GamePanel/Menus/ShopMenu/Layout/Column/Scroll" unique_id=1446223177]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="Lemons" type="HBoxContainer" parent="GameView/GamePanel/Menus/ShopMenu/Layout/Column/Scroll/Rows" unique_id=1398754906]
+custom_minimum_size = Vector2(0, 68)
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Icon" type="TextureRect" parent="GameView/GamePanel/Menus/ShopMenu/Layout/Column/Scroll/Rows/Lemons" unique_id=276527885]
+custom_minimum_size = Vector2(40, 40)
+layout_mode = 2
+size_flags_vertical = 4
+texture = ExtResource("11_quqse")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Info" type="VBoxContainer" parent="GameView/GamePanel/Menus/ShopMenu/Layout/Column/Scroll/Rows/Lemons" unique_id=329925631]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_constants/separation = 0
+
+[node name="Name" type="Label" parent="GameView/GamePanel/Menus/ShopMenu/Layout/Column/Scroll/Rows/Lemons/Info" unique_id=371790078]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.16, 0.11, 0.06, 1)
+theme_override_font_sizes/font_size = 20
+text = "Lemons"
+
+[node name="Stock" type="Label" parent="GameView/GamePanel/Menus/ShopMenu/Layout/Column/Scroll/Rows/Lemons/Info" unique_id=1408252972]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.36, 0.28, 0.17, 1)
+theme_override_font_sizes/font_size = 16
+text = "In stock: 0"
+
+[node name="Note" type="Label" parent="GameView/GamePanel/Menus/ShopMenu/Layout/Column/Scroll/Rows/Lemons/Info" unique_id=1149670752]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.45, 0.33, 0.19, 1)
+theme_override_font_sizes/font_size = 14
+autowrap_mode = 3
+
+[node name="Buy1" type="Button" parent="GameView/GamePanel/Menus/ShopMenu/Layout/Column/Scroll/Rows/Lemons" unique_id=380107128]
+custom_minimum_size = Vector2(104, 40)
+layout_mode = 2
+size_flags_vertical = 4
+
+[node name="Buy2" type="Button" parent="GameView/GamePanel/Menus/ShopMenu/Layout/Column/Scroll/Rows/Lemons" unique_id=1088432271]
+custom_minimum_size = Vector2(104, 40)
+layout_mode = 2
+size_flags_vertical = 4
+
+[node name="Buy3" type="Button" parent="GameView/GamePanel/Menus/ShopMenu/Layout/Column/Scroll/Rows/Lemons" unique_id=85183331]
+custom_minimum_size = Vector2(104, 40)
+layout_mode = 2
+size_flags_vertical = 4
+
+[node name="Sugar" type="HBoxContainer" parent="GameView/GamePanel/Menus/ShopMenu/Layout/Column/Scroll/Rows" unique_id=1270635801]
+custom_minimum_size = Vector2(0, 68)
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Icon" type="TextureRect" parent="GameView/GamePanel/Menus/ShopMenu/Layout/Column/Scroll/Rows/Sugar" unique_id=1415497990]
+custom_minimum_size = Vector2(40, 40)
+layout_mode = 2
+size_flags_vertical = 4
+texture = ExtResource("12_tnwbb")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Info" type="VBoxContainer" parent="GameView/GamePanel/Menus/ShopMenu/Layout/Column/Scroll/Rows/Sugar" unique_id=169722291]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_constants/separation = 0
+
+[node name="Name" type="Label" parent="GameView/GamePanel/Menus/ShopMenu/Layout/Column/Scroll/Rows/Sugar/Info" unique_id=2028372987]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.16, 0.11, 0.06, 1)
+theme_override_font_sizes/font_size = 20
+text = "Sugar"
+
+[node name="Stock" type="Label" parent="GameView/GamePanel/Menus/ShopMenu/Layout/Column/Scroll/Rows/Sugar/Info" unique_id=1962500875]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.36, 0.28, 0.17, 1)
+theme_override_font_sizes/font_size = 16
+text = "In stock: 0"
+
+[node name="Note" type="Label" parent="GameView/GamePanel/Menus/ShopMenu/Layout/Column/Scroll/Rows/Sugar/Info" unique_id=1280057856]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.45, 0.33, 0.19, 1)
+theme_override_font_sizes/font_size = 14
+autowrap_mode = 3
+
+[node name="Buy1" type="Button" parent="GameView/GamePanel/Menus/ShopMenu/Layout/Column/Scroll/Rows/Sugar" unique_id=417566091]
+custom_minimum_size = Vector2(104, 40)
+layout_mode = 2
+size_flags_vertical = 4
+
+[node name="Buy2" type="Button" parent="GameView/GamePanel/Menus/ShopMenu/Layout/Column/Scroll/Rows/Sugar" unique_id=2030304455]
+custom_minimum_size = Vector2(104, 40)
+layout_mode = 2
+size_flags_vertical = 4
+
+[node name="Buy3" type="Button" parent="GameView/GamePanel/Menus/ShopMenu/Layout/Column/Scroll/Rows/Sugar" unique_id=219604677]
+custom_minimum_size = Vector2(104, 40)
+layout_mode = 2
+size_flags_vertical = 4
+
+[node name="Ice" type="HBoxContainer" parent="GameView/GamePanel/Menus/ShopMenu/Layout/Column/Scroll/Rows" unique_id=455949170]
+custom_minimum_size = Vector2(0, 68)
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Icon" type="TextureRect" parent="GameView/GamePanel/Menus/ShopMenu/Layout/Column/Scroll/Rows/Ice" unique_id=2073442589]
+custom_minimum_size = Vector2(40, 40)
+layout_mode = 2
+size_flags_vertical = 4
+texture = ExtResource("13_hgufp")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Info" type="VBoxContainer" parent="GameView/GamePanel/Menus/ShopMenu/Layout/Column/Scroll/Rows/Ice" unique_id=1733655638]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_constants/separation = 0
+
+[node name="Name" type="Label" parent="GameView/GamePanel/Menus/ShopMenu/Layout/Column/Scroll/Rows/Ice/Info" unique_id=1431494679]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.16, 0.11, 0.06, 1)
+theme_override_font_sizes/font_size = 20
+text = "Ice"
+
+[node name="Stock" type="Label" parent="GameView/GamePanel/Menus/ShopMenu/Layout/Column/Scroll/Rows/Ice/Info" unique_id=825926963]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.36, 0.28, 0.17, 1)
+theme_override_font_sizes/font_size = 16
+text = "In stock: 0"
+
+[node name="Note" type="Label" parent="GameView/GamePanel/Menus/ShopMenu/Layout/Column/Scroll/Rows/Ice/Info" unique_id=1922095504]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.45, 0.33, 0.19, 1)
+theme_override_font_sizes/font_size = 14
+autowrap_mode = 3
+
+[node name="Buy1" type="Button" parent="GameView/GamePanel/Menus/ShopMenu/Layout/Column/Scroll/Rows/Ice" unique_id=1533603998]
+custom_minimum_size = Vector2(104, 40)
+layout_mode = 2
+size_flags_vertical = 4
+
+[node name="Buy2" type="Button" parent="GameView/GamePanel/Menus/ShopMenu/Layout/Column/Scroll/Rows/Ice" unique_id=471725949]
+custom_minimum_size = Vector2(104, 40)
+layout_mode = 2
+size_flags_vertical = 4
+
+[node name="Buy3" type="Button" parent="GameView/GamePanel/Menus/ShopMenu/Layout/Column/Scroll/Rows/Ice" unique_id=156328769]
+custom_minimum_size = Vector2(104, 40)
+layout_mode = 2
+size_flags_vertical = 4
+
+[node name="Cups" type="HBoxContainer" parent="GameView/GamePanel/Menus/ShopMenu/Layout/Column/Scroll/Rows" unique_id=1199772153]
+custom_minimum_size = Vector2(0, 68)
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Icon" type="TextureRect" parent="GameView/GamePanel/Menus/ShopMenu/Layout/Column/Scroll/Rows/Cups" unique_id=615729192]
+custom_minimum_size = Vector2(40, 40)
+layout_mode = 2
+size_flags_vertical = 4
+texture = ExtResource("14_1fu58")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Info" type="VBoxContainer" parent="GameView/GamePanel/Menus/ShopMenu/Layout/Column/Scroll/Rows/Cups" unique_id=898914453]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_constants/separation = 0
+
+[node name="Name" type="Label" parent="GameView/GamePanel/Menus/ShopMenu/Layout/Column/Scroll/Rows/Cups/Info" unique_id=898386834]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.16, 0.11, 0.06, 1)
+theme_override_font_sizes/font_size = 20
+text = "Cups"
+
+[node name="Stock" type="Label" parent="GameView/GamePanel/Menus/ShopMenu/Layout/Column/Scroll/Rows/Cups/Info" unique_id=1761012668]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.36, 0.28, 0.17, 1)
+theme_override_font_sizes/font_size = 16
+text = "In stock: 0"
+
+[node name="Note" type="Label" parent="GameView/GamePanel/Menus/ShopMenu/Layout/Column/Scroll/Rows/Cups/Info" unique_id=1957809317]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.45, 0.33, 0.19, 1)
+theme_override_font_sizes/font_size = 14
+autowrap_mode = 3
+
+[node name="Buy1" type="Button" parent="GameView/GamePanel/Menus/ShopMenu/Layout/Column/Scroll/Rows/Cups" unique_id=1398382798]
+custom_minimum_size = Vector2(104, 40)
+layout_mode = 2
+size_flags_vertical = 4
+
+[node name="Buy2" type="Button" parent="GameView/GamePanel/Menus/ShopMenu/Layout/Column/Scroll/Rows/Cups" unique_id=974291433]
+custom_minimum_size = Vector2(104, 40)
+layout_mode = 2
+size_flags_vertical = 4
+
+[node name="Buy3" type="Button" parent="GameView/GamePanel/Menus/ShopMenu/Layout/Column/Scroll/Rows/Cups" unique_id=637722592]
+custom_minimum_size = Vector2(104, 40)
+layout_mode = 2
+size_flags_vertical = 4
 
 [node name="RecipeMenu" type="Control" parent="GameView/GamePanel/Menus" unique_id=2034686580]
 visible = false
@@ -381,12 +851,297 @@ offset_right = 700.0
 offset_bottom = 450.0
 script = ExtResource("5_1c78g")
 
+[node name="Layout" type="MarginContainer" parent="GameView/GamePanel/Menus/RecipeMenu" unique_id=1200108275]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
+
+[node name="Column" type="VBoxContainer" parent="GameView/GamePanel/Menus/RecipeMenu/Layout" unique_id=851800287]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Header" type="HBoxContainer" parent="GameView/GamePanel/Menus/RecipeMenu/Layout/Column" unique_id=699897035]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="GameView/GamePanel/Menus/RecipeMenu/Layout/Column/Header" unique_id=876918288]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.16, 0.11, 0.06, 1)
+theme_override_font_sizes/font_size = 24
+text = "Recipe"
+
+[node name="Money" type="Label" parent="GameView/GamePanel/Menus/RecipeMenu/Layout/Column/Header" unique_id=1260452593]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.16, 0.11, 0.06, 1)
+theme_override_font_sizes/font_size = 20
+text = "Money: $0.00"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="Hint" type="Label" parent="GameView/GamePanel/Menus/RecipeMenu/Layout/Column" unique_id=1831354531]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.29, 0.22, 0.13, 1)
+theme_override_font_sizes/font_size = 15
+text = "How much fruit and sugar goes into each pitcher, and what you charge per cup."
+autowrap_mode = 3
+
+[node name="Separator" type="HSeparator" parent="GameView/GamePanel/Menus/RecipeMenu/Layout/Column" unique_id=2129022951]
+layout_mode = 2
+
+[node name="Scroll" type="ScrollContainer" parent="GameView/GamePanel/Menus/RecipeMenu/Layout/Column" unique_id=164955802]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="Rows" type="VBoxContainer" parent="GameView/GamePanel/Menus/RecipeMenu/Layout/Column/Scroll" unique_id=1229868817]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="SectionPitcher" type="Label" parent="GameView/GamePanel/Menus/RecipeMenu/Layout/Column/Scroll/Rows" unique_id=361549556]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.45, 0.33, 0.19, 1)
+theme_override_font_sizes/font_size = 17
+text = "Per Pitcher"
+
+[node name="recipe_lemons" type="HBoxContainer" parent="GameView/GamePanel/Menus/RecipeMenu/Layout/Column/Scroll/Rows" unique_id=1358462521]
+custom_minimum_size = Vector2(0, 58)
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Icon" type="TextureRect" parent="GameView/GamePanel/Menus/RecipeMenu/Layout/Column/Scroll/Rows/recipe_lemons" unique_id=1718508532]
+custom_minimum_size = Vector2(34, 34)
+layout_mode = 2
+size_flags_vertical = 4
+texture = ExtResource("11_quqse")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Name" type="Label" parent="GameView/GamePanel/Menus/RecipeMenu/Layout/Column/Scroll/Rows/recipe_lemons" unique_id=575739969]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.16, 0.11, 0.06, 1)
+theme_override_font_sizes/font_size = 20
+text = "Lemons"
+vertical_alignment = 1
+
+[node name="Value" type="Label" parent="GameView/GamePanel/Menus/RecipeMenu/Layout/Column/Scroll/Rows/recipe_lemons" unique_id=929604296]
+custom_minimum_size = Vector2(76, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.16, 0.11, 0.06, 1)
+theme_override_font_sizes/font_size = 20
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Decrease" type="Button" parent="GameView/GamePanel/Menus/RecipeMenu/Layout/Column/Scroll/Rows/recipe_lemons" unique_id=855628707]
+custom_minimum_size = Vector2(64, 42)
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_font_sizes/font_size = 24
+text = "-"
+
+[node name="Increase" type="Button" parent="GameView/GamePanel/Menus/RecipeMenu/Layout/Column/Scroll/Rows/recipe_lemons" unique_id=2103749576]
+custom_minimum_size = Vector2(64, 42)
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_font_sizes/font_size = 24
+text = "+"
+
+[node name="recipe_sugar" type="HBoxContainer" parent="GameView/GamePanel/Menus/RecipeMenu/Layout/Column/Scroll/Rows" unique_id=177365731]
+custom_minimum_size = Vector2(0, 58)
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Icon" type="TextureRect" parent="GameView/GamePanel/Menus/RecipeMenu/Layout/Column/Scroll/Rows/recipe_sugar" unique_id=338609713]
+custom_minimum_size = Vector2(34, 34)
+layout_mode = 2
+size_flags_vertical = 4
+texture = ExtResource("12_tnwbb")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Name" type="Label" parent="GameView/GamePanel/Menus/RecipeMenu/Layout/Column/Scroll/Rows/recipe_sugar" unique_id=1309405331]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.16, 0.11, 0.06, 1)
+theme_override_font_sizes/font_size = 20
+text = "Sugar"
+vertical_alignment = 1
+
+[node name="Value" type="Label" parent="GameView/GamePanel/Menus/RecipeMenu/Layout/Column/Scroll/Rows/recipe_sugar" unique_id=254831617]
+custom_minimum_size = Vector2(76, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.16, 0.11, 0.06, 1)
+theme_override_font_sizes/font_size = 20
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Decrease" type="Button" parent="GameView/GamePanel/Menus/RecipeMenu/Layout/Column/Scroll/Rows/recipe_sugar" unique_id=895963187]
+custom_minimum_size = Vector2(64, 42)
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_font_sizes/font_size = 24
+text = "-"
+
+[node name="Increase" type="Button" parent="GameView/GamePanel/Menus/RecipeMenu/Layout/Column/Scroll/Rows/recipe_sugar" unique_id=1551533230]
+custom_minimum_size = Vector2(64, 42)
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_font_sizes/font_size = 24
+text = "+"
+
+[node name="SectionCup" type="Label" parent="GameView/GamePanel/Menus/RecipeMenu/Layout/Column/Scroll/Rows" unique_id=570699158]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.45, 0.33, 0.19, 1)
+theme_override_font_sizes/font_size = 17
+text = "Per Cup"
+
+[node name="recipe_ice" type="HBoxContainer" parent="GameView/GamePanel/Menus/RecipeMenu/Layout/Column/Scroll/Rows" unique_id=631941596]
+custom_minimum_size = Vector2(0, 58)
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Icon" type="TextureRect" parent="GameView/GamePanel/Menus/RecipeMenu/Layout/Column/Scroll/Rows/recipe_ice" unique_id=666513722]
+custom_minimum_size = Vector2(34, 34)
+layout_mode = 2
+size_flags_vertical = 4
+texture = ExtResource("13_hgufp")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Name" type="Label" parent="GameView/GamePanel/Menus/RecipeMenu/Layout/Column/Scroll/Rows/recipe_ice" unique_id=1232116901]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.16, 0.11, 0.06, 1)
+theme_override_font_sizes/font_size = 20
+text = "Ice Cubes"
+vertical_alignment = 1
+
+[node name="Value" type="Label" parent="GameView/GamePanel/Menus/RecipeMenu/Layout/Column/Scroll/Rows/recipe_ice" unique_id=312861281]
+custom_minimum_size = Vector2(76, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.16, 0.11, 0.06, 1)
+theme_override_font_sizes/font_size = 20
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Decrease" type="Button" parent="GameView/GamePanel/Menus/RecipeMenu/Layout/Column/Scroll/Rows/recipe_ice" unique_id=436735438]
+custom_minimum_size = Vector2(64, 42)
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_font_sizes/font_size = 24
+text = "-"
+
+[node name="Increase" type="Button" parent="GameView/GamePanel/Menus/RecipeMenu/Layout/Column/Scroll/Rows/recipe_ice" unique_id=50410681]
+custom_minimum_size = Vector2(64, 42)
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_font_sizes/font_size = 24
+text = "+"
+
+[node name="sale_price" type="HBoxContainer" parent="GameView/GamePanel/Menus/RecipeMenu/Layout/Column/Scroll/Rows" unique_id=873969860]
+custom_minimum_size = Vector2(0, 58)
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="IconSpacer" type="Control" parent="GameView/GamePanel/Menus/RecipeMenu/Layout/Column/Scroll/Rows/sale_price" unique_id=169093647]
+custom_minimum_size = Vector2(34, 0)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Name" type="Label" parent="GameView/GamePanel/Menus/RecipeMenu/Layout/Column/Scroll/Rows/sale_price" unique_id=333605482]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.16, 0.11, 0.06, 1)
+theme_override_font_sizes/font_size = 20
+text = "Price per Cup"
+vertical_alignment = 1
+
+[node name="Value" type="Label" parent="GameView/GamePanel/Menus/RecipeMenu/Layout/Column/Scroll/Rows/sale_price" unique_id=1492178720]
+custom_minimum_size = Vector2(76, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.16, 0.11, 0.06, 1)
+theme_override_font_sizes/font_size = 20
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Decrease" type="Button" parent="GameView/GamePanel/Menus/RecipeMenu/Layout/Column/Scroll/Rows/sale_price" unique_id=1323680859]
+custom_minimum_size = Vector2(64, 42)
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_font_sizes/font_size = 24
+text = "-"
+
+[node name="Increase" type="Button" parent="GameView/GamePanel/Menus/RecipeMenu/Layout/Column/Scroll/Rows/sale_price" unique_id=959514805]
+custom_minimum_size = Vector2(64, 42)
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_font_sizes/font_size = 24
+text = "+"
+
 [node name="UpgradesMenu" type="Control" parent="GameView/GamePanel/Menus" unique_id=1907334512]
 visible = false
 anchors_preset = 0
 offset_right = 700.0
 offset_bottom = 450.0
 script = ExtResource("9_upgrade")
+
+[node name="Layout" type="MarginContainer" parent="GameView/GamePanel/Menus/UpgradesMenu" unique_id=1261842697]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_override_constants/margin_left = 14
+theme_override_constants/margin_top = 14
+theme_override_constants/margin_right = 14
+theme_override_constants/margin_bottom = 14
+
+[node name="Column" type="VBoxContainer" parent="GameView/GamePanel/Menus/UpgradesMenu/Layout" unique_id=1195948227]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Header" type="HBoxContainer" parent="GameView/GamePanel/Menus/UpgradesMenu/Layout/Column" unique_id=602685970]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="GameView/GamePanel/Menus/UpgradesMenu/Layout/Column/Header" unique_id=1493093457]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_font_sizes/font_size = 28
+text = "Upgrades"
+
+[node name="Money" type="Label" parent="GameView/GamePanel/Menus/UpgradesMenu/Layout/Column/Header" unique_id=578931220]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_font_sizes/font_size = 24
+text = "Money: $0.00"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="Hint" type="Label" parent="GameView/GamePanel/Menus/UpgradesMenu/Layout/Column" unique_id=276778665]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.12, 0.18, 0.12, 1)
+theme_override_font_sizes/font_size = 18
+text = "Buy an upgrade to raise its level. Most apply from the next day; storage and cooler upgrades apply straight away. Gain Popularity in new Areas to unlock Upgrades."
+autowrap_mode = 3
+
+[node name="Separator" type="HSeparator" parent="GameView/GamePanel/Menus/UpgradesMenu/Layout/Column" unique_id=1951739912]
+layout_mode = 2
+
+[node name="Scroll" type="ScrollContainer" parent="GameView/GamePanel/Menus/UpgradesMenu/Layout/Column" unique_id=1235344315]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="Rows" type="VBoxContainer" parent="GameView/GamePanel/Menus/UpgradesMenu/Layout/Column/Scroll" unique_id=1727856270]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 12
 
 [node name="AreasMenu" type="Control" parent="GameView/GamePanel/Menus" unique_id=1907334514]
 visible = false
@@ -395,12 +1150,130 @@ offset_right = 700.0
 offset_bottom = 450.0
 script = ExtResource("4_areas")
 
+[node name="Layout" type="MarginContainer" parent="GameView/GamePanel/Menus/AreasMenu" unique_id=1642031827]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
+
+[node name="Column" type="VBoxContainer" parent="GameView/GamePanel/Menus/AreasMenu/Layout" unique_id=1420763198]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Header" type="HBoxContainer" parent="GameView/GamePanel/Menus/AreasMenu/Layout/Column" unique_id=1288625863]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="GameView/GamePanel/Menus/AreasMenu/Layout/Column/Header" unique_id=1222962789]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.16, 0.11, 0.06, 1)
+theme_override_font_sizes/font_size = 24
+text = "Areas"
+
+[node name="Money" type="Label" parent="GameView/GamePanel/Menus/AreasMenu/Layout/Column/Header" unique_id=1961023973]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.16, 0.11, 0.06, 1)
+theme_override_font_sizes/font_size = 20
+text = "Money: $0.00"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="Hint" type="Label" parent="GameView/GamePanel/Menus/AreasMenu/Layout/Column" unique_id=235985658]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.29, 0.22, 0.13, 1)
+theme_override_font_sizes/font_size = 15
+text = "Where your stand is setup. The Neighbourhood is free, Downtown and the Stadium bring big crowds with looser wallets, but cost a fee up front, every day you work there. With more popularity, more people will come, and be willing to pay more and wait longer. Increase your Popularity in an Area to unlock new Areas and Upgrades."
+autowrap_mode = 3
+
+[node name="Notice" type="Label" parent="GameView/GamePanel/Menus/AreasMenu/Layout/Column" unique_id=289999961]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.55, 0.16, 0.1, 1)
+theme_override_font_sizes/font_size = 15
+autowrap_mode = 3
+
+[node name="Separator" type="HSeparator" parent="GameView/GamePanel/Menus/AreasMenu/Layout/Column" unique_id=899926658]
+layout_mode = 2
+
+[node name="Scroll" type="ScrollContainer" parent="GameView/GamePanel/Menus/AreasMenu/Layout/Column" unique_id=1237918147]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="Rows" type="VBoxContainer" parent="GameView/GamePanel/Menus/AreasMenu/Layout/Column/Scroll" unique_id=442759648]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
 [node name="StaffMenu" type="Control" parent="GameView/GamePanel/Menus" unique_id=1154780729]
 visible = false
 anchors_preset = 0
 offset_right = 700.0
 offset_bottom = 450.0
 script = ExtResource("10_staff")
+
+[node name="Layout" type="MarginContainer" parent="GameView/GamePanel/Menus/StaffMenu" unique_id=1722100636]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
+
+[node name="Column" type="VBoxContainer" parent="GameView/GamePanel/Menus/StaffMenu/Layout" unique_id=1179970649]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Header" type="HBoxContainer" parent="GameView/GamePanel/Menus/StaffMenu/Layout/Column" unique_id=1364926067]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="GameView/GamePanel/Menus/StaffMenu/Layout/Column/Header" unique_id=1654054180]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.16, 0.11, 0.06, 1)
+theme_override_font_sizes/font_size = 24
+text = "Staff"
+
+[node name="Money" type="Label" parent="GameView/GamePanel/Menus/StaffMenu/Layout/Column/Header" unique_id=244255141]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.16, 0.11, 0.06, 1)
+theme_override_font_sizes/font_size = 20
+text = "Money: $0.00"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="Hint" type="Label" parent="GameView/GamePanel/Menus/StaffMenu/Layout/Column" unique_id=455848060]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.29, 0.22, 0.13, 1)
+theme_override_font_sizes/font_size = 15
+text = "Hire help for the next day. Wages come out of the till up front, the moment the day starts, and only for the people you left switched on. The server opens a second line. The advertiser walks the pavement and brings more people past."
+autowrap_mode = 3
+
+[node name="Notice" type="Label" parent="GameView/GamePanel/Menus/StaffMenu/Layout/Column" unique_id=619627327]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.55, 0.16, 0.1, 1)
+theme_override_font_sizes/font_size = 15
+autowrap_mode = 3
+
+[node name="Separator" type="HSeparator" parent="GameView/GamePanel/Menus/StaffMenu/Layout/Column" unique_id=232649300]
+layout_mode = 2
+
+[node name="Scroll" type="ScrollContainer" parent="GameView/GamePanel/Menus/StaffMenu/Layout/Column" unique_id=2131656205]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="Rows" type="VBoxContainer" parent="GameView/GamePanel/Menus/StaffMenu/Layout/Column/Scroll" unique_id=929829374]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
 
 [node name="NewsTicker" type="Panel" parent="GameView/GamePanel" unique_id=2018144720]
 layout_mode = 1
@@ -411,6 +1284,13 @@ offset_bottom = 112.0
 grow_horizontal = 2
 theme_override_styles/panel = ExtResource("8_bar")
 script = ExtResource("11_news")
+
+[node name="Headline" type="Label" parent="GameView/GamePanel/NewsTicker" unique_id=219223516]
+layout_mode = 0
+offset_top = 8.0
+theme_override_colors/font_color = Color(0.99, 0.96, 0.89, 1)
+theme_override_font_sizes/font_size = 18
+vertical_alignment = 1
 
 [node name="MenuBarBG" type="Panel" parent="GameView/GamePanel" unique_id=771002001]
 layout_mode = 1

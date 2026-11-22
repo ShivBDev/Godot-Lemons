@@ -5,17 +5,11 @@ extends Panel
 
 const SCROLL_SPEED: float = 70.0
 
-var _label: Label
+@onready var _label: Label = $Headline
 var _offset: float = 0.0
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_label = Label.new()
-	_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_label.add_theme_font_size_override("font_size", 18)
-	_label.add_theme_color_override("font_color", Color(0.99, 0.96, 0.89))
-	_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	add_child(_label)
 	if not PlayerData.news_changed.is_connected(_refresh):
 		PlayerData.news_changed.connect(_refresh)
 	_refresh()

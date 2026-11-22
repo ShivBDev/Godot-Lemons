@@ -117,6 +117,56 @@ albedo_color = Color(1, 0.85, 0.25, 1)
 
 [sub_resource type="SphereMesh" id="MeshBall"]
 
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_guxk0"]
+emission_shape = 3
+emission_box_extents = Vector3(18, 0.4, 18)
+angle_max = 360.0
+direction = Vector3(0.25, -1, 0.15)
+spread = 55.0
+initial_velocity_min = 0.35
+initial_velocity_max = 1.1
+angular_velocity_min = -90.0
+angular_velocity_max = 90.0
+gravity = Vector3(0.35, -0.65, 0.12)
+scale_min = 0.8
+scale_max = 1.5
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_xqvie"]
+shading_mode = 0
+albedo_color = Color(0.86, 0.42, 0.13, 1)
+billboard_mode = 3
+particles_anim_h_frames = 1
+particles_anim_v_frames = 1
+particles_anim_loop = false
+
+[sub_resource type="QuadMesh" id="QuadMesh_i3lk2"]
+material = SubResource("StandardMaterial3D_xqvie")
+size = Vector2(0.16, 0.09)
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_mto50"]
+emission_shape = 3
+emission_box_extents = Vector3(15, 0.5, 15)
+direction = Vector3(0, -1, 0)
+spread = 22.0
+initial_velocity_min = 0.5
+initial_velocity_max = 1.3
+gravity = Vector3(0.05, -1.4, 0.05)
+scale_min = 0.7
+scale_max = 1.4
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_k5t4v"]
+transparency = 1
+shading_mode = 0
+albedo_color = Color(0.98, 0.99, 1, 0.9)
+billboard_mode = 3
+particles_anim_h_frames = 1
+particles_anim_v_frames = 1
+particles_anim_loop = false
+
+[sub_resource type="QuadMesh" id="QuadMesh_ekblr"]
+material = SubResource("StandardMaterial3D_k5t4v")
+size = Vector2(0.09, 0.09)
+
 [node name="DaySimulation" type="Node3D" unique_id=895767277]
 script = ExtResource("1_script")
 
@@ -632,3 +682,23 @@ clip_text = true
 [node name="LevelHolder" type="Node3D" parent="." unique_id=285066890]
 
 [node name="Neighborhood" parent="LevelHolder" unique_id=365782543 instance=ExtResource("5_ef33t")]
+
+[node name="LeafParticles" type="GPUParticles3D" parent="." unique_id=1288088213]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 17, 0)
+emitting = false
+amount = 130
+lifetime = 14.0
+preprocess = 14.0
+visibility_aabb = AABB(-28, -18, -28, 56, 36, 56)
+process_material = SubResource("ParticleProcessMaterial_guxk0")
+draw_pass_1 = SubResource("QuadMesh_i3lk2")
+
+[node name="SnowParticles" type="GPUParticles3D" parent="." unique_id=645182167]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 17, 0)
+emitting = false
+amount = 550
+lifetime = 9.0
+preprocess = 9.0
+visibility_aabb = AABB(-28, -18, -28, 56, 36, 56)
+process_material = SubResource("ParticleProcessMaterial_mto50")
+draw_pass_1 = SubResource("QuadMesh_ekblr")

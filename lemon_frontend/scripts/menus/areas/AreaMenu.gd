@@ -26,7 +26,6 @@ var _notice: Label
 var _rows: Array = []
 
 func _ready() -> void:
-	_clear_placeholder_children()
 	_build_ui()
 	if not PlayerData.profile_updated.is_connected(_refresh):
 		PlayerData.profile_updated.connect(_refresh)
@@ -46,89 +45,14 @@ func _on_area_changed(_area_id: MapArea.AreaID) -> void:
 	_set_notice("")
 	_refresh()
 
-# The scene may ship hand-laid-out placeholder rows. Drop them so the generated
-# list is the only thing on screen.
-func _clear_placeholder_children() -> void:
-	for child in get_children():
-		remove_child(child)
-		child.queue_free()
-
 # --- UI construction -----------------------------------------------------
 
 func _build_ui() -> void:
-	var margin := MarginContainer.new()
-	margin.name = "Layout"
-	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	for side in ["margin_left", "margin_right", "margin_top", "margin_bottom"]:
-		margin.add_theme_constant_override(side, 20)
-	add_child(margin)
-
-	var column := VBoxContainer.new()
-	column.name = "Column"
-	column.add_theme_constant_override("separation", 6)
-	margin.add_child(column)
-
-	column.add_child(_build_header())
-
-	# Word wrap is load bearing: an unwrapped Label reports its whole text as
-	# its minimum width, which stretches the row grid past the 700px panel.
-	var hint := Label.new()
-	hint.name = "Hint"
-	hint.text = "Where your stand is setup. The Neighbourhood is free, Downtown and the Stadium bring big crowds with looser wallets, but cost a fee up front, every day you work there. With more popularity, more people will come, and be willing to pay more and wait longer. Increase your Popularity in an Area to unlock new Areas."
-	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	hint.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	hint.add_theme_font_size_override("font_size", HINT_FONT)
-	hint.add_theme_color_override("font_color", BODY_COLOR)
-	column.add_child(hint)
-
-	_notice = Label.new()
-	_notice.name = "Notice"
-	_notice.text = ""
-	_notice.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_notice.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_notice.add_theme_font_size_override("font_size", NOTICE_FONT)
-	_notice.add_theme_color_override("font_color", WARN_COLOR)
-	column.add_child(_notice)
-
-	column.add_child(HSeparator.new())
-
-	var scroll := ScrollContainer.new()
-	scroll.name = "Scroll"
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	column.add_child(scroll)
-
-	var rows := VBoxContainer.new()
-	rows.name = "Rows"
-	rows.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	rows.add_theme_constant_override("separation", ROW_SEPARATION)
-	scroll.add_child(rows)
-
+	_money_label = $Layout/Column/Header/Money
+	_notice = $Layout/Column/Notice
+	var rows: VBoxContainer = $Layout/Column/Scroll/Rows
 	for area in AreaCatalog.all():
 		rows.add_child(_build_row(area))
-
-func _build_header() -> HBoxContainer:
-	var header := HBoxContainer.new()
-	header.name = "Header"
-
-	var title := Label.new()
-	title.name = "Title"
-	title.text = "Areas"
-	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	title.add_theme_font_size_override("font_size", 24)
-	title.add_theme_color_override("font_color", TITLE_COLOR)
-	header.add_child(title)
-
-	_money_label = Label.new()
-	_money_label.name = "Money"
-	_money_label.text = "Money: $0.00"
-	_money_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	_money_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_money_label.add_theme_font_size_override("font_size", 20)
-	_money_label.add_theme_color_override("font_color", TITLE_COLOR)
-	header.add_child(_money_label)
-
-	return header
 
 func _build_row(area: MapArea) -> PanelContainer:
 	var panel := PanelContainer.new()

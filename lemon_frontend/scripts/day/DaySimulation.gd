@@ -198,15 +198,24 @@ const startingLightAngle: float = 45.0
 const endingLightAngle: float = 125.0
 const lightAngleDelta: float = endingLightAngle - startingLightAngle
 @onready var rainControl: GPUParticles3D = $RainParticles
+@onready var snowControl: GPUParticles3D = get_node_or_null("SnowParticles")
+@onready var leafControl: GPUParticles3D = get_node_or_null("LeafParticles")
 func _update_weather_simulation():
 	var weather:Dictionary = PlayerData.today_weather()
 	var temp:int = weather["temp"]
+	var season: Weather.Season = PlayerData.season()
+	var precipitating: bool = bool(weather["raining"])
 	directionalLight.light_energy = (float(temp) / 100) * 1.5
-	if bool(weather["raining"]):
-		rainControl.emitting = true
+	# Rain in summer, fall and spring; winter turns the same precipitation into
+	# snow. Leaves drift all through fall whether or not it is wet.
+	if rainControl != null:
+		rainControl.emitting = precipitating and season != Weather.Season.Winter
+	if snowControl != null:
+		snowControl.emitting = precipitating and season == Weather.Season.Winter
+	if leafControl != null:
+		leafControl.emitting = season == Weather.Season.Fall
+	if precipitating:
 		directionalLight.light_energy *= 0.7
-	else:
-		rainControl.emitting = false
 
 @onready var stand: Node3D = get_node_or_null("Stand")
 # The current area's scenery is instanced under this node and swapped for a
@@ -275,6 +284,7 @@ func _ready() -> void:
 	update_hud()
 	_update_speed_button()
 	_refresh_status_bar()
+	_update_weather_simulation()
 
 func is_running() -> bool:
 	return running
@@ -1293,7 +1303,7 @@ func _refresh_status_bar() -> void:
 	# The sign shows the player's name. This method already listens to
 	# profile_updated, which is what a rename emits, so the board follows along.
 	if sign_user_label != null:
-		sign_user_label.text = PlayerData.username
+		sign_user_label.text = "%s's" % PlayerData.username
 	status_money_label.text = "Money: $%.2f" % PlayerData.money
 	# One icon + number per ingredient, so the strip reads at a glance.
 	# Count over capacity, so the strip shows both what is on the stand and how
@@ -1308,7 +1318,7 @@ func _refresh_status_bar() -> void:
 	_set_weather_icon(status_forecast_icon, kind_for_weather(int(tomorrow["temp"]), bool(tomorrow["raining"])))
 	# Icon, day word and temperature only. The icon already says which sky it
 	# is, so repeating "warm sunny" beside it just crowds the strip.
-	status_weather_label.text = "Today %dF" % int(today["temp"])
+	status_weather_label.text = "%s %dF" % [PlayerData.season_name(), int(today["temp"])]
 	status_forecast_label.text = "Tomorrow %dF" % int(tomorrow["temp"])
 	# The day bar only carries live numbers while a day is running.
 	if top_bar != null:

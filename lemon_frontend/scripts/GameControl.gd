@@ -50,6 +50,7 @@ func _on_game_panel_visibility_changed():
 		_refresh_start_button()
 	else:
 		autosaveTimer.stop()
+		AudioManager.set_crowd_active(false)
 
 func _on_menu_changed(menu: MENU):
 	recipeMenu.visible = false
@@ -149,11 +150,13 @@ func _on_start_day_pressed() -> void:
 	menus.visible = false
 	menuBar.visible = false
 	daySimulator.visible = true
+	AudioManager.set_crowd_active(true)
 	AdManager.show_lower_banner()
 	daySim.start_day()
 
 func _on_day_finished() -> void:
 	# restart autosave, simulation saves at day end and start
+	AudioManager.set_crowd_active(false)
 	AdManager.hide_lower_banner()
 	autosaveTimer.start()
 	daySimulator.visible = true
