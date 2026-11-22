@@ -193,6 +193,21 @@ var _lane_leaver: Array = [null, null]
 var walkers: Array = []
 var _passby_timer: float = 0.0
 
+@onready var directionalLight: DirectionalLight3D = $DirectionalLight3D
+const startingLightAngle: float = 45.0
+const endingLightAngle: float = 125.0
+const lightAngleDelta: float = endingLightAngle - startingLightAngle
+@onready var rainControl: GPUParticles3D = $RainParticles
+func _update_weather_simulation():
+	var weather:Dictionary = PlayerData.today_weather()
+	var temp:int = weather["temp"]
+	directionalLight.light_energy = (float(temp) / 100) * 1.5
+	if bool(weather["raining"]):
+		rainControl.emitting = true
+		directionalLight.light_energy *= 0.7
+	else:
+		rainControl.emitting = false
+
 @onready var stand: Node3D = get_node_or_null("Stand")
 # The current area's scenery is instanced under this node and swapped for a
 # different area's scene when the player moves the stand.
@@ -253,6 +268,8 @@ func _ready() -> void:
 		PlayerData.weather_changed.connect(_refresh_status_bar)
 	if not PlayerData.area_changed.is_connected(_on_area_changed):
 		PlayerData.area_changed.connect(_on_area_changed)
+	if not PlayerData.weather_changed.is_connected(_update_weather_simulation):
+		PlayerData.weather_changed.connect(_update_weather_simulation)
 	_apply_effective_stats()
 	_refresh_level()
 	_refresh_queue_anchor()
@@ -318,6 +335,7 @@ func start_day() -> void:
 	update_hud()
 	_update_speed_button()
 	_refresh_status_bar()
+	directionalLight.rotation.y = startingLightAngle
 
 func _process(_delta: float) -> void:
 	# The ambient crowd walks whether or not a day is running, so the street
@@ -333,6 +351,7 @@ func _process(_delta: float) -> void:
 		spawning = false
 	elif day_remaining <= spawn_stop_buffer:
 		spawning = false
+	directionalLight.rotation.y = deg_to_rad(startingLightAngle + (1 - day_remaining/day_length)*lightAngleDelta)
 	if spawning:
 		spawn_timer -= delta
 		if spawn_timer <= 0.0:
@@ -940,6 +959,7 @@ func _end_day() -> void:
 	print("Day Finished, saving...")
 	GameNet.sync_user_data()
 	_show_results()
+	directionalLight.rotation.y = deg_to_rad(startingLightAngle)
 	_refresh_status_bar()
 
 # The day's books, top to bottom: where the stand was and what it cost up

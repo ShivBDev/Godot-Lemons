@@ -27,6 +27,34 @@ ambient_light_source = 2
 ambient_light_color = Color(0.933, 0.945, 0.867, 1)
 ambient_light_energy = 0.55
 
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_t2uw5"]
+emission_shape_scale = Vector3(15, 0.5, 15)
+emission_shape = 3
+emission_box_extents = Vector3(1, 1, 1)
+direction = Vector3(0, -1, 0)
+spread = 5.0
+initial_velocity_min = 50.0
+initial_velocity_max = 50.0
+collision_mode = 1
+collision_friction = 0.0
+collision_bounce = 0.0
+
+[sub_resource type="Curve" id="Curve_xqvie"]
+_limits = [0.0, 1.0, 0.0, 0.1]
+_data = [Vector2(0, 0), 0.0, 0.0, 0, 0, Vector2(0.0025974028, 0.46428573), 24.749996, 24.749996, 0, 0, Vector2(0.0051948056, 1), 7.5457296, 7.5457296, 0, 0, Vector2(0.071428575, 0.107142925), 0.0, 0.0, 0, 0, Vector2(0.1, 0), 0.0, 0.0, 0, 0]
+point_count = 5
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_guxk0"]
+transparency = 1
+cull_mode = 2
+shading_mode = 0
+vertex_color_use_as_albedo = true
+use_particle_trails = true
+
+[sub_resource type="RibbonTrailMesh" id="RibbonTrailMesh_njuqu"]
+material = SubResource("StandardMaterial3D_guxk0")
+curve = SubResource("Curve_xqvie")
+
 [sub_resource type="StandardMaterial3D" id="MatGround"]
 albedo_color = Color(0.42, 0.663, 0.341, 1)
 
@@ -96,12 +124,22 @@ script = ExtResource("1_script")
 environment = SubResource("Env")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=357957444]
-transform = Transform3D(-0.6642486, -0.00063958764, 0.74751145, 0.59696394, 0.6014061, 0.5309847, -0.44989753, 0.79894316, -0.39910132, 0, 0, 0)
+transform = Transform3D(0.23697208, -0.7648767, 0.5990056, 0.596911, 0.6010929, 0.53139853, -0.76651245, 0.23162644, 0.5990056, 0, 0, 0)
 light_color = Color(1, 0.965, 0.878, 1)
-light_energy = 1.15
-light_angular_distance = 1.5
+light_energy = 0.45
+light_angular_distance = 1.05
 shadow_enabled = true
 directional_shadow_max_distance = 110.0
+
+[node name="RainParticles" type="GPUParticles3D" parent="." unique_id=1238065883]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 19.198208, 0)
+emitting = false
+amount = 200
+lifetime = 3.0
+visibility_aabb = AABB(-10, -20, -10, 40, 20, 40)
+trail_enabled = true
+process_material = SubResource("ParticleProcessMaterial_t2uw5")
+draw_pass_1 = SubResource("RibbonTrailMesh_njuqu")
 
 [node name="Ground" type="MeshInstance3D" parent="." unique_id=136170054]
 material_override = SubResource("MatGround")
