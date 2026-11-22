@@ -465,17 +465,6 @@ text = "Day Time: 0.0s"
 horizontal_alignment = 2
 vertical_alignment = 1
 
-[node name="StockLabel" type="Label" parent="HUD/TopBar" unique_id=156761265]
-layout_mode = 0
-offset_left = 18.0
-offset_top = 68.0
-offset_right = 420.0
-offset_bottom = 100.0
-theme_override_colors/font_color = Color(0.729, 0.769, 0.639, 1)
-theme_override_font_sizes/font_size = 18
-text = "Stock L:0 S:0 I:0 C:0"
-vertical_alignment = 1
-
 [node name="RevenueLabel" type="Label" parent="HUD/TopBar" unique_id=911066422]
 layout_mode = 0
 offset_left = 430.0

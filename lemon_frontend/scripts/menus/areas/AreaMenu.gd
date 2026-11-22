@@ -74,7 +74,7 @@ func _build_ui() -> void:
 	# its minimum width, which stretches the row grid past the 700px panel.
 	var hint := Label.new()
 	hint.name = "Hint"
-	hint.text = "Where you set up changes who walks past and what they will pay. The neighbourhood is free to work. Downtown and the stadium bring far more customers and looser wallets, but charge a flat fee up front, every day you work there."
+	hint.text = "Where your stand is setup. The Neighbourhood is free, Downtown and the Stadium bring big crowds with looser wallets, but cost a fee up front, every day you work there. With more popularity, more people will come, and be willing to pay more and wait longer. Increase your Popularity in an Area to unlock new Areas."
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	hint.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	hint.add_theme_font_size_override("font_size", HINT_FONT)
@@ -236,6 +236,15 @@ func _build_row(area: MapArea) -> PanelContainer:
 
 # --- Refresh -------------------------------------------------------------
 
+func _area_unlocked(area: MapArea.AreaID) -> bool:
+	match area:
+		MapArea.AreaID.Neighborhood: return true
+		MapArea.AreaID.City:
+			return PlayerData.popularity_level(MapArea.AreaID.Neighborhood) >= 20
+		MapArea.AreaID.Stadium:
+			return PlayerData.popularity_level(MapArea.AreaID.City) >= 20
+		_: return true
+
 func _refresh() -> void:
 	if _money_label != null and is_instance_valid(_money_label):
 		_money_label.text = "Money: $%.2f" % PlayerData.money
@@ -261,9 +270,11 @@ func _refresh() -> void:
 			button.disabled = true
 		else:
 			button.text = "Move Here" if fee <= 0.0 else "Move Here  ($%.2f / day)" % fee
+			if not _area_unlocked(rowArea.id):
+				button.text = "Not Unlocked"
 			# Locked when the new fee plus the wages already on the books would
 			# not fit in the till, so a move can never make the day unstartable.
-			button.disabled = not PlayerData.can_afford_area(rowArea.id)
+			button.disabled = not PlayerData.can_afford_area(rowArea.id) or not _area_unlocked(rowArea.id)
 
 func _on_move_pressed(id: MapArea.AreaID) -> void:
 	if not AreaCatalog.has_area(id):

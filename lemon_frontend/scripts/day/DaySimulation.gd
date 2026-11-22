@@ -225,7 +225,6 @@ var loaded_level_scene: String = ""
 @onready var status_weather_label: Label = $HUD/StatusBar/WeatherLabel
 @onready var status_forecast_label: Label = $HUD/StatusBar/ForecastLabel
 @onready var status_label: Label = $HUD/TopBar/StatusLabel
-@onready var stock_label: Label = $HUD/TopBar/StockLabel
 @onready var revenue_label: Label = $HUD/TopBar/RevenueLabel
 @onready var results_panel: Control = $HUD/ResultsPanel
 @onready var results_revenue: Label = $HUD/ResultsPanel/ResultsRevenue
@@ -1249,12 +1248,6 @@ func update_hud() -> void:
 		status_label.text = "Brewing..."
 	else:
 		status_label.text = "Out of stock"
-	stock_label.text = "Stock L:%d/%d S:%d/%d I:%d/%d C:%d/%d" % [
-		PlayerData.lemon_stock, PlayerData.capacity_for("lemon_stock"),
-		PlayerData.sugar_stock, PlayerData.capacity_for("sugar_stock"),
-		PlayerData.ice_stock, PlayerData.capacity_for("ice_stock"),
-		PlayerData.cup_stock, PlayerData.capacity_for("cup_stock"),
-	]
 	_refresh_status_bar()
 
 # --- Effective stats -----------------------------------------------------
