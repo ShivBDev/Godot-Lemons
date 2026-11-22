@@ -11,6 +11,7 @@ const MUSIC_PATH: String = "res://library/sounds/game-music/Apple Cider.mp3"
 const CROWD_PATH: String = "res://audio/crowd_ambience/crowd_ambience.wav"
 const MENU_SFX_PATH: String = "res://library/sounds/rpg-sound-effects/doorOpen_2.ogg"
 const CLICK_SFX_PATH: String = "res://library/sounds/rpg-sound-effects/confirmation_002.ogg"
+const SALE_SFX_PATH: String = "res://audio/sfx/sale_cash.wav"
 const SFX_VOICES: int = 6
 
 var music_volume: float = 0.55
@@ -23,6 +24,7 @@ var _sfx_voices: Array[AudioStreamPlayer] = []
 var _sfx_cursor: int = 0
 var _menu_sfx: AudioStream
 var _click_sfx: AudioStream
+var _sale_sfx: AudioStream
 var _crowd_playing: bool = false
 
 func _ready() -> void:
@@ -35,6 +37,7 @@ func _ready() -> void:
 		_sfx_voices.append(_make_player("SFX"))
 	_menu_sfx = _load_audio(MENU_SFX_PATH)
 	_click_sfx = _load_audio(CLICK_SFX_PATH)
+	_sale_sfx = _load_audio(SALE_SFX_PATH)
 	_start_music()
 	# Every Button in the game gets an interface sound without each menu having
 	# to wire one. The tab buttons mark themselves and get the menu version.
@@ -108,13 +111,19 @@ func play_click() -> void:
 func play_menu_switch() -> void:
 	_play_sfx(_menu_sfx, -5.0)
 
-func _play_sfx(stream: AudioStream, volume_db: float) -> void:
+# A cup was sold. Slightly different pitch each time keeps a busy day from
+# sounding like one sample on repeat.
+func play_sale() -> void:
+	_play_sfx(_sale_sfx, -8.0, randf_range(0.97, 1.05))
+
+func _play_sfx(stream: AudioStream, volume_db: float, pitch: float = 1.0) -> void:
 	if stream == null or _sfx_voices.is_empty():
 		return
 	var player: AudioStreamPlayer = _sfx_voices[_sfx_cursor]
 	_sfx_cursor = (_sfx_cursor + 1) % _sfx_voices.size()
 	player.stream = stream
 	player.volume_db = volume_db
+	player.pitch_scale = pitch
 	player.play()
 
 func _on_node_added(node: Node) -> void:

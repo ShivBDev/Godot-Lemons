@@ -70,52 +70,19 @@ const WEATHER_ICONS: Dictionary = {
 	"cloudy": preload("res://assets/ui/icons/cloudy.png"),
 }
 
-# Reaction art, shared with the badges that pop above customers' heads so the
-# results card and the world can never disagree about what a face means. Each
-# reject entry is [tally key, icon path, row label]; the keys are the
-# RecipeOpinion.SKIP_* buckets, so a row, its icon and its count all come from
-# the one tally and cannot drift apart.
-const REJECT_ICONS: Array = [
-	["wait", "res://assets/ui/icons/react_clock.svg", "Waited Too Long"],
-	["queue", "res://assets/ui/icons/react_crowd.svg", "Line Too Long"],
-	["price", "res://assets/ui/icons/react_price.svg", "Cost Too Much"],
-	["stock", "res://assets/ui/icons/react_soldout.svg", "Sold Out"],
+# The tally keys in card order. The card's rows live in DaySimulation.tscn;
+# these two lists are the only bridge the script needs to fill them.
+const REJECT_ROWS: Array = [
+	["wait", "WaitRow"],
+	["queue", "QueueRow"],
+	["price", "PriceRow"],
+	["stock", "StockRow"],
 ]
-# [tally key, icon path, label]. The counts are read from the day tally.
-const TASTE_ICONS: Array = [
-	["loved", "res://assets/ui/icons/face_loved.svg", "Loved"],
-	["neutral", "res://assets/ui/icons/face_neutral.svg", "Neutral"],
-	["disliked", "res://assets/ui/icons/face_disliked.svg", "Disliked"],
+const TASTE_COLUMNS: Array = [
+	["loved", "LovedColumn"],
+	["neutral", "NeutralColumn"],
+	["disliked", "DislikedColumn"],
 ]
-# Results-card metrics. The card is one vertical list built in code, so a stale
-# saved scene still gets the full layout instead of a mix of old and new.
-const RESULT_ICON_SIZE: int = 26
-const RESULT_FONT: int = 19
-const RESULT_FONT_BIG: int = 23
-# The area line at the head of the card, a size up from the body text.
-const RESULT_HEADER_FONT: int = 30
-# Fixed width for a reject reason's name, so every count lines up under the one
-# above it however long the reason is.
-const RESULT_REASON_WIDTH: int = 214
-# Card frame. The card is a fixed width and CENTRED, and its height is fitted to
-# whatever it is showing each day. Both matter: a fixed offset from a top-left
-# anchor once pushed the card off the top of the screen, and a fixed tall height
-# left a slab of dead space under the rows.
-const RESULT_CARD_WIDTH: float = 620.0
-const RESULT_CARD_MARGIN: float = 26.0
-# Rows are HAND-PLACED at these heights rather than measured from their labels.
-# A wrapping Label reports its minimum size from whatever width it has right
-# now, so measuring the column before the card had been laid out read a 47
-# character line as about 47 lines tall and stretched the card over the screen.
-const RESULT_ROW_H: float = 34.0
-const RESULT_ROW_H_TALL: float = 92.0
-const RESULT_HEADER_H: float = 38.0
-const RESULT_CARD_TOP_PAD: float = 26.0
-const RESULT_CARD_BOTTOM_PAD: float = 78.0
-const RESULT_TEXT_COLOR: Color = Color(0.16, 0.11, 0.06)
-const RESULT_MUTED_COLOR: Color = Color(0.42, 0.34, 0.22)
-const RESULT_LOSS_COLOR: Color = Color(0.72, 0.28, 0.16)
-const RESULT_PROFIT_COLOR: Color = Color(0.15, 0.45, 0.20)
 
 # Arrival routes live in AreaCatalog now, one set per area, so the crowd walks
 # in from the right streets wherever the stand is set up. Every route in every
@@ -235,24 +202,18 @@ var loaded_level_scene: String = ""
 @onready var status_forecast_label: Label = $HUD/StatusBar/ForecastLabel
 @onready var status_label: Label = $HUD/TopBar/StatusLabel
 @onready var revenue_label: Label = $HUD/TopBar/RevenueLabel
+# The results card is scene nodes (Center/Card/Margin/Rows); the script only
+# fills the labels. Every row exists already, so the card sizes itself.
 @onready var results_panel: Control = $HUD/ResultsPanel
-@onready var results_revenue: Label = $HUD/ResultsPanel/ResultsRevenue
-@onready var results_cups: Label = $HUD/ResultsPanel/ResultsCups
-@onready var results_served: Label = $HUD/ResultsPanel/ResultsServed
-@onready var results_rejected: Label = $HUD/ResultsPanel/ResultsRejected
-# The results card lists everything itself, in one column built at boot. The
-# old hand-placed text rows are retired (hidden) but stay declared so a saved
-# scene that still carries them loads and can be switched off.
-@onready var results_spoilage: Label = get_node_or_null("HUD/ResultsPanel/ResultsSpoilage")
-@onready var results_area: Label = get_node_or_null("HUD/ResultsPanel/ResultsArea")
-@onready var results_opinions: Label = get_node_or_null("HUD/ResultsPanel/ResultsOpinions")
-@onready var results_popularity: Label = get_node_or_null("HUD/ResultsPanel/ResultsPopularity")
-# The card and the column every results row is added to, both built by
-# _prepare_results_panel().
-var _results_card: Panel = null
-# A bare holder the rows are hand-placed inside, not a container: nothing about
-# the card's layout is measured from its children.
-var _results_body: Control = null
+@onready var _results_rows: VBoxContainer = $HUD/ResultsPanel/Center/Card/Margin/Rows
+@onready var _result_area: Label = $HUD/ResultsPanel/Center/Card/Margin/Rows/AreaLabel
+@onready var _result_upfront: Label = $HUD/ResultsPanel/Center/Card/Margin/Rows/UpfrontLabel
+@onready var _result_revenue: Label = $HUD/ResultsPanel/Center/Card/Margin/Rows/RevenueLabel
+@onready var _result_profit: Label = $HUD/ResultsPanel/Center/Card/Margin/Rows/ProfitLabel
+@onready var _result_losses: Label = $HUD/ResultsPanel/Center/Card/Margin/Rows/LossesLabel
+@onready var _result_served: Label = $HUD/ResultsPanel/Center/Card/Margin/Rows/ServedRow/ServedLabel
+@onready var _result_rejected: Label = $HUD/ResultsPanel/Center/Card/Margin/Rows/ServedRow/RejectedLabel
+@onready var _finish_day_button: Button = $HUD/ResultsPanel/Center/Card/Margin/Rows/FinishDayButton
 @onready var news_banner: Label = get_node_or_null("HUD/NewsBanner")
 @onready var crew: Node3D = get_node_or_null("Stand/Crew")
 # The player's name, painted on the stand sign on the line above the LEMONADE
@@ -261,12 +222,7 @@ var _results_body: Control = null
 
 func _ready() -> void:
 	results_panel.visible = false
-	# Wired BEFORE the card is built, because building it moves the button into
-	# the card's own column and this path stops resolving afterwards.
-	var finish_button: Button = get_node_or_null("HUD/ResultsPanel/FinishDayButton")
-	if finish_button != null:
-		finish_button.pressed.connect(_on_finish_day_pressed)
-	_prepare_results_panel()
+	_finish_day_button.pressed.connect(_on_finish_day_pressed)
 	var speed_button: Button = get_node_or_null("HUD/SpeedButton")
 	if speed_button != null:
 		speed_button.pressed.connect(_on_speed_button_pressed)
@@ -887,6 +843,7 @@ func _resolve_sale(c, lane: int) -> void:
 		# The ice this cup is made of leaves the tray with the cup.
 		PlayerData.consume_stock("ice_stock", PlayerData.recipe_ice)
 		PlayerData.note_sale(PlayerData.sale_price)
+		AudioManager.play_sale()
 		# The cup is scored once, and that one score drives both the popularity
 		# tally and the reaction above the customer's head, so the badge on
 		# screen and the points behind it can never disagree. Nobody tastes
@@ -971,248 +928,35 @@ func _end_day() -> void:
 	directionalLight.rotation.y = deg_to_rad(startingLightAngle)
 	_refresh_status_bar()
 
-# The day's books, top to bottom: where the stand was and what it cost up
-# front, what it took, what it really made, what the night ate, how many people
-# were served or turned away (and why, as icon rows), and how the crowd felt
-# about the recipe. The prose the old card buried this under lives on the Stats
-# panel instead.
+# Fills the scene card: the day's books top to bottom (where the stand was and
+# what it cost up front, revenue, profit, what the night ate), the served and
+# rejected totals, one row per reason a customer walked away, and the recipe
+# verdicts. Every row already exists in the scene; only the text changes.
 func _show_results() -> void:
-	_clear_results_body()
-	if _results_body == null:
-		results_panel.visible = true
-		return
 	# Profit is what the day actually made once the fee and the wages taken at
 	# start_day() are off it, so the headline figure is the honest one.
 	var profit: float = revenue - PlayerData.last_area_fee - PlayerData.last_staff_wage
-	# Rows are placed one after another at a known height and the card's height
-	# is the running total of them. Nothing here measures a label.
-	var y: float = RESULT_CARD_TOP_PAD
-	_add_result_row(y, _result_line(AreaCatalog.get_area(PlayerData.current_area).name, RESULT_TEXT_COLOR, RESULT_HEADER_FONT), RESULT_HEADER_H)
-	y += RESULT_HEADER_H
-	_add_result_row(y, _result_line("Upfront Cost: Area Fee ($%.2f), Staff ($%.2f)" % [
-		PlayerData.last_area_fee, PlayerData.last_staff_wage], RESULT_MUTED_COLOR, RESULT_FONT))
-	y += RESULT_ROW_H
-	_add_result_row(y, _result_line("Revenue: $%.2f" % revenue, RESULT_TEXT_COLOR, RESULT_FONT))
-	y += RESULT_ROW_H
-	_add_result_row(y, _result_line("Profit: $%.2f" % profit, RESULT_PROFIT_COLOR, RESULT_FONT_BIG))
-	y += RESULT_ROW_H
-	_add_result_row(y, _result_line("Losses: %d ice melted, %d lemons spoiled" % [
-		PlayerData.last_ice_melted, PlayerData.last_lemons_spoiled], RESULT_LOSS_COLOR, RESULT_FONT))
-	y += RESULT_ROW_H
-	_add_result_row(y, _served_row())
-	y += RESULT_ROW_H
-	# One row per reason a customer walked away, read from the same SKIP_*
-	# buckets the tally counts, so a row's icon, label and number can never
-	# disagree. A reason nobody hit still shows, at zero.
+	_result_area.text = AreaCatalog.get_area(PlayerData.current_area).name
+	_result_upfront.text = "Upfront Cost: Area Fee ($%.2f), Staff ($%.2f)" % [
+		PlayerData.last_area_fee, PlayerData.last_staff_wage]
+	_result_revenue.text = "Revenue: $%.2f" % revenue
+	_result_profit.text = "Profit: $%.2f" % profit
+	_result_losses.text = "Losses: %d ice melted, %d lemons spoiled" % [
+		PlayerData.last_ice_melted, PlayerData.last_lemons_spoiled]
+	_result_served.text = "Customers Served: %d" % served_count
+	_result_rejected.text = "Customers Rejected: %d" % rejected_count
+	# Rejections read from the same SKIP_* buckets that were tallied.
 	var skips: Dictionary = PlayerData.opinion_totals.get("skips", {})
-	for entry in REJECT_ICONS:
-		_add_result_row(y, _reject_row(str(entry[2]), str(entry[1]), int(skips.get(str(entry[0]), 0))))
-		y += RESULT_ROW_H
-	_add_result_row(y, _result_line("Recipe:", RESULT_TEXT_COLOR, RESULT_FONT))
-	y += RESULT_ROW_H
-	_add_result_row(y, _taste_row(), RESULT_ROW_H_TALL)
-	y += RESULT_ROW_H_TALL
-	_fit_results_card(y + RESULT_CARD_BOTTOM_PAD)
-	results_panel.visible = true
-
-# Adds one element to the card at an absolute y, inset equally from both sides,
-# with an explicit rect. No container lays these out and nothing is measured,
-# which is what keeps the card's height honest.
-func _add_result_row(top: float, content: Control, height: float = RESULT_ROW_H) -> void:
-	if _results_body == null or content == null:
-		return
-	content.anchor_left = 0.0
-	content.anchor_right = 1.0
-	content.anchor_top = 0.0
-	content.anchor_bottom = 0.0
-	content.offset_left = RESULT_CARD_MARGIN
-	content.offset_right = -RESULT_CARD_MARGIN
-	content.offset_top = top
-	content.offset_bottom = top + height
-	_results_body.add_child(content)
-
-# Centres the card on a height that was worked out from the rows themselves.
-func _fit_results_card(height: float) -> void:
-	if _results_card == null:
-		return
-	_results_card.offset_top = -height * 0.5
-	_results_card.offset_bottom = height * 0.5
-
-# Clears the previous day's rows out of the column. The Finish Day button lives
-# in the same column so it always sits under the last row, and it is tagged so
-# this pass leaves it alone.
-func _clear_results_body() -> void:
-	if _results_body == null or not is_instance_valid(_results_body):
-		return
-	for child in _results_body.get_children():
-		if child.has_meta("card_keeper"):
-			continue
-		_results_body.remove_child(child)
-		child.queue_free()
-
-# A plain, single-line label in the card. It never wraps and never expands: a
-# wrapping Label reports its minimum size from whatever width it currently has,
-# so a squeezed one collapses into a one-character-wide ribbon of text.
-func _result_line(text: String, color: Color, size: int) -> Label:
-	var label := Label.new()
-	label.text = text
-	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	label.add_theme_font_size_override("font_size", size)
-	label.add_theme_color_override("font_color", color)
-	return label
-
-# "Customers Served: 20      Customers Rejected: 2" on one row: the two totals
-# belong together, and a second full row would waste the width. Neither label
-# expands or wraps, so the pair can never be squeezed into a vertical column.
-func _served_row() -> HBoxContainer:
-	var row := HBoxContainer.new()
-	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	row.add_theme_constant_override("separation", 24)
-	var served: Label = _result_line("Customers Served: %d" % served_count, RESULT_TEXT_COLOR, RESULT_FONT)
-	served.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.add_child(served)
-	row.add_child(_result_line("Customers Rejected: %d" % rejected_count, RESULT_TEXT_COLOR, RESULT_FONT))
-	return row
-
-# "Waited Too Long [clock] : 1". The reason name sits in a fixed-width column so
-# every count lines up under the one above it.
-func _reject_row(name: String, icon_path: String, count: int) -> HBoxContainer:
-	var row := HBoxContainer.new()
-	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	row.add_theme_constant_override("separation", 8)
-	# The name sits in a fixed-width column so every count below it lines up.
-	var name_label: Label = _result_line(name, RESULT_TEXT_COLOR, RESULT_FONT)
-	name_label.custom_minimum_size = Vector2(RESULT_REASON_WIDTH, 0)
-	row.add_child(name_label)
-	var icon: TextureRect = _icon(icon_path, RESULT_ICON_SIZE)
-	if icon != null:
-		row.add_child(icon)
-	row.add_child(_result_line(": %d" % count, RESULT_TEXT_COLOR, RESULT_FONT))
-	return row
-
-# Recipe verdicts as three columns: the count and the face on top, the word
-# underneath. The same faces the badges over customers' heads use.
-func _taste_row() -> HBoxContainer:
-	var row := HBoxContainer.new()
-	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	row.add_theme_constant_override("separation", 0)
+	for entry in REJECT_ROWS:
+		var row: Control = _results_rows.get_node_or_null(str(entry[1]))
+		if row != null:
+			row.get_node("CountLabel").text = ": %d" % int(skips.get(str(entry[0]), 0))
 	var totals: Dictionary = PlayerData.opinion_totals
-	for entry in TASTE_ICONS:
-		var column := VBoxContainer.new()
-		column.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		column.size_flags_vertical = Control.SIZE_EXPAND_FILL
-		column.alignment = BoxContainer.ALIGNMENT_CENTER
-		column.add_theme_constant_override("separation", 2)
-		var top := HBoxContainer.new()
-		top.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		top.alignment = BoxContainer.ALIGNMENT_CENTER
-		top.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-		top.add_theme_constant_override("separation", 6)
-		top.add_child(_result_line("%d" % int(totals.get(str(entry[0]), 0)), RESULT_TEXT_COLOR, RESULT_FONT_BIG))
-		var icon: TextureRect = _icon(str(entry[1]), RESULT_ICON_SIZE)
-		if icon != null:
-			top.add_child(icon)
-		column.add_child(top)
-		var caption: Label = _result_line(str(entry[2]), RESULT_MUTED_COLOR, RESULT_FONT)
-		caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		caption.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-		column.add_child(caption)
-		row.add_child(column)
-	return row
-
-# A square icon for a card row, aspect kept, or null if the art is missing.
-func _icon(path: String, size: int) -> TextureRect:
-	var texture: Texture2D = _reaction_texture(path)
-	if texture == null:
-		return null
-	var icon := TextureRect.new()
-	icon.texture = texture
-	icon.custom_minimum_size = Vector2(size, size)
-	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	return icon
-
-# Loads and caches one of the reaction icons for the results rows.
-var _result_icon_cache: Dictionary = {}
-
-func _reaction_texture(path: String) -> Texture2D:
-	if _result_icon_cache.has(path):
-		return _result_icon_cache[path]
-	var tex: Texture2D = null
-	if ResourceLoader.exists(path):
-		tex = load(path)
-	_result_icon_cache[path] = tex
-	return tex
-
-# The card builds one vertical list of its own and retires the old hand-placed
-# text rows, so a stale saved scene still gets the full layout instead of a mix
-# of the two. The column sits inside the card's Panel, inset to clear the title
-# at the top and the Finish Day button at the bottom.
-func _prepare_results_panel() -> void:
-	# The card is drawn from scratch in _show_results(), so the scene's old title
-	# and text rows are retired here instead of sitting above the new layout.
-	var title: Label = get_node_or_null("HUD/ResultsPanel/TitleLabel")
-	if title != null:
-		title.visible = false
-	for stale in [results_revenue, results_cups, results_served, results_rejected,
-			results_spoilage, results_area, results_opinions, results_popularity]:
-		if stale != null and is_instance_valid(stale):
-			stale.visible = false
-	# The whole overlay is taken over from code, so nothing about the layout
-	# depends on what the saved scene happens to say: full-screen dim, one
-	# centred card, one column of rows.
-	results_panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	var backdrop: ColorRect = get_node_or_null("HUD/ResultsPanel/Backdrop")
-	if backdrop != null:
-		backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-		backdrop.color = Color(0, 0, 0, 0.55)
-	_results_card = get_node_or_null("HUD/ResultsPanel/Panel")
-	if _results_card == null:
-		return
-	# Centre the card. Anchors are set rather than trusted, because the scene's
-	# Panel uses a top-left layout mode, and its offsets then place the card
-	# ABOVE the top of the screen instead of in the middle of it.
-	_results_card.anchor_left = 0.5
-	_results_card.anchor_top = 0.5
-	_results_card.anchor_right = 0.5
-	_results_card.anchor_bottom = 0.5
-	_results_card.offset_left = -RESULT_CARD_WIDTH * 0.5
-	_results_card.offset_right = RESULT_CARD_WIDTH * 0.5
-	# A placeholder height until the first day ends and _fit_results_card() sets
-	# the real one.
-	_results_card.offset_top = -RESULT_ROW_H * 2.0
-	_results_card.offset_bottom = RESULT_ROW_H * 2.0
-	# Drop a body left over from an earlier load, so the card can never end up
-	# with two sets of rows stacked on top of each other.
-	var stale_body: Node = _results_card.get_node_or_null("Rows")
-	if stale_body != null:
-		_results_card.remove_child(stale_body)
-		stale_body.queue_free()
-	# A bare holder: every row is placed inside it at an absolute y, so nothing
-	# here needs a container to lay out, and nothing is ever measured.
-	_results_body = Control.new()
-	_results_body.name = "Rows"
-	_results_body.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_results_body.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_results_card.add_child(_results_body)
-	# The button is pinned to the card's own bottom edge, below the last row.
-	var finish: Button = get_node_or_null("HUD/ResultsPanel/FinishDayButton")
-	if finish != null:
-		var old_parent: Node = finish.get_parent()
-		if old_parent != null and old_parent != _results_card:
-			old_parent.remove_child(finish)
-			_results_card.add_child(finish)
-		finish.set_meta("card_keeper", true)
-		finish.anchor_left = 0.5
-		finish.anchor_right = 0.5
-		finish.anchor_top = 1.0
-		finish.anchor_bottom = 1.0
-		finish.offset_left = -110.0
-		finish.offset_right = 110.0
-		finish.offset_top = -66.0
-		finish.offset_bottom = -16.0
+	for entry in TASTE_COLUMNS:
+		var column: Control = _results_rows.get_node_or_null("TasteRow/" + str(entry[1]))
+		if column != null:
+			column.get_node("Top/CountLabel").text = "%d" % int(totals.get(str(entry[0]), 0))
+	results_panel.visible = true
 
 func _on_finish_day_pressed() -> void:
 	results_panel.visible = false

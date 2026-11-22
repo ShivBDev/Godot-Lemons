@@ -10,6 +10,13 @@
 [ext_resource type="Texture2D" uid="uid://bs6558bvw7530" path="res://assets/ui/icons/sun.png" id="8_bggbl"]
 [ext_resource type="StyleBox" path="res://assets/ui/style_card.tres" id="8_card"]
 [ext_resource type="Script" uid="uid://bhp28tmwy3lla" path="res://scripts/menus/staff/StandCrew.gd" id="10_crew"]
+[ext_resource type="Texture2D" uid="uid://dfuabc0hq5igy" path="res://assets/ui/icons/react_clock.svg" id="20_clock"]
+[ext_resource type="Texture2D" uid="uid://dxj3bpydry7sn" path="res://assets/ui/icons/react_crowd.svg" id="21_crowd"]
+[ext_resource type="Texture2D" uid="uid://brt705ekhxml7" path="res://assets/ui/icons/react_price.svg" id="22_price"]
+[ext_resource type="Texture2D" uid="uid://kpl11t68lm6m" path="res://assets/ui/icons/react_soldout.svg" id="23_soldout"]
+[ext_resource type="Texture2D" uid="uid://bv6jol2g5du6g" path="res://assets/ui/icons/face_loved.svg" id="24_loved"]
+[ext_resource type="Texture2D" uid="uid://1mo30evq8isb" path="res://assets/ui/icons/face_neutral.svg" id="25_neutral"]
+[ext_resource type="Texture2D" uid="uid://drermlnxgdq5v" path="res://assets/ui/icons/face_disliked.svg" id="26_disliked"]
 
 [sub_resource type="ProceduralSkyMaterial" id="SkyMat"]
 sky_top_color = Color(0.44, 0.71, 0.96, 1)
@@ -538,138 +545,374 @@ text = "Fast Forward x5"
 
 [node name="ResultsPanel" type="Control" parent="HUD" unique_id=439339270]
 visible = false
-layout_mode = 3
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -330.0
-offset_top = -430.0
-offset_right = 330.0
-offset_bottom = 430.0
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
 [node name="Backdrop" type="ColorRect" parent="HUD/ResultsPanel" unique_id=2046628905]
-layout_mode = 0
-offset_left = -330.0
-offset_top = -430.0
-offset_right = 330.0
-offset_bottom = 430.0
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
 color = Color(0, 0, 0, 0.55)
 
-[node name="Panel" type="Panel" parent="HUD/ResultsPanel" unique_id=1967840164]
-layout_mode = 0
-offset_left = 24.0
-offset_top = -330.0
-offset_right = 636.0
-offset_bottom = 330.0
+[node name="Center" type="CenterContainer" parent="HUD/ResultsPanel" unique_id=920000001]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Card" type="PanelContainer" parent="HUD/ResultsPanel/Center" unique_id=920000002]
+custom_minimum_size = Vector2(620, 0)
+layout_mode = 2
 theme_override_styles/panel = ExtResource("8_card")
 
-[node name="TitleLabel" type="Label" parent="HUD/ResultsPanel" unique_id=810255806]
-visible = false
-layout_mode = 0
-offset_left = 40.0
-offset_top = 28.0
-offset_right = 620.0
-offset_bottom = 78.0
-theme_override_colors/font_color = Color(0, 0, 0, 1)
-theme_override_font_sizes/font_size = 40
-text = "Day Complete!"
-horizontal_alignment = 1
+[node name="Margin" type="MarginContainer" parent="HUD/ResultsPanel/Center/Card" unique_id=920000003]
+layout_mode = 2
+theme_override_constants/margin_left = 26
+theme_override_constants/margin_top = 22
+theme_override_constants/margin_right = 26
+theme_override_constants/margin_bottom = 22
+
+[node name="Rows" type="VBoxContainer" parent="HUD/ResultsPanel/Center/Card/Margin" unique_id=920000004]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 4
+[node name="AreaLabel" type="Label" parent="HUD/ResultsPanel/Center/Card/Margin/Rows" unique_id=920000005]
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.16, 0.11, 0.06, 1)
+theme_override_font_sizes/font_size = 30
+text = "Neighborhood"
+vertical_alignment = 1
+[node name="UpfrontLabel" type="Label" parent="HUD/ResultsPanel/Center/Card/Margin/Rows" unique_id=920000006]
+custom_minimum_size = Vector2(0, 26)
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.42, 0.34, 0.22, 1)
+theme_override_font_sizes/font_size = 19
+text = "Upfront Cost: Area Fee ($0.00), Staff ($0.00)"
+vertical_alignment = 1
+[node name="RevenueLabel" type="Label" parent="HUD/ResultsPanel/Center/Card/Margin/Rows" unique_id=920000007]
+custom_minimum_size = Vector2(0, 26)
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.16, 0.11, 0.06, 1)
+theme_override_font_sizes/font_size = 19
+text = "Revenue: $0.00"
+vertical_alignment = 1
+[node name="ProfitLabel" type="Label" parent="HUD/ResultsPanel/Center/Card/Margin/Rows" unique_id=920000008]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.15, 0.45, 0.20, 1)
+theme_override_font_sizes/font_size = 23
+text = "Profit: $0.00"
+vertical_alignment = 1
+[node name="LossesLabel" type="Label" parent="HUD/ResultsPanel/Center/Card/Margin/Rows" unique_id=920000009]
+custom_minimum_size = Vector2(0, 26)
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.72, 0.28, 0.16, 1)
+theme_override_font_sizes/font_size = 19
+text = "Losses: 0 ice melted, 0 lemons spoiled"
+vertical_alignment = 1
+[node name="ServedRow" type="HBoxContainer" parent="HUD/ResultsPanel/Center/Card/Margin/Rows" unique_id=920000010]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 24
+
+[node name="ServedLabel" type="Label" parent="HUD/ResultsPanel/Center/Card/Margin/Rows/ServedRow" unique_id=920000011]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.16, 0.11, 0.06, 1)
+theme_override_font_sizes/font_size = 19
+text = "Customers Served: 0"
 vertical_alignment = 1
 
-[node name="ResultsRevenue" type="Label" parent="HUD/ResultsPanel" unique_id=1230414419]
-layout_mode = 0
-offset_left = 48.0
-offset_top = 168.0
-offset_right = 612.0
-offset_bottom = 204.0
-theme_override_colors/font_color = Color(0, 0, 0, 1)
-theme_override_font_sizes/font_size = 26
-text = "Revenue: $0.00"
-
-[node name="ResultsCups" type="Label" parent="HUD/ResultsPanel" unique_id=1200889561]
-layout_mode = 0
-offset_left = 48.0
-offset_top = 208.0
-offset_right = 612.0
-offset_bottom = 244.0
-theme_override_colors/font_color = Color(0, 0, 0, 1)
-theme_override_font_sizes/font_size = 26
-text = "Cups Sold: 0"
-
-[node name="ResultsServed" type="Label" parent="HUD/ResultsPanel" unique_id=168098686]
-layout_mode = 0
-offset_left = 48.0
-offset_top = 248.0
-offset_right = 612.0
-offset_bottom = 284.0
-theme_override_colors/font_color = Color(0, 0, 0, 1)
-theme_override_font_sizes/font_size = 26
-text = "Customers Served: 0"
-
-[node name="ResultsRejected" type="Label" parent="HUD/ResultsPanel" unique_id=1813934326]
-layout_mode = 0
-offset_left = 48.0
-offset_top = 288.0
-offset_right = 612.0
-offset_bottom = 324.0
-theme_override_colors/font_color = Color(0, 0, 0, 1)
-theme_override_font_sizes/font_size = 26
-text = "Customers Rejected: 0"
-
-[node name="FinishDayButton" type="Button" parent="HUD/ResultsPanel" unique_id=242765334]
-layout_mode = 0
-offset_left = 170.0
-offset_top = 232.0
-offset_right = 490.0
-offset_bottom = 286.0
-theme_override_font_sizes/font_size = 28
-text = "Finish Day"
-
-[node name="ResultsSpoilage" type="Label" parent="HUD/ResultsPanel" unique_id=869675500]
-layout_mode = 0
-offset_left = 48.0
-offset_top = 328.0
-offset_right = 612.0
-offset_bottom = 364.0
-theme_override_colors/font_color = Color(0.72, 0.28, 0.16, 1)
-theme_override_font_sizes/font_size = 22
-text = "Losses: 0 ice melted, 0 lemons spoiled"
-
-[node name="ResultsArea" type="Label" parent="HUD/ResultsPanel" unique_id=1099607055]
-layout_mode = 0
-offset_left = 48.0
-offset_top = 84.0
-offset_right = 612.0
-offset_bottom = 120.0
-theme_override_colors/font_color = Color(0.36, 0.24, 0.15, 1)
-theme_override_font_sizes/font_size = 22
-text = "Fee: $0.00"
-
-[node name="ResultsOpinions" type="Label" parent="HUD/ResultsPanel" unique_id=991216969]
-layout_mode = 0
-offset_left = 48.0
-offset_top = 372.0
-offset_right = 612.0
-offset_bottom = 736.0
+[node name="RejectedLabel" type="Label" parent="HUD/ResultsPanel/Center/Card/Margin/Rows/ServedRow" unique_id=920000012]
+layout_mode = 2
+mouse_filter = 2
 theme_override_colors/font_color = Color(0.16, 0.11, 0.06, 1)
-theme_override_font_sizes/font_size = 16
-text = "Loved 0 | Neutral 0 | Disliked 0"
-autowrap_mode = 3
+theme_override_font_sizes/font_size = 19
+text = "Customers Rejected: 0"
+vertical_alignment = 1
+[node name="WaitRow" type="HBoxContainer" parent="HUD/ResultsPanel/Center/Card/Margin/Rows" unique_id=920000013]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 8
 
-[node name="ResultsPopularity" type="Label" parent="HUD/ResultsPanel" unique_id=327945522]
-layout_mode = 0
-offset_left = 48.0
-offset_top = 124.0
-offset_right = 612.0
-offset_bottom = 160.0
-theme_override_colors/font_color = Color(0.24, 0.42, 0.2, 1)
-theme_override_font_sizes/font_size = 16
-text = "Popularity"
+[node name="NameLabel" type="Label" parent="HUD/ResultsPanel/Center/Card/Margin/Rows/WaitRow" unique_id=920000014]
+custom_minimum_size = Vector2(214, 0)
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.16, 0.11, 0.06, 1)
+theme_override_font_sizes/font_size = 19
+text = "Waited Too Long"
+vertical_alignment = 1
 
+[node name="Icon" type="TextureRect" parent="HUD/ResultsPanel/Center/Card/Margin/Rows/WaitRow" unique_id=920000015]
+custom_minimum_size = Vector2(26, 26)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+texture = ExtResource("20_clock")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="CountLabel" type="Label" parent="HUD/ResultsPanel/Center/Card/Margin/Rows/WaitRow" unique_id=920000016]
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.16, 0.11, 0.06, 1)
+theme_override_font_sizes/font_size = 19
+text = ": 0"
+vertical_alignment = 1
+[node name="QueueRow" type="HBoxContainer" parent="HUD/ResultsPanel/Center/Card/Margin/Rows" unique_id=920000017]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 8
+
+[node name="NameLabel" type="Label" parent="HUD/ResultsPanel/Center/Card/Margin/Rows/QueueRow" unique_id=920000018]
+custom_minimum_size = Vector2(214, 0)
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.16, 0.11, 0.06, 1)
+theme_override_font_sizes/font_size = 19
+text = "Line Too Long"
+vertical_alignment = 1
+
+[node name="Icon" type="TextureRect" parent="HUD/ResultsPanel/Center/Card/Margin/Rows/QueueRow" unique_id=920000019]
+custom_minimum_size = Vector2(26, 26)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+texture = ExtResource("21_crowd")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="CountLabel" type="Label" parent="HUD/ResultsPanel/Center/Card/Margin/Rows/QueueRow" unique_id=920000020]
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.16, 0.11, 0.06, 1)
+theme_override_font_sizes/font_size = 19
+text = ": 0"
+vertical_alignment = 1
+[node name="PriceRow" type="HBoxContainer" parent="HUD/ResultsPanel/Center/Card/Margin/Rows" unique_id=920000021]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 8
+
+[node name="NameLabel" type="Label" parent="HUD/ResultsPanel/Center/Card/Margin/Rows/PriceRow" unique_id=920000022]
+custom_minimum_size = Vector2(214, 0)
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.16, 0.11, 0.06, 1)
+theme_override_font_sizes/font_size = 19
+text = "Cost Too Much"
+vertical_alignment = 1
+
+[node name="Icon" type="TextureRect" parent="HUD/ResultsPanel/Center/Card/Margin/Rows/PriceRow" unique_id=920000023]
+custom_minimum_size = Vector2(26, 26)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+texture = ExtResource("22_price")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="CountLabel" type="Label" parent="HUD/ResultsPanel/Center/Card/Margin/Rows/PriceRow" unique_id=920000024]
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.16, 0.11, 0.06, 1)
+theme_override_font_sizes/font_size = 19
+text = ": 0"
+vertical_alignment = 1
+[node name="StockRow" type="HBoxContainer" parent="HUD/ResultsPanel/Center/Card/Margin/Rows" unique_id=920000025]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 8
+
+[node name="NameLabel" type="Label" parent="HUD/ResultsPanel/Center/Card/Margin/Rows/StockRow" unique_id=920000026]
+custom_minimum_size = Vector2(214, 0)
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.16, 0.11, 0.06, 1)
+theme_override_font_sizes/font_size = 19
+text = "Sold Out"
+vertical_alignment = 1
+
+[node name="Icon" type="TextureRect" parent="HUD/ResultsPanel/Center/Card/Margin/Rows/StockRow" unique_id=920000027]
+custom_minimum_size = Vector2(26, 26)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+texture = ExtResource("23_soldout")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="CountLabel" type="Label" parent="HUD/ResultsPanel/Center/Card/Margin/Rows/StockRow" unique_id=920000028]
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.16, 0.11, 0.06, 1)
+theme_override_font_sizes/font_size = 19
+text = ": 0"
+vertical_alignment = 1
+[node name="RecipeLabel" type="Label" parent="HUD/ResultsPanel/Center/Card/Margin/Rows" unique_id=920000029]
+custom_minimum_size = Vector2(0, 26)
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.16, 0.11, 0.06, 1)
+theme_override_font_sizes/font_size = 19
+text = "Recipe:"
+vertical_alignment = 1
+[node name="TasteRow" type="HBoxContainer" parent="HUD/ResultsPanel/Center/Card/Margin/Rows" unique_id=920000030]
+custom_minimum_size = Vector2(0, 84)
+layout_mode = 2
+mouse_filter = 2
+[node name="LovedColumn" type="VBoxContainer" parent="HUD/ResultsPanel/Center/Card/Margin/Rows/TasteRow" unique_id=920000031]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+alignment = 1
+theme_override_constants/separation = 2
+
+[node name="Top" type="HBoxContainer" parent="HUD/ResultsPanel/Center/Card/Margin/Rows/TasteRow/LovedColumn" unique_id=920000032]
+layout_mode = 2
+size_flags_horizontal = 4
+mouse_filter = 2
+alignment = 1
+theme_override_constants/separation = 6
+
+[node name="CountLabel" type="Label" parent="HUD/ResultsPanel/Center/Card/Margin/Rows/TasteRow/LovedColumn/Top" unique_id=920000033]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.16, 0.11, 0.06, 1)
+theme_override_font_sizes/font_size = 23
+text = "0"
+
+[node name="Icon" type="TextureRect" parent="HUD/ResultsPanel/Center/Card/Margin/Rows/TasteRow/LovedColumn/Top" unique_id=920000034]
+custom_minimum_size = Vector2(26, 26)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+texture = ExtResource("24_loved")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Caption" type="Label" parent="HUD/ResultsPanel/Center/Card/Margin/Rows/TasteRow/LovedColumn" unique_id=920000035]
+layout_mode = 2
+size_flags_horizontal = 4
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.42, 0.34, 0.22, 1)
+theme_override_font_sizes/font_size = 19
+text = "Loved"
+horizontal_alignment = 1
+[node name="NeutralColumn" type="VBoxContainer" parent="HUD/ResultsPanel/Center/Card/Margin/Rows/TasteRow" unique_id=920000036]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+alignment = 1
+theme_override_constants/separation = 2
+
+[node name="Top" type="HBoxContainer" parent="HUD/ResultsPanel/Center/Card/Margin/Rows/TasteRow/NeutralColumn" unique_id=920000037]
+layout_mode = 2
+size_flags_horizontal = 4
+mouse_filter = 2
+alignment = 1
+theme_override_constants/separation = 6
+
+[node name="CountLabel" type="Label" parent="HUD/ResultsPanel/Center/Card/Margin/Rows/TasteRow/NeutralColumn/Top" unique_id=920000038]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.16, 0.11, 0.06, 1)
+theme_override_font_sizes/font_size = 23
+text = "0"
+
+[node name="Icon" type="TextureRect" parent="HUD/ResultsPanel/Center/Card/Margin/Rows/TasteRow/NeutralColumn/Top" unique_id=920000039]
+custom_minimum_size = Vector2(26, 26)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+texture = ExtResource("25_neutral")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Caption" type="Label" parent="HUD/ResultsPanel/Center/Card/Margin/Rows/TasteRow/NeutralColumn" unique_id=920000040]
+layout_mode = 2
+size_flags_horizontal = 4
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.42, 0.34, 0.22, 1)
+theme_override_font_sizes/font_size = 19
+text = "Neutral"
+horizontal_alignment = 1
+[node name="DislikedColumn" type="VBoxContainer" parent="HUD/ResultsPanel/Center/Card/Margin/Rows/TasteRow" unique_id=920000041]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+alignment = 1
+theme_override_constants/separation = 2
+
+[node name="Top" type="HBoxContainer" parent="HUD/ResultsPanel/Center/Card/Margin/Rows/TasteRow/DislikedColumn" unique_id=920000042]
+layout_mode = 2
+size_flags_horizontal = 4
+mouse_filter = 2
+alignment = 1
+theme_override_constants/separation = 6
+
+[node name="CountLabel" type="Label" parent="HUD/ResultsPanel/Center/Card/Margin/Rows/TasteRow/DislikedColumn/Top" unique_id=920000043]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.16, 0.11, 0.06, 1)
+theme_override_font_sizes/font_size = 23
+text = "0"
+
+[node name="Icon" type="TextureRect" parent="HUD/ResultsPanel/Center/Card/Margin/Rows/TasteRow/DislikedColumn/Top" unique_id=920000044]
+custom_minimum_size = Vector2(26, 26)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+texture = ExtResource("26_disliked")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Caption" type="Label" parent="HUD/ResultsPanel/Center/Card/Margin/Rows/TasteRow/DislikedColumn" unique_id=920000045]
+layout_mode = 2
+size_flags_horizontal = 4
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.42, 0.34, 0.22, 1)
+theme_override_font_sizes/font_size = 19
+text = "Disliked"
+horizontal_alignment = 1
+[node name="Spacer" type="Control" parent="HUD/ResultsPanel/Center/Card/Margin/Rows" unique_id=920000046]
+custom_minimum_size = Vector2(0, 6)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="FinishDayButton" type="Button" parent="HUD/ResultsPanel/Center/Card/Margin/Rows" unique_id=242765334]
+custom_minimum_size = Vector2(220, 50)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 24
+text = "Finish Day"
 [node name="NewsBanner" type="Label" parent="HUD" unique_id=346751202]
 offset_left = 10.0
 offset_top = 100.0

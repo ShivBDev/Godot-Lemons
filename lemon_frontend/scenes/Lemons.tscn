@@ -1334,8 +1334,8 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-alignment = 1
 theme_override_constants/separation = 2
+alignment = 1
 
 [node name="Icon" type="TextureRect" parent="GameView/GamePanel/MenuBar/RecipeMenu/TabLayout" unique_id=771002011]
 custom_minimum_size = Vector2(26, 26)
@@ -1352,7 +1352,6 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 14
 text = "Recipe"
 horizontal_alignment = 1
-mouse_filter = 2
 
 [node name="ShopMenu" type="Button" parent="GameView/GamePanel/MenuBar" unique_id=559755763]
 layout_mode = 2
@@ -1366,8 +1365,8 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-alignment = 1
 theme_override_constants/separation = 2
+alignment = 1
 
 [node name="Icon" type="TextureRect" parent="GameView/GamePanel/MenuBar/ShopMenu/TabLayout" unique_id=771002012]
 custom_minimum_size = Vector2(26, 26)
@@ -1384,7 +1383,6 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 14
 text = "Shop"
 horizontal_alignment = 1
-mouse_filter = 2
 
 [node name="Upgrades" type="Button" parent="GameView/GamePanel/MenuBar" unique_id=1907334513]
 layout_mode = 2
@@ -1398,8 +1396,8 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-alignment = 1
 theme_override_constants/separation = 2
+alignment = 1
 
 [node name="Icon" type="TextureRect" parent="GameView/GamePanel/MenuBar/Upgrades/TabLayout" unique_id=771002013]
 custom_minimum_size = Vector2(26, 26)
@@ -1416,7 +1414,6 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 14
 text = "Upgrades"
 horizontal_alignment = 1
-mouse_filter = 2
 
 [node name="Staff" type="Button" parent="GameView/GamePanel/MenuBar" unique_id=2105221643]
 layout_mode = 2
@@ -1430,8 +1427,8 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-alignment = 1
 theme_override_constants/separation = 2
+alignment = 1
 
 [node name="Icon" type="TextureRect" parent="GameView/GamePanel/MenuBar/Staff/TabLayout" unique_id=1593383430]
 custom_minimum_size = Vector2(26, 26)
@@ -1448,7 +1445,6 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 14
 text = "Staff"
 horizontal_alignment = 1
-mouse_filter = 2
 
 [node name="Areas" type="Button" parent="GameView/GamePanel/MenuBar" unique_id=771002015]
 layout_mode = 2
@@ -1462,8 +1458,8 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-alignment = 1
 theme_override_constants/separation = 2
+alignment = 1
 
 [node name="Icon" type="TextureRect" parent="GameView/GamePanel/MenuBar/Areas/TabLayout" unique_id=771002016]
 custom_minimum_size = Vector2(26, 26)
@@ -1480,7 +1476,6 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 14
 text = "Areas"
 horizontal_alignment = 1
-mouse_filter = 2
 
 [node name="Settings" type="Button" parent="GameView/GamePanel/MenuBar" unique_id=1688769654]
 layout_mode = 2
@@ -1494,8 +1489,8 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-alignment = 1
 theme_override_constants/separation = 2
+alignment = 1
 
 [node name="Icon" type="TextureRect" parent="GameView/GamePanel/MenuBar/Settings/TabLayout" unique_id=771002014]
 custom_minimum_size = Vector2(26, 26)
@@ -1512,4 +1507,3 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 14
 text = "Settings"
 horizontal_alignment = 1
-mouse_filter = 2
