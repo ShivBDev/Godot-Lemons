@@ -9,7 +9,7 @@ class_name Popularity
 # patience, and price ceiling.
 
 const MAX_RANK: int = 99
-const BONUS_PER_RANK: float = 0.05
+const BONUS_PER_RANK: float = 0.02
 const POINTS_LOVE: int = 3
 const POINTS_NEUTRAL: int = 1
 const POINTS_DISLIKE: int = 0
